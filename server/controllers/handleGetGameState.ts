@@ -1,53 +1,86 @@
 import { Request, Response } from "express";
-import { errorHandler, getCredentials, getDroppedAsset, Visitor, World } from "../utils/index.js";
-import { VisitorInterface } from "@rtsdk/topia";
-import axios from "axios";
+import {
+  errorHandler,
+  getCredentials,
+  initializeVisitorData,
+  calculateGrowthLevel,
+  getSeedConfig,
+  Visitor,
+  DroppedAsset,
+} from "../utils/index.js";
+import { PlotAssetDataObject } from "../types/index.js";
 
+/**
+ * Get the current game state for a visitor including their plot, plants, and coin balance
+ */
 export const handleGetGameState = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { assetId, displayName, interactiveNonce, interactivePublicKey, profileId, urlSlug, visitorId } = credentials;
+    const { assetId, urlSlug, visitorId } = credentials;
 
-    const droppedAsset = await getDroppedAsset(credentials);
-    if (droppedAsset instanceof Error) throw droppedAsset;
+    const plotAsset = await DroppedAsset.create(assetId, urlSlug, { credentials });
+    const plotData = (await plotAsset.fetchDataObject()) as PlotAssetDataObject;
 
-    const world = World.create(urlSlug, { credentials });
-    world.triggerParticle({ name: "Sparkle", duration: 3, position: droppedAsset.position }).catch((error: any) =>
-      errorHandler({
-        error,
-        functionName: "handleGetGameState",
-        message: "Error triggering particle effects",
-      }),
-    );
+    // Initialize visitor data with defaults if needed
+    let visitorData = await initializeVisitorData(credentials);
 
-    const visitor: VisitorInterface = await Visitor.get(visitorId, urlSlug, { credentials });
-    const { isAdmin } = visitor;
+    // Update plant growth levels for all plants
+    const updatedPlants = { ...visitorData.plants };
+    let hasUpdates = false;
 
-    try {
-      await axios.post(
-        `${process.env.LEADERBOARD_BASE_URL || "http://v2lboard0-prod-topia.topia-rtsdk.com"}/api/dropped-asset/increment-player-stats?assetId=${assetId}&displayName=${displayName}&interactiveNonce=${interactiveNonce}&interactivePublicKey=${interactivePublicKey}&profileId=${profileId}&urlSlug=${urlSlug}&visitorId=${visitorId}`,
-        {
-          publicKey: interactivePublicKey,
-          secret: process.env.INTERACTIVE_SECRET,
-          profileId,
-          displayName,
-          incrementBy: 1,
-        },
-      );
-    } catch (error) {
-      errorHandler({
-        error,
-        functionName: "handleGetGameState",
-        message: "Error posting player stats to Leaderboard",
-      });
+    for (const [plantAssetId, plant] of Object.entries(visitorData.plants)) {
+      if (!plant.wasHarvested) {
+        const seedConfig = getSeedConfig(plant.seedId);
+        if (seedConfig) {
+          const currentGrowthLevel = calculateGrowthLevel(
+            plant.dateDropped,
+            seedConfig.growthTime,
+            seedConfig.harvestLevel,
+          );
+
+          if (currentGrowthLevel !== plant.growLevel) {
+            // Update growth level in memory
+            updatedPlants[plantAssetId] = {
+              ...plant,
+              growLevel: currentGrowthLevel,
+            };
+            hasUpdates = true;
+
+            try {
+              const droppedAsset = await DroppedAsset.create(plantAssetId, urlSlug, { credentials });
+              if (droppedAsset) {
+                await droppedAsset.updateWebImageLayers("", seedConfig.imageVariations[currentGrowthLevel]);
+              }
+            } catch (error) {
+              console.error("Failed to update dropped asset:", error);
+            }
+          }
+        }
+      }
     }
 
-    return res.json({ droppedAsset, isAdmin, success: true });
+    // Save updated plant data if there were changes
+    if (hasUpdates) {
+      const visitor = await Visitor.get(visitorId, urlSlug, { credentials });
+      visitorData = { ...visitorData, plants: updatedPlants };
+      await visitor.updateDataObject(
+        { [urlSlug]: visitorData },
+        {
+          analytics: [{ analyticName: "plant_growth_updated" }],
+        },
+      );
+    }
+
+    return res.json({
+      success: true,
+      plotData,
+      visitorData,
+    });
   } catch (error) {
     return errorHandler({
       error,
-      functionName: "getDroppedAssetDetails",
-      message: "Error getting dropped asset instance and data object",
+      functionName: "handleGetGameState",
+      message: "Error getting game state",
       req,
       res,
     });

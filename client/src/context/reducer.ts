@@ -1,4 +1,11 @@
-import { ActionType, InitialState, SET_ERROR, SET_GAME_STATE, SET_HAS_INTERACTIVE_PARAMS } from "./types";
+import {
+  ActionType,
+  InitialState,
+  SET_ERROR,
+  SET_GAME_STATE,
+  SET_HAS_INTERACTIVE_PARAMS,
+  SET_VISITOR_DATA,
+} from "./types";
 
 const globalReducer = (state: InitialState, action: ActionType) => {
   const { type, payload } = action;
@@ -11,8 +18,15 @@ const globalReducer = (state: InitialState, action: ActionType) => {
     case SET_GAME_STATE:
       return {
         ...state,
-        droppedAsset: payload.droppedAsset,
         isAdmin: payload.isAdmin,
+        plotData: payload.plotData,
+        visitorData: payload.visitorData,
+        error: "",
+      };
+    case SET_VISITOR_DATA:
+      return {
+        ...state,
+        visitorData: payload.visitorData,
         error: "",
       };
     case SET_ERROR:
