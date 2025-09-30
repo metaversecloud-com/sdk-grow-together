@@ -1,4 +1,4 @@
 export * from "./Credentials.js";
-export * from "./Interfaces.js";
-export * from "./VisitorDataTypes.js";
+export * from "./Types.js";
+export * from "./SharedTypes.js";
 export * from "../../shared/types/PlotData.js";

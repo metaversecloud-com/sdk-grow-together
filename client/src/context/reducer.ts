@@ -4,6 +4,7 @@ import {
   SET_ERROR,
   SET_GAME_STATE,
   SET_HAS_INTERACTIVE_PARAMS,
+  SET_PLANT_DATA,
   SET_VISITOR_DATA,
 } from "./types";
 
@@ -27,6 +28,12 @@ const globalReducer = (state: InitialState, action: ActionType) => {
       return {
         ...state,
         visitorData: payload.visitorData,
+        error: "",
+      };
+    case SET_PLANT_DATA:
+      return {
+        ...state,
+        plantData: payload.plantData,
         error: "",
       };
     case SET_ERROR:

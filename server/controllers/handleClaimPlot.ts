@@ -1,13 +1,6 @@
 import { Request, Response } from "express";
-import {
-  errorHandler,
-  getCredentials,
-  initializeVisitorData,
-  Visitor,
-  DroppedAsset,
-  getBaseUrl,
-} from "../utils/index.js";
-import { PlotAssetDataObject } from "../types/index.js";
+import { errorHandler, getCredentials, initializeVisitorData, Visitor, DroppedAsset, World } from "../utils/index.js";
+import { PlotAssetDataObjectType, WorldDataObjectType } from "../types/index.js";
 
 /**
  * Handle plot claiming - allows visitor to claim ownership of a plot
@@ -20,6 +13,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
 
     // Initialize visitor data and check if they already own a plot
     const visitorData = await initializeVisitorData(credentials);
+    if (visitorData instanceof Error) throw visitorData;
 
     if (visitorData.ownedPlot) {
       return res.status(400).json({
@@ -32,7 +26,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
     const plotAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
     await plotAsset.fetchDataObject();
 
-    let plotData = plotAsset.dataObject as PlotAssetDataObject;
+    let plotData = plotAsset.dataObject as PlotAssetDataObjectType;
 
     if (plotData?.ownerId && plotData.ownerId !== profileId) {
       return res.status(400).json({
@@ -90,10 +84,18 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
     // ]);
     await plotAsset.updateCustomTextAsset({}, `${displayName}'s Plot`);
 
+    const world = await World.create(urlSlug, { credentials });
+    const worldDataObject = (await world.fetchDataObject()) as WorldDataObjectType;
+    await world.updateDataObject({
+      claimedPlots: {
+        ...worldDataObject.claimedPlots,
+        [assetId]: profileId,
+      },
+    });
+
     return res.json({
       success: true,
-      plotAssetId: assetId,
-      claimedDate,
+      plotData,
       visitorData: updatedVisitorData,
     });
   } catch (error) {

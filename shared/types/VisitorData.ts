@@ -2,7 +2,9 @@
  * Shared types between client and server for visitor data
  */
 
-export interface VisitorData {
+import { PlantDataObjectType } from "./PlantData.js";
+
+export type VisitorDataType = {
   coinsAvailable: number; // Current spendable coins
   totalCoinsEarned: number; // Lifetime coins earned (for unlocks)
   ownedPlot: {
@@ -19,16 +21,10 @@ export interface VisitorData {
     };
   };
   plants: {
-    [droppedAssetId: string]: {
-      dateDropped: string;
-      seedId: number;
-      growLevel: number;
-      squareIndex: number; // Which square in the plot (0-15)
-      wasHarvested: boolean;
-    };
+    [droppedAssetId: string]: PlantDataObjectType;
   };
-}
+};
 
-export interface VisitorDataObject {
-  [urlSlug: string]: VisitorData;
-}
+export type VisitorDataObjectType = {
+  [urlSlug: string]: VisitorDataType;
+};

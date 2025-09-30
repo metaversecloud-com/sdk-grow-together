@@ -10,9 +10,9 @@ import {
 } from "../utils/index.js";
 
 /**
- * Handle plant harvesting - removes plant from world and awards coins
+ * Handle plant watering - grows plant by 1 level and updates dropped asset image in world
  */
-export const handleHarvestPlant = async (req: Request, res: Response) => {
+export const handleWaterPlant = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
     const { assetId, urlSlug, visitorId } = credentials;
@@ -30,14 +30,6 @@ export const handleHarvestPlant = async (req: Request, res: Response) => {
       });
     }
 
-    // Check if plant was already harvested
-    if (plant.wasHarvested) {
-      return res.status(400).json({
-        success: false,
-        error: "Plant already harvested",
-      });
-    }
-
     // Get seed configuration for harvest level and reward calculation
     const seedConfig = getSeedConfig(plant.seedId);
     if (!seedConfig) {
@@ -47,34 +39,16 @@ export const handleHarvestPlant = async (req: Request, res: Response) => {
       });
     }
 
-    // Check if plant is fully grown (at harvest level)
-    if (plant.growLevel < seedConfig.harvestLevel) {
-      return res.status(400).json({
-        success: false,
-        error: `Plant is not ready for harvest. Current growth level: ${plant.growLevel}/${seedConfig.harvestLevel}`,
-      });
-    }
-
     // Update visitor's data object
     const visitor = await Visitor.get(visitorId, urlSlug, { credentials });
     const updatedVisitorData = {
       ...visitorData,
-      coinsAvailable: visitorData.coinsAvailable + seedConfig.reward,
-      totalCoinsEarned: visitorData.totalCoinsEarned + seedConfig.reward,
-      ownedPlot: visitorData.ownedPlot
-        ? {
-            ...visitorData.ownedPlot,
-            plotSquares: {
-              ...visitorData.ownedPlot.plotSquares,
-              [plant.squareIndex]: null, // Free up the square
-            },
-          }
-        : null,
       plants: {
         ...visitorData.plants,
         [assetId]: {
           ...plant,
-          wasHarvested: true,
+          growLevel: plant.growLevel + 1,
+          lastWatered: new Date().toISOString(),
         },
       },
     };
@@ -84,7 +58,7 @@ export const handleHarvestPlant = async (req: Request, res: Response) => {
       {
         analytics: [
           {
-            analyticName: "plant_harvested",
+            analyticName: "plant_watered",
           },
         ],
       },
@@ -96,31 +70,28 @@ export const handleHarvestPlant = async (req: Request, res: Response) => {
     const world = World.create(urlSlug, { credentials });
     await world
       .triggerParticle({
-        name: "Sparkle",
+        name: "lightBlueSmoke_puff",
         duration: 2,
         position: plantAsset.position,
       })
       .catch((error) => {
-        console.error(`Failed to trigger harvest particle effect:`, error);
+        console.error(`Failed to trigger water particle effect:`, error);
       });
 
-    // Remove the plant asset from the world
-    await plantAsset.deleteDroppedAsset().catch((error) => {
-      console.error(`Failed to delete plant asset ${assetId}:`, error);
-      // Continue with harvest even if asset deletion fails (it might have been manually deleted)
+    // Update the plant asset image to reflect new growth level
+    await plantAsset.updateWebImageLayers("", seedConfig.imageVariations[plant.growLevel + 1]).catch((error) => {
+      console.error(`Failed to update plant asset ${assetId}:`, error);
     });
 
     return res.json({
       success: true,
-      coinsEarned: seedConfig.reward,
-      totalCoins: updatedVisitorData.coinsAvailable,
       visitorData: updatedVisitorData,
     });
   } catch (error) {
     return errorHandler({
       error,
-      functionName: "handleHarvestPlant",
-      message: "Error harvesting plant",
+      functionName: "handleWaterPlant",
+      message: "Error watering plant",
       req,
       res,
     });

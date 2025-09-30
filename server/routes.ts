@@ -5,6 +5,9 @@ import {
   handlePurchaseSeed,
   handlePlantSeed,
   handleHarvestPlant,
+  handleTeleportToPlot,
+  handleWaterPlant,
+  handleGetPlantInfo,
 } from "./controllers/index.js";
 import { getVersion } from "./utils/getVersion.js";
 
@@ -31,8 +34,11 @@ router.get("/system/health", (req, res) => {
 
 router.get("/game-state", handleGetGameState);
 router.post("/plot/claim", handleClaimPlot);
+router.post("/plot/teleport", handleTeleportToPlot);
 router.post("/seed/purchase", handlePurchaseSeed);
+router.get("/plant", handleGetPlantInfo);
 router.post("/plant/drop", handlePlantSeed);
+router.post("/plant/water", handleWaterPlant);
 router.post("/plant/harvest", handleHarvestPlant);
 
 export default router;

@@ -8,14 +8,13 @@ import { ErrorType } from "@/context/types";
 import { backendAPI, setErrorMessage } from "@/utils";
 
 // types
-import { VisitorData } from "@shared/types/VisitorData";
-import { SEED_CONFIGS } from "@shared/types/SeedConfig";
+import { seeds, VisitorDataType } from "@shared/index.js";
 
 interface PlotGridProps {
   plotSquares: { [key: number]: string | null };
-  plants: VisitorData["plants"];
+  plants: VisitorDataType["plants"];
   isReadOnly: boolean;
-  gameState?: VisitorData;
+  gameState?: VisitorDataType;
   onStateUpdate?: () => void;
 }
 
@@ -76,11 +75,11 @@ export const PlotGrid = ({ plotSquares, plants, isReadOnly, gameState, onStateUp
         <div className="card-details text-center">
           {plant && !plant.wasHarvested ? (
             <div>
-              <img className="m-auto" src={SEED_CONFIGS[plant.seedId].icon} />
+              <img className="m-auto" src={seeds[plant.seedId].icon} />
               <p className="p4 text-muted">
-                Lv {plant.growLevel}/{SEED_CONFIGS[plant.seedId]?.harvestLevel || 10}
+                Lv {plant.growLevel}/{seeds[plant.seedId]?.harvestLevel || 10}
               </p>
-              {plant.growLevel >= (SEED_CONFIGS[plant.seedId]?.harvestLevel || 10) && (
+              {plant.growLevel >= (seeds[plant.seedId]?.harvestLevel || 10) && (
                 <p className="p4 text-success">Ready!</p>
               )}
             </div>
@@ -109,7 +108,7 @@ export const PlotGrid = ({ plotSquares, plants, isReadOnly, gameState, onStateUp
             <p className="p3">Select a seed to plant:</p>
 
             <div className="grid gap-2">
-              {Object.values(SEED_CONFIGS).map((seed) => {
+              {Object.values(seeds).map((seed) => {
                 const isFree = seed.cost === 0;
                 const isPurchased = gameState?.seedsPurchased[seed.id] || false;
                 const isAvailable = isFree || isPurchased;

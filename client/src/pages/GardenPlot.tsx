@@ -2,9 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 // components
-import { PageContainer } from "@/components";
-import { PlotGrid } from "@/components/PlotGrid";
-import { SeedMenu } from "@/components/SeedMenu";
+import { PlotGrid, SeedMenu, PageContainer } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
@@ -55,6 +53,14 @@ export const GardenPlot = () => {
       .finally(() => setIsClaiming(false));
   };
 
+  const handleTeleportToPlot = async () => {
+    setIsLoading(true);
+    await backendAPI
+      .post("/plot/teleport")
+      .catch((error) => setErrorMessage(dispatch, error as ErrorType))
+      .finally(() => setIsLoading(false));
+  };
+
   // Show seed menu overlay
   if (visitorData && showSeedMenu && isOwnedByCurrentUser) {
     return <SeedMenu visitorData={visitorData} onClose={() => setShowSeedMenu(false)} />;
@@ -68,13 +74,6 @@ export const GardenPlot = () => {
           <div className="grid gap-2">
             <h3>Plot Owned by {ownerName}</h3>
             <p>This plot belongs to another player. You can view their garden but cannot make changes.</p>
-
-            {/* {ownedPlot && (
-              <div className="flex-col">
-                <p className="p3 text-muted">Claimed on: {new Date(ownedPlot.claimedDate).toLocaleDateString()}</p>
-                <PlotGrid plotSquares={ownedPlot.plotSquares} plants={plants || {}} isReadOnly={true} />
-              </div>
-            )} */}
           </div>
         )}
 
@@ -83,7 +82,7 @@ export const GardenPlot = () => {
           <div className="grid gap-2">
             <h3>Claim This Plot</h3>
             <p>This plot is available! Claim it to start your garden.</p>
-            <p className="p3 text-muted">Note: You can only claim one plot per account.</p>
+            <p className="p3 text-muted">Note: You can only claim one plot per world.</p>
 
             <button className="btn" onClick={handleClaimPlot} disabled={isClaiming}>
               {isClaiming ? "Claiming..." : "Claim This Plot"}
@@ -117,12 +116,18 @@ export const GardenPlot = () => {
               onStateUpdate={loadGameState}
             />
 
-            <div className="flex items-center justify-center">
-              <button className="btn btn-outline" onClick={() => setShowSeedMenu(true)}>
-                🌱 Open Seed Menu
-              </button>
-            </div>
+            <button className="btn btn-outline" onClick={() => setShowSeedMenu(true)}>
+              🌱 Open Seed Menu
+            </button>
           </div>
+        )}
+
+        {/* Current user already owns a different plot */}
+        {ownedPlot && !isOwnedByCurrentUser && (
+          <button className="btn btn-outline mt-4" onClick={() => handleTeleportToPlot()}>
+            <img alt="Teleport" className="mr-1" src="https://sdk-style.s3.amazonaws.com/icons/walk.svg" />
+            Teleport to my plot
+          </button>
         )}
       </div>
     </PageContainer>

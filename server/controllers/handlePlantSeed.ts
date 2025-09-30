@@ -48,6 +48,7 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
 
     // Initialize visitor data
     const visitorData = await initializeVisitorData(credentials);
+    if (visitorData instanceof Error) throw visitorData;
 
     // Check if visitor owns a plot
     if (!visitorData.ownedPlot) {
@@ -96,12 +97,26 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
       isOpenLinkInDrawer: true,
       layer1: plantImageUrl,
       position: plantPosition,
-      uniqueName: `${visitorData.ownedPlot.plotAssetId}-plant-${squareIndex}-${Date.now()}`,
+      uniqueName: `BountyBuilders_plant_${profileId}`,
       urlSlug,
     });
 
     const plantAssetId = newPlantAsset.id;
-    const dateDropped = new Date().toISOString();
+    const now = new Date().toISOString();
+    const plantData = {
+      dateDropped: now,
+      lastWatered: now,
+      seedId,
+      growLevel: 0,
+      squareIndex,
+      wasHarvested: false,
+    };
+
+    await newPlantAsset.setDataObject({
+      ...plantData,
+      ownerId: profileId,
+      ownerName: displayName,
+    });
 
     // Trigger planting particle effect
     try {
@@ -127,13 +142,7 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
       },
       plants: {
         ...visitorData.plants,
-        [plantAssetId!]: {
-          dateDropped,
-          seedId,
-          growLevel: 0,
-          squareIndex,
-          wasHarvested: false,
-        },
+        [plantAssetId!]: plantData,
       },
     };
 

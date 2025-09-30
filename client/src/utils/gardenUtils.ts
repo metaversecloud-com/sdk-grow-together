@@ -1,4 +1,4 @@
-import { SEED_CONFIGS } from "@shared/types/SeedConfig";
+import { seeds } from "@shared/index.js";
 
 export interface SeedConfig {
   id: number;
@@ -10,7 +10,7 @@ export interface SeedConfig {
 }
 
 export const getSeedConfig = (seedId: number): SeedConfig | null => {
-  return SEED_CONFIGS[seedId] || null;
+  return seeds[seedId] || null;
 };
 
 export const calculateGrowthLevel = (dateDropped: string, growthTime: number): number => {

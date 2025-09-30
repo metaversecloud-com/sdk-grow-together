@@ -7,25 +7,20 @@ import { ErrorType, SET_VISITOR_DATA } from "@/context/types";
 // utils
 import { backendAPI, setErrorMessage } from "@/utils";
 
-import { SEED_CONFIGS } from "@shared/types/SeedConfig";
+// types
+import { seeds, PlantDataObjectType } from "@shared/index.js";
 
 interface PlantDetailsProps {
-  plant: {
-    dateDropped: string;
-    seedId: number;
-    growLevel: number;
-    squareIndex: number;
-    wasHarvested: boolean;
-  };
-  plantAssetId?: string;
+  plant: PlantDataObjectType;
   isReadOnly: boolean;
 }
 
-export const PlantDetails = ({ plant, plantAssetId, isReadOnly }: PlantDetailsProps) => {
+export const PlantDetails = ({ plant, isReadOnly }: PlantDetailsProps) => {
   const dispatch = useContext(GlobalDispatchContext);
+  const [isWatering, setIsWatering] = useState(false);
   const [isHarvesting, setIsHarvesting] = useState(false);
 
-  const seedConfig = SEED_CONFIGS[plant.seedId];
+  const seedConfig = seeds[plant.seedId];
   if (!seedConfig) {
     return (
       <div className="card danger">
@@ -36,34 +31,56 @@ export const PlantDetails = ({ plant, plantAssetId, isReadOnly }: PlantDetailsPr
     );
   }
 
-  const handleHarvest = async () => {
-    if (!plantAssetId) return;
+  const handleWater = async () => {
+    setIsWatering(true);
+    await backendAPI
+      .post("/plant/water")
+      .then((response) => {
+        const { success, visitorData } = response.data;
 
-    try {
-      setIsHarvesting(true);
-      const response = await backendAPI.post("/plant/harvest", {
-        droppedAssetId: plantAssetId,
+        if (success) {
+          dispatch!({
+            type: SET_VISITOR_DATA,
+            payload: { visitorData, error: "" },
+          });
+          console.log(`Watered! Your plant just grew by 1 level.`);
+        }
+      })
+      .catch((error) => {
+        setErrorMessage(dispatch, error as ErrorType);
+      })
+      .finally(() => {
+        setIsWatering(false);
       });
+  };
 
-      // Show success message
-      if (response.data.success) {
-        dispatch!({
-          type: SET_VISITOR_DATA,
-          payload: { visitorData: response.data.visitorData, error: "" },
-        });
-        console.log(`Harvested! Earned ${response.data.coinsEarned} coins`);
-      }
-    } catch (error) {
-      setErrorMessage(dispatch, error as ErrorType);
-    } finally {
-      setIsHarvesting(false);
-    }
+  const handleHarvest = async () => {
+    setIsHarvesting(true);
+    await backendAPI
+      .post("/plant/harvest")
+      .then((response) => {
+        const { success, visitorData, coinsEarned } = response.data;
+
+        if (success) {
+          dispatch!({
+            type: SET_VISITOR_DATA,
+            payload: { visitorData, error: "" },
+          });
+          console.log(`Harvested! Earned ${coinsEarned} coins`);
+        }
+      })
+      .catch((error) => {
+        setErrorMessage(dispatch, error as ErrorType);
+      })
+      .finally(() => {
+        setIsHarvesting(false);
+      });
   };
 
   const calculateTimeRemaining = () => {
-    const plantedTime = new Date(plant.dateDropped).getTime();
+    const lastWateredTime = new Date(plant.lastWatered).getTime();
     const currentTime = new Date().getTime();
-    const elapsedSeconds = (currentTime - plantedTime) / 1000;
+    const elapsedSeconds = (currentTime - lastWateredTime) / 1000;
     const totalGrowthTime = seedConfig.growthTime;
     const timePerLevel = totalGrowthTime / seedConfig.harvestLevel;
     const timeForNextLevel = (plant.growLevel + 1) * timePerLevel;
@@ -95,48 +112,55 @@ export const PlantDetails = ({ plant, plantAssetId, isReadOnly }: PlantDetailsPr
   return (
     <div className="grid gap-4">
       <img className="m-auto" src={seedConfig.icon} style={{ width: "40px" }} />
-      <div className="flex-col text-center">
+      <div className="text-center">
         <h3 className="card-title">{seedConfig.name}</h3>
         <p className={`p2 ${getGrowthColor()}`}>{getGrowthStatus()}</p>
       </div>
 
-      <div className="flex-col grid gap-4">
-        <div className="card small">
-          <div className="card-details">
-            <h4 className="h4">Growth Progress</h4>
-            <div className="flex">
-              <div className="flex-col" style={{ marginRight: "1rem" }}>
-                <p className="p3">
-                  Level: {plant.growLevel}/{seedConfig.harvestLevel}
-                </p>
-                <p className="p3">Planted: {new Date(plant.dateDropped).toLocaleString()}</p>
-              </div>
-              <div className="flex-col">
-                {timeRemaining && <p className="p3">Next level: {timeRemaining}</p>}
-                <p className="p3">Plot Square: {plant.squareIndex + 1}/16</p>
-              </div>
+      <div className="card small">
+        <div className="card-details" style={{ maxWidth: "100%" }}>
+          <h4 className="h4">Growth Progress</h4>
+          <div className="grid grid-cols-2">
+            <div>
+              <p className="p3">
+                Level: {plant.growLevel}/{seedConfig.harvestLevel}
+              </p>
+              <p className="p3">Plot Square: {plant.squareIndex + 1}/16</p>
             </div>
-          </div>
-        </div>
-
-        <div className="card small">
-          <div className="card-details">
-            <h4 className="h4">Seed Info</h4>
-            <div className="flex">
-              <div className="flex-col" style={{ marginRight: "1rem" }}>
-                <p className="p3">Cost: {seedConfig.cost === 0 ? "Free" : `${seedConfig.cost} coins`}</p>
-                <p className="p3">Growth Time: {Math.floor(seedConfig.growthTime / 60)}m</p>
-              </div>
-              <div className="flex-col">
-                <p className="p3">Reward: {seedConfig.reward} coins</p>
-                <p className="p3">Profit: +{seedConfig.reward - seedConfig.cost} coins</p>
-              </div>
+            <div className="text-right">
+              {timeRemaining && <p className="p3">Next level: {timeRemaining}</p>}
+              <p className="p3">Planted: {new Date(plant.dateDropped).toLocaleString()}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Harvest button for current user */}
+      <div className="card small">
+        <div className="card-details" style={{ maxWidth: "100%" }}>
+          <h4 className="h4">Seed Info</h4>
+          <div className="grid grid-cols-2">
+            <div>
+              <p className="p3">Cost: {seedConfig.cost === 0 ? "Free" : `${seedConfig.cost} coins`}</p>
+              <p className="p3">Growth Time: {Math.floor(seedConfig.growthTime / 60)}m</p>
+            </div>
+            <div className="text-right">
+              <p className="p3">Reward: {seedConfig.reward} coins</p>
+              <p className="p3">Profit: +{seedConfig.reward - seedConfig.cost} coins</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Water */}
+      {!isReadOnly && !timeRemaining && !plant.wasHarvested && plant.growLevel < seedConfig.harvestLevel && (
+        <div className="actions">
+          <button className="btn" onClick={handleWater} disabled={isWatering}>
+            {isWatering ? "Watering..." : `Water (+1 growth level)`}
+          </button>
+        </div>
+      )}
+
+      {/* Harvest */}
       {!isReadOnly && !plant.wasHarvested && plant.growLevel >= seedConfig.harvestLevel && (
         <div className="actions">
           <button className="btn" onClick={handleHarvest} disabled={isHarvesting}>

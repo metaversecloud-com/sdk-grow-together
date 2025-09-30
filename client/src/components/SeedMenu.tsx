@@ -8,11 +8,10 @@ import { ErrorType, SET_VISITOR_DATA } from "@/context/types";
 import { backendAPI, setErrorMessage } from "@/utils";
 
 // types
-import { VisitorData } from "@shared/types/VisitorData";
-import { SEED_CONFIGS } from "@shared/types/SeedConfig";
+import { seeds, VisitorDataType } from "@shared/index.js";
 
 interface SeedMenuProps {
-  visitorData: VisitorData;
+  visitorData: VisitorDataType;
   onClose: () => void;
 }
 
@@ -63,7 +62,7 @@ export const SeedMenu = ({ visitorData, onClose }: SeedMenuProps) => {
         </div>
 
         <div className="grid gap-2">
-          {Object.values(SEED_CONFIGS).map((seed) => {
+          {Object.values(seeds).map((seed) => {
             const purchased = isPurchased(seed.id);
             const affordable = canAfford(seed.cost);
             const free = isFree(seed.cost);

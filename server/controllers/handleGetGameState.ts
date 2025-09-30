@@ -1,14 +1,6 @@
 import { Request, Response } from "express";
-import {
-  errorHandler,
-  getCredentials,
-  initializeVisitorData,
-  calculateGrowthLevel,
-  getSeedConfig,
-  Visitor,
-  DroppedAsset,
-} from "../utils/index.js";
-import { PlotAssetDataObject } from "../types/index.js";
+import { errorHandler, getCredentials, initializeVisitorData, DroppedAsset, getPlotAssets } from "../utils/index.js";
+import { PlotAssetDataObjectType } from "../types/index.js";
 
 /**
  * Get the current game state for a visitor including their plot, plants, and coin balance
@@ -16,14 +8,19 @@ import { PlotAssetDataObject } from "../types/index.js";
 export const handleGetGameState = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { assetId, urlSlug, visitorId } = credentials;
+    const { assetId, urlSlug } = credentials;
+
+    const getPlotAssetsResult = await getPlotAssets(credentials);
+    if (getPlotAssetsResult instanceof Error) throw getPlotAssetsResult;
 
     const plotAsset = await DroppedAsset.create(assetId, urlSlug, { credentials });
-    const plotData = (await plotAsset.fetchDataObject()) as PlotAssetDataObject;
+    const plotData = (await plotAsset.fetchDataObject()) as PlotAssetDataObjectType;
 
     // Initialize visitor data with defaults if needed
     let visitorData = await initializeVisitorData(credentials);
+    if (visitorData instanceof Error) throw visitorData;
 
+    /* Commenting out for now but may be used for wilting and losing plants in future
     // Update plant growth levels for all plants
     const updatedPlants = { ...visitorData.plants };
     let hasUpdates = false;
@@ -70,6 +67,7 @@ export const handleGetGameState = async (req: Request, res: Response) => {
         },
       );
     }
+      */
 
     return res.json({
       success: true,

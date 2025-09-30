@@ -7,15 +7,14 @@ import { PlantDetails } from "@/components/PlantDetails";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
-import { ErrorType } from "@/context/types";
+import { ErrorType, SET_PLANT_DATA } from "@/context/types";
 
 // utils
-import { backendAPI, setErrorMessage, setGameState } from "@/utils";
+import { backendAPI, setErrorMessage } from "@/utils";
 
 export const GardenPlant = () => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { hasInteractiveParams, visitorData } = useContext(GlobalStateContext);
-  const { plants } = visitorData || {};
+  const { hasInteractiveParams, plantData } = useContext(GlobalStateContext);
 
   const [searchParams] = useSearchParams();
 
@@ -24,42 +23,46 @@ export const GardenPlant = () => {
   const ownerProfileId = searchParams.get("ownerProfileId");
   const ownerName = searchParams.get("ownerName");
   const profileId = searchParams.get("profileId");
-  const assetId = searchParams.get("assetId");
 
   const isOwnedByCurrentUser = ownerProfileId === profileId;
 
   useEffect(() => {
     if (hasInteractiveParams) {
       backendAPI
-        .get("/game-state")
+        .get("/plant")
         .then((response) => {
-          setGameState(dispatch, response.data);
+          const { success, plantData } = response.data;
+          if (success) {
+            dispatch!({
+              type: SET_PLANT_DATA,
+              payload: { plantData, error: "" },
+            });
+            console.log(`Watered! Your plant just grew by 1 level.`);
+          }
         })
         .catch((error) => setErrorMessage(dispatch, error as ErrorType))
         .finally(() => setIsLoading(false));
     }
   }, [hasInteractiveParams]);
 
-  // Find the specific plant data
-  const plant = assetId && plants ? plants[assetId] : null;
-
   return (
     <PageContainer isLoading={isLoading} headerText="Garden Plant">
       <div className="container">
-        {/* Plant owned by another user */}
-        {!isOwnedByCurrentUser && (
-          <div className="card">
-            <div className="card-details">
-              <h2 className="h2">Plant Details</h2>
-              <p className="p2">This plant belongs to {ownerName || "another player"}</p>
-              {/* <PlantDetails plant={plant} isReadOnly={true} /> */}
-            </div>
-          </div>
-        )}
+        {plantData ? (
+          <>
+            {/* Plant owned by another user */}
+            {!isOwnedByCurrentUser && (
+              <div className="grid gap-4">
+                <p className="pb-2 text-center">This plant belongs to {ownerName || "another player"}</p>
+                <PlantDetails plant={plantData} isReadOnly={true} />
+              </div>
+            )}
 
-        {/* Current user's plant */}
-        {isOwnedByCurrentUser && plant && (
-          <PlantDetails plant={plant} plantAssetId={assetId || ""} isReadOnly={false} />
+            {/* Current user's plant */}
+            {isOwnedByCurrentUser && <PlantDetails plant={plantData} isReadOnly={false} />}
+          </>
+        ) : (
+          <p className="p2">No plant data found.</p>
         )}
       </div>
     </PageContainer>

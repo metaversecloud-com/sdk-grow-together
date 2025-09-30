@@ -1,19 +1,19 @@
 import { Visitor } from "../index.js";
 import { Credentials } from "../../types/Credentials.js";
-import { VisitorData, VisitorDataObject } from "../../types/VisitorDataTypes.js";
+import { VisitorDataType, VisitorDataObjectType } from "../../types/index.js";
 import { DEFAULT_VISITOR_DATA } from "../../constants/gameConstants.js";
 
 /**
  * Initialize visitor data object with default values if it doesn't exist or is missing properties
  */
-export const initializeVisitorData = async (credentials: Credentials): Promise<VisitorData> => {
+export const initializeVisitorData = async (credentials: Credentials): Promise<VisitorDataType | Error> => {
   const { urlSlug, visitorId } = credentials;
 
   try {
     const visitor = await Visitor.get(visitorId, urlSlug, { credentials });
     await visitor.fetchDataObject();
 
-    let visitorData = (visitor.dataObject as VisitorDataObject)?.[urlSlug];
+    let visitorData = (visitor.dataObject as VisitorDataObjectType)?.[urlSlug];
 
     // Check if visitor data needs initialization
     const needsInitialization =

@@ -28,6 +28,7 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
 
     // Initialize visitor data
     const visitorData = await initializeVisitorData(credentials);
+    if (visitorData instanceof Error) throw visitorData;
 
     // Check if seed is already purchased (for paid seeds)
     if (seedConfig.cost > 0 && visitorData.seedsPurchased[seedId]) {
