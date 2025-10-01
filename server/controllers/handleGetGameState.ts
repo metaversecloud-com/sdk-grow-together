@@ -14,7 +14,7 @@ export const handleGetGameState = async (req: Request, res: Response) => {
     if (getPlotAssetsResult instanceof Error) throw getPlotAssetsResult;
 
     const plotAsset = await DroppedAsset.create(assetId, urlSlug, { credentials });
-    const plotData = (await plotAsset.fetchDataObject()) as PlotAssetDataObjectType;
+    const plotAssetData = (await plotAsset.fetchDataObject()) as PlotAssetDataObjectType;
 
     // Initialize visitor data with defaults if needed
     let visitorData = await initializeVisitorData(credentials);
@@ -63,7 +63,7 @@ export const handleGetGameState = async (req: Request, res: Response) => {
       await visitor.updateDataObject(
         { [urlSlug]: visitorData },
         {
-          analytics: [{ analyticName: "plant_growth_updated" }],
+          analytics: [{ analyticName: "plantGrowthUpdated" }],
         },
       );
     }
@@ -71,8 +71,9 @@ export const handleGetGameState = async (req: Request, res: Response) => {
 
     return res.json({
       success: true,
-      plotData,
+      plotAssetData,
       visitorData,
+      visitorPlotData: visitorData.worlds[urlSlug],
     });
   } catch (error) {
     return errorHandler({

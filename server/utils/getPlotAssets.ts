@@ -14,7 +14,7 @@ export const getPlotAssets = async (credentials: Credentials): Promise<WorldData
 
     if (!worldDataObject?.claimedPlots || Object.keys(worldDataObject?.claimedPlots).length === 0) {
       const plotAssets: DroppedAssetInterface[] = await world.fetchDroppedAssetsWithUniqueName({
-        uniqueName: "BountyBuilders_plot",
+        uniqueName: "BountyBuilder_plot",
       });
 
       if (plotAssets.length === 0) throw "No plot assets found.";
@@ -36,6 +36,7 @@ export const getPlotAssets = async (credentials: Credentials): Promise<WorldData
 
     return { claimedPlots };
   } catch (error: any) {
+    console.log("🚀 ~ getPlotAssets.ts:39 ~ error:", error);
     return new Error(error);
   }
 };

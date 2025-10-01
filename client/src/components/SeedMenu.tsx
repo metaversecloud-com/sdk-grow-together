@@ -8,10 +8,10 @@ import { ErrorType, SET_VISITOR_DATA } from "@/context/types";
 import { backendAPI, setErrorMessage } from "@/utils";
 
 // types
-import { seeds, VisitorDataType } from "@shared/index.js";
+import { seeds, VisitorDataObjectType } from "@shared/index.js";
 
 interface SeedMenuProps {
-  visitorData: VisitorDataType;
+  visitorData: VisitorDataObjectType;
   onClose: () => void;
 }
 

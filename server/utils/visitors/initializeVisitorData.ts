@@ -1,47 +1,41 @@
 import { Visitor } from "../index.js";
 import { Credentials } from "../../types/Credentials.js";
-import { VisitorDataType, VisitorDataObjectType } from "../../types/index.js";
-import { DEFAULT_VISITOR_DATA } from "../../constants/gameConstants.js";
+import { VisitorDataObjectType } from "../../types/index.js";
+import { DEFAULT_VISITOR_DATA, DEFAULT_VISITOR_WORLD_DATA } from "../../constants.js";
 
 /**
  * Initialize visitor data object with default values if it doesn't exist or is missing properties
  */
-export const initializeVisitorData = async (credentials: Credentials): Promise<VisitorDataType | Error> => {
+export const initializeVisitorData = async (credentials: Credentials): Promise<VisitorDataObjectType | Error> => {
   const { urlSlug, visitorId } = credentials;
 
   try {
     const visitor = await Visitor.get(visitorId, urlSlug, { credentials });
-    await visitor.fetchDataObject();
+    let visitorData = (await visitor.fetchDataObject()) as VisitorDataObjectType;
 
-    let visitorData = (visitor.dataObject as VisitorDataObjectType)?.[urlSlug];
+    if (visitorData?.worlds?.[urlSlug]) return visitorData;
 
-    // Check if visitor data needs initialization
-    const needsInitialization =
-      !visitorData ||
-      typeof visitorData.coinsAvailable === "undefined" ||
-      typeof visitorData.totalCoinsEarned === "undefined" ||
-      typeof visitorData.ownedPlot === "undefined" ||
-      !visitorData.seedsPurchased ||
-      !visitorData.plants;
+    const lockId = `visitor_data_init_${Math.floor(Date.now() / 60000) * 60000}`;
 
-    if (needsInitialization) {
-      // Merge existing data with defaults
-      visitorData = {
-        ...DEFAULT_VISITOR_DATA,
-        ...visitorData,
-        seedsPurchased: visitorData?.seedsPurchased || {},
-        plants: visitorData?.plants || {},
-      };
-
+    if (!visitorData || typeof visitorData.totalCoinsEarned === "undefined") {
       // Set the initialized data object
       await visitor.setDataObject(
-        { [urlSlug]: visitorData },
+        { ...DEFAULT_VISITOR_DATA, worlds: { [urlSlug]: DEFAULT_VISITOR_WORLD_DATA } },
         {
-          analytics: [{ analyticName: "visitor_initialized" }],
+          lock: { lockId, releaseLock: true },
+        },
+      );
+    } else if (!visitorData.worlds[urlSlug]) {
+      // Update the initialized data object
+      await visitor.updateDataObject(
+        { [`worlds.${urlSlug}`]: DEFAULT_VISITOR_WORLD_DATA },
+        {
+          lock: { lockId, releaseLock: true },
         },
       );
     }
 
+    visitorData = (await visitor.fetchDataObject()) as VisitorDataObjectType;
     return visitorData;
   } catch (error: any) {
     throw new Error(`Failed to initialize visitor data: ${error.message}`);

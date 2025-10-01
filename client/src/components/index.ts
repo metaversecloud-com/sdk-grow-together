@@ -5,6 +5,8 @@ export * from "./ConfirmationModal.js";
 export * from "./Loading.js";
 export * from "./PageContainer.js";
 export * from "./PageFooter.js";
+export * from "./PlaceDecoration.js";
+export * from "./PlantSeed.js";
 export * from "./PlotGrid.js";
 export * from "./SeedMenu.js";
 export * from "./PlantDetails.js";

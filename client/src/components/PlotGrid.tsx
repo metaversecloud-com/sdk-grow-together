@@ -1,53 +1,25 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 
-// context
-import { GlobalDispatchContext } from "@/context/GlobalContext";
-import { ErrorType } from "@/context/types";
-
-// utils
-import { backendAPI, setErrorMessage } from "@/utils";
+// components
+import { PlaceDecoration, PlantSeed } from "@/components";
 
 // types
-import { seeds, VisitorDataType } from "@shared/index.js";
+import { plotConfig, seeds, VisitorDataObjectType, VisitorWorldDataType } from "@shared/index.js";
 
 interface PlotGridProps {
   plotSquares: { [key: number]: string | null };
-  plants: VisitorDataType["plants"];
+  plants: VisitorWorldDataType["plants"];
   isReadOnly: boolean;
-  gameState?: VisitorDataType;
-  onStateUpdate?: () => void;
+  visitorData?: VisitorDataObjectType;
 }
 
-export const PlotGrid = ({ plotSquares, plants, isReadOnly, gameState, onStateUpdate }: PlotGridProps) => {
-  const dispatch = useContext(GlobalDispatchContext);
+export const PlotGrid = ({ plotSquares, plants, isReadOnly, visitorData }: PlotGridProps) => {
   const [selectedSquare, setSelectedSquare] = useState<number | null>(null);
-  const [selectedSeedId, setSelectedSeedId] = useState<number | null>(null);
-  const [isPlanting, setIsPlanting] = useState(false);
+  const [isUpdatingPlot, setIsUpdatingPlot] = useState(false);
 
   const handleSquareClick = (squareIndex: number) => {
     if (isReadOnly || plotSquares[squareIndex]) return;
-
     setSelectedSquare(selectedSquare === squareIndex ? null : squareIndex);
-  };
-
-  const handlePlantSeed = async () => {
-    if (!selectedSeedId || selectedSquare === null) return;
-
-    try {
-      setIsPlanting(true);
-      await backendAPI.post("/plant/drop", {
-        seedId: selectedSeedId,
-        squareIndex: selectedSquare,
-      });
-
-      setSelectedSquare(null);
-      setSelectedSeedId(null);
-      onStateUpdate?.();
-    } catch (error) {
-      setErrorMessage(dispatch, error as ErrorType);
-    } finally {
-      setIsPlanting(false);
-    }
   };
 
   const renderSquare = (squareIndex: number) => {
@@ -57,13 +29,30 @@ export const PlotGrid = ({ plotSquares, plants, isReadOnly, gameState, onStateUp
     const isSelected = selectedSquare === squareIndex;
 
     let squareClass = "card small flex items-center justify-center";
-    if (isEmpty && !isReadOnly && !isPlanting) {
+    if (isEmpty && !isReadOnly && !isUpdatingPlot) {
       squareClass += " cursor-pointer";
       if (isSelected) squareClass += " success";
     }
     if (plant?.wasHarvested) {
       squareClass += " opacity-50";
     }
+
+    const isReserved = plotConfig.reservedSquares?.includes(squareIndex);
+    const emptySquareContent = isReadOnly ? (
+      "Empty"
+    ) : isReserved ? (
+      <img
+        className="m-auto"
+        src="https://sdk-style.s3.amazonaws.com/icons/star.svg"
+        style={{ width: "12px", opacity: 0.7 }}
+      />
+    ) : (
+      <img
+        className="m-auto"
+        src="https://sdk-style.s3.amazonaws.com/icons/add.svg"
+        style={{ width: "8px", opacity: 0.5 }}
+      />
+    );
 
     return (
       <div
@@ -86,7 +75,7 @@ export const PlotGrid = ({ plotSquares, plants, isReadOnly, gameState, onStateUp
           ) : plant && plant.wasHarvested ? (
             <p className="p4 text-muted">Harvested</p>
           ) : (
-            <p className="p3 text-muted">{isReadOnly ? "Empty" : "+"}</p>
+            <div>{emptySquareContent}</div>
           )}
         </div>
       </div>
@@ -98,55 +87,26 @@ export const PlotGrid = ({ plotSquares, plants, isReadOnly, gameState, onStateUp
       <h3 className="h3 text-center py-4">Garden Plot (4x4)</h3>
 
       <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
-        {Array.from({ length: 16 }, (_, i) => renderSquare(i))}
+        {Array.from({ length: plotConfig.gridCols * plotConfig.gridRows }, (_, i) => renderSquare(i))}
       </div>
 
-      {!isReadOnly && selectedSquare !== null && (
-        <div className="card mt-4">
-          <div className="card-details grid gap-4">
-            <h4>Plant Seed in Square {selectedSquare}</h4>
-            <p className="p3">Select a seed to plant:</p>
-
-            <div className="grid gap-2">
-              {Object.values(seeds).map((seed) => {
-                const isFree = seed.cost === 0;
-                const isPurchased = gameState?.seedsPurchased[seed.id] || false;
-                const isAvailable = isFree || isPurchased;
-
-                return (
-                  <button
-                    key={seed.id}
-                    className={`btn btn-outline ${selectedSeedId === seed.id ? "btn-success-outline" : ""} ${
-                      !isAvailable ? "opacity-50" : ""
-                    }`}
-                    disabled={!isAvailable || isPlanting}
-                    onClick={() => isAvailable && setSelectedSeedId(seed.id)}
-                  >
-                    <img className="mr-2" src={seed.icon} />
-                    {seed.name}
-                    {!isAvailable && " (Not purchased)"}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="flex">
-              <button className="btn" onClick={handlePlantSeed} disabled={!selectedSeedId || isPlanting}>
-                {isPlanting ? "Planting..." : "Plant Seed"}
-              </button>
-              <button
-                className="btn btn-text"
-                onClick={() => {
-                  setSelectedSquare(null);
-                  setSelectedSeedId(null);
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {!isReadOnly &&
+        selectedSquare !== null &&
+        (plotConfig.reservedSquares?.includes(selectedSquare) ? (
+          <PlaceDecoration
+            selectedSquare={selectedSquare}
+            setSelectedSquare={setSelectedSquare}
+            setIsUpdatingPlot={setIsUpdatingPlot}
+            decorationsOwned={visitorData?.decorationsOwned || {}}
+          />
+        ) : (
+          <PlantSeed
+            selectedSquare={selectedSquare}
+            setSelectedSquare={setSelectedSquare}
+            setIsUpdatingPlot={setIsUpdatingPlot}
+            seedsPurchased={visitorData?.seedsPurchased || {}}
+          />
+        ))}
     </div>
   );
 };

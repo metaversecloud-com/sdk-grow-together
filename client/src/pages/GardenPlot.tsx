@@ -13,9 +13,10 @@ import { backendAPI, setErrorMessage, setGameState } from "@/utils";
 
 export const GardenPlot = () => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { hasInteractiveParams, plotData, visitorData } = useContext(GlobalStateContext);
-  const { ownerId, ownerName } = plotData || {};
-  const { ownedPlot, plants, coinsAvailable, totalCoinsEarned } = visitorData || {};
+  const { hasInteractiveParams, plotAssetData, visitorData, visitorPlotData } = useContext(GlobalStateContext);
+  const { ownerId, ownerName } = plotAssetData || {};
+  const { coinsAvailable, totalCoinsEarned } = visitorData || {};
+  const { ownedPlot, plants } = visitorPlotData || {};
 
   const [searchParams] = useSearchParams();
 
@@ -29,18 +30,16 @@ export const GardenPlot = () => {
   const isOwnedByOtherUser = ownerId && ownerId !== profileId;
 
   useEffect(() => {
-    if (hasInteractiveParams) loadGameState();
+    if (hasInteractiveParams) {
+      backendAPI
+        .get("/game-state")
+        .then((response) => {
+          setGameState(dispatch, response.data);
+        })
+        .catch((error) => setErrorMessage(dispatch, error as ErrorType))
+        .finally(() => setIsLoading(false));
+    }
   }, [hasInteractiveParams]);
-
-  const loadGameState = async () => {
-    backendAPI
-      .get("/game-state")
-      .then((response) => {
-        setGameState(dispatch, response.data);
-      })
-      .catch((error) => setErrorMessage(dispatch, error as ErrorType))
-      .finally(() => setIsLoading(false));
-  };
 
   const handleClaimPlot = async () => {
     setIsClaiming(true);
@@ -112,8 +111,7 @@ export const GardenPlot = () => {
               plotSquares={ownedPlot.plotSquares}
               plants={plants || {}}
               isReadOnly={false}
-              gameState={visitorData}
-              onStateUpdate={loadGameState}
+              visitorData={visitorData}
             />
 
             <button className="btn btn-outline" onClick={() => setShowSeedMenu(true)}>

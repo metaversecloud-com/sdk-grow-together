@@ -6,6 +6,7 @@ import {
   SET_HAS_INTERACTIVE_PARAMS,
   SET_PLANT_DATA,
   SET_VISITOR_DATA,
+  SET_VISITOR_PLOT_DATA,
 } from "./types";
 
 const globalReducer = (state: InitialState, action: ActionType) => {
@@ -20,14 +21,21 @@ const globalReducer = (state: InitialState, action: ActionType) => {
       return {
         ...state,
         isAdmin: payload.isAdmin,
-        plotData: payload.plotData,
+        plotAssetData: payload.plotAssetData,
         visitorData: payload.visitorData,
+        visitorPlotData: payload.visitorPlotData,
         error: "",
       };
     case SET_VISITOR_DATA:
       return {
         ...state,
         visitorData: payload.visitorData,
+        error: "",
+      };
+    case SET_VISITOR_PLOT_DATA:
+      return {
+        ...state,
+        visitorPlotData: payload.visitorPlotData,
         error: "",
       };
     case SET_PLANT_DATA:

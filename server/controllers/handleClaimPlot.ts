@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { errorHandler, getCredentials, initializeVisitorData, Visitor, DroppedAsset, World } from "../utils/index.js";
 import { PlotAssetDataObjectType, WorldDataObjectType } from "../types/index.js";
+import { calculateNumberOfSquares, decorations } from "../../shared/index.js";
 
 /**
  * Handle plot claiming - allows visitor to claim ownership of a plot
@@ -15,7 +16,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
     const visitorData = await initializeVisitorData(credentials);
     if (visitorData instanceof Error) throw visitorData;
 
-    if (visitorData.ownedPlot) {
+    if (visitorData.worlds[urlSlug].ownedPlot) {
       return res.status(400).json({
         success: false,
         error: "You already own a plot. Each player can only claim one plot.",
@@ -26,49 +27,51 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
     const plotAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
     await plotAsset.fetchDataObject();
 
-    let plotData = plotAsset.dataObject as PlotAssetDataObjectType;
+    let plotAssetData = plotAsset.dataObject as PlotAssetDataObjectType;
 
-    if (plotData?.ownerId && plotData.ownerId !== profileId) {
+    if (plotAssetData?.ownerId && plotAssetData.ownerId !== profileId) {
       return res.status(400).json({
         success: false,
-        error: `This plot is already owned by ${plotData.ownerName || "another player"}.`,
+        error: `This plot is already owned by ${plotAssetData.ownerName || "another player"}.`,
       });
     }
 
     // Claim the plot
     const claimedDate = new Date().toISOString();
 
-    // Initialize empty 4x4 grid (16 squares, all null initially)
+    // Initialize empty grid
+    const noOfSquares = calculateNumberOfSquares(false);
     const plotSquares: { [key: number]: string | null } = {};
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < noOfSquares; i++) {
       plotSquares[i] = null;
     }
 
     // Update visitor's data object
     const visitor = await Visitor.get(visitorId, urlSlug, { credentials });
-    const updatedVisitorData = {
-      ...visitorData,
+    const visitorPlotData = {
       ownedPlot: {
         plotAssetId: assetId,
         claimedDate,
         plotSquares,
       },
+      plants: {},
+      decorations: {},
     };
 
     await visitor.updateDataObject(
-      { [urlSlug]: updatedVisitorData },
+      { [`worlds.${urlSlug}`]: visitorPlotData },
       {
-        analytics: [{ analyticName: "plot_claimed" }],
+        analytics: [{ analyticName: "plotClaimed" }],
       },
     );
 
     // Update plot asset's data object to mark ownership
-    plotData = {
+    plotAssetData = {
       ownerId: profileId,
       ownerName: displayName,
       claimedDate,
     };
-    await plotAsset.setDataObject(plotData);
+    await plotAsset.setDataObject(plotAssetData);
 
     // Update plot's clickable link
     // const baseUrl = getBaseUrl(req.hostname);
@@ -93,10 +96,19 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       },
     });
 
+    const updatedVisitorData = {
+      ...visitorData,
+      worlds: {
+        ...visitorData.worlds,
+        [urlSlug]: visitorPlotData,
+      },
+    };
+
     return res.json({
       success: true,
-      plotData,
+      plotAssetData,
       visitorData: updatedVisitorData,
+      visitorPlotData,
     });
   } catch (error) {
     return errorHandler({

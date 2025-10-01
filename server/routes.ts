@@ -8,6 +8,7 @@ import {
   handleTeleportToPlot,
   handleWaterPlant,
   handleGetPlantInfo,
+  handlePlaceDecoration,
 } from "./controllers/index.js";
 import { getVersion } from "./utils/getVersion.js";
 
@@ -40,5 +41,6 @@ router.get("/plant", handleGetPlantInfo);
 router.post("/plant/drop", handlePlantSeed);
 router.post("/plant/water", handleWaterPlant);
 router.post("/plant/harvest", handleHarvestPlant);
+router.post("/decoration/drop", handlePlaceDecoration);
 
 export default router;

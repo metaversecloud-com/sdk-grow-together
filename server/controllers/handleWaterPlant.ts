@@ -21,8 +21,10 @@ export const handleWaterPlant = async (req: Request, res: Response) => {
     const visitorData = await initializeVisitorData(credentials);
     if (visitorData instanceof Error) throw visitorData;
 
+    const visitorPlotData = visitorData.worlds[urlSlug];
+
     // Check if the plant exists in visitor's data
-    const plant = visitorData.plants[assetId];
+    const plant = visitorPlotData.plants[assetId];
     if (!plant) {
       return res.status(400).json({
         success: false,
@@ -39,30 +41,36 @@ export const handleWaterPlant = async (req: Request, res: Response) => {
       });
     }
 
+    const plantData = {
+      ...plant,
+      growLevel: plant.growLevel + 1,
+      lastWatered: new Date().toISOString(),
+    };
+
     // Update visitor's data object
     const visitor = await Visitor.get(visitorId, urlSlug, { credentials });
+
     const updatedVisitorData = {
       ...visitorData,
-      plants: {
-        ...visitorData.plants,
-        [assetId]: {
-          ...plant,
-          growLevel: plant.growLevel + 1,
-          lastWatered: new Date().toISOString(),
+      worlds: {
+        ...visitorData.worlds,
+        [urlSlug]: {
+          ...visitorPlotData,
+          plants: {
+            ...visitorPlotData.plants,
+            [assetId]: plantData,
+          },
         },
       },
     };
 
-    await visitor.updateDataObject(
-      { [urlSlug]: updatedVisitorData },
-      {
-        analytics: [
-          {
-            analyticName: "plant_watered",
-          },
-        ],
-      },
-    );
+    await visitor.updateDataObject(updatedVisitorData, {
+      analytics: [
+        {
+          analyticName: "plantWatered",
+        },
+      ],
+    });
 
     const plantAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
 
@@ -78,6 +86,11 @@ export const handleWaterPlant = async (req: Request, res: Response) => {
         console.error(`Failed to trigger water particle effect:`, error);
       });
 
+    const plantAssetData = await plantAsset.fetchDataObject();
+
+    // update the plant data on the asset
+    await plantAsset.updateDataObject({ ...plantAssetData, ...plantData });
+
     // Update the plant asset image to reflect new growth level
     await plantAsset.updateWebImageLayers("", seedConfig.imageVariations[plant.growLevel + 1]).catch((error) => {
       console.error(`Failed to update plant asset ${assetId}:`, error);
@@ -85,7 +98,7 @@ export const handleWaterPlant = async (req: Request, res: Response) => {
 
     return res.json({
       success: true,
-      visitorData: updatedVisitorData,
+      plantData,
     });
   } catch (error) {
     return errorHandler({

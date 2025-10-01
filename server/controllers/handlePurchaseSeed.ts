@@ -68,16 +68,13 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
       },
     };
 
-    await visitor.updateDataObject(
-      { [urlSlug]: updatedVisitorData },
-      {
-        analytics: [
-          {
-            analyticName: "seed_purchased",
-          },
-        ],
-      },
-    );
+    await visitor.updateDataObject(updatedVisitorData, {
+      analytics: [
+        {
+          analyticName: "seedPurchased",
+        },
+      ],
+    });
 
     return res.json({
       success: true,

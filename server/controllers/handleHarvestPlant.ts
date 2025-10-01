@@ -21,8 +21,10 @@ export const handleHarvestPlant = async (req: Request, res: Response) => {
     const visitorData = await initializeVisitorData(credentials);
     if (visitorData instanceof Error) throw visitorData;
 
+    const visitorPlotData = visitorData.worlds[urlSlug];
+
     // Check if the plant exists in visitor's data
-    const plant = visitorData.plants[assetId];
+    const plant = visitorPlotData.plants[assetId];
     if (!plant) {
       return res.status(400).json({
         success: false,
@@ -55,40 +57,46 @@ export const handleHarvestPlant = async (req: Request, res: Response) => {
       });
     }
 
+    const plantData = {
+      ...plant,
+      wasHarvested: true,
+    };
+
     // Update visitor's data object
     const visitor = await Visitor.get(visitorId, urlSlug, { credentials });
+
     const updatedVisitorData = {
       ...visitorData,
       coinsAvailable: visitorData.coinsAvailable + seedConfig.reward,
       totalCoinsEarned: visitorData.totalCoinsEarned + seedConfig.reward,
-      ownedPlot: visitorData.ownedPlot
-        ? {
-            ...visitorData.ownedPlot,
-            plotSquares: {
-              ...visitorData.ownedPlot.plotSquares,
-              [plant.squareIndex]: null, // Free up the square
-            },
-          }
-        : null,
-      plants: {
-        ...visitorData.plants,
-        [assetId]: {
-          ...plant,
-          wasHarvested: true,
+      lastDateCoinsEarned: new Date().toISOString(),
+      worlds: {
+        ...visitorData.worlds,
+        [urlSlug]: {
+          ownedPlot: visitorPlotData.ownedPlot
+            ? {
+                ...visitorPlotData.ownedPlot,
+                plotSquares: {
+                  ...visitorPlotData.ownedPlot.plotSquares,
+                  [plant.squareIndex]: null, // Free up the square
+                },
+              }
+            : null,
+          plants: {
+            ...visitorPlotData.plants,
+            [assetId]: plantData,
+          },
         },
       },
     };
 
-    await visitor.updateDataObject(
-      { [urlSlug]: updatedVisitorData },
-      {
-        analytics: [
-          {
-            analyticName: "plant_harvested",
-          },
-        ],
-      },
-    );
+    await visitor.updateDataObject(updatedVisitorData, {
+      analytics: [
+        {
+          analyticName: "plantHarvested",
+        },
+      ],
+    });
 
     const plantAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
 
@@ -96,7 +104,7 @@ export const handleHarvestPlant = async (req: Request, res: Response) => {
     const world = World.create(urlSlug, { credentials });
     await world
       .triggerParticle({
-        name: "Sparkle",
+        name: "lightBlueSmoke_puff",
         duration: 2,
         position: plantAsset.position,
       })
@@ -112,9 +120,7 @@ export const handleHarvestPlant = async (req: Request, res: Response) => {
 
     return res.json({
       success: true,
-      coinsEarned: seedConfig.reward,
-      totalCoins: updatedVisitorData.coinsAvailable,
-      visitorData: updatedVisitorData,
+      plantData,
     });
   } catch (error) {
     return errorHandler({

@@ -9,30 +9,91 @@ A relaxing, loop-based gardening game where players plant seeds, grow crops, and
 ### Canvas elements & interactions
 
 - Plot Assets: Users can claim a plot where they can then purchase seeds, plant seeds, watch their garden grow, and harvest plants.
-- Plant Assets: Users can click on a plant in the world and check on it's status. If it's fully grown they can harvest that plant to earn coins to purchase additional seeds.
+- Plant Assets: Users can click on a plant in the world and check on it's status and water if ready. If it's fully grown they can harvest that plant to earn coins to purchase additional seeds.
 
 ### Drawer content
 
 - Claim a plot and view details
 - Purchase and plant seeds
-- Check on plant status and harvest once grown
+- Check on plant status to water and harvest once grown
 
 ### Data objects
 
 _We use data objects to store information about each implementation of the app per world._
 
-- Plot Asset: the data object attached to the dropped key asset will store information related to this specific plot. Example data:
-  - ownerId
-  - ownerName
-- Visitor: the data object attached to the visitor will store information for each visitor per world keyed by `urlSlug`. Example data:
-  - coinsAvailable: Current spendable coins
-  - totalCoinsEarned: Lifetime coins earned (for unlocks)
-  - ownedPlot:
-    - plotAssetId
-    - claimedDate: string;
-    - plotSquares
-  - seedsPurchased
-  - plants
+#### World
+
+The data object attached to the world will store ownership information about all plots in the world. This is populated on first app load by searching the world for plots with a unique name of "BountyBuilder_plot".
+
+```ts
+{
+  claimedPlots: {
+    [plotAssetId: string]: string | null; // profileId of owner
+  };
+};
+```
+
+### Plot Assets
+
+The data objects attached to the dropped plot assets will store information related to this specific plot.
+
+```ts
+{
+  ownerId?: string; // profileId of the owner
+  ownerName?: string; // displayName of the owner
+  claimedDate?: string; // ISO date string when the plot was claimed
+};
+```
+
+### Plant Assets
+
+The data objects attached to the dropped plant assets will store information related to this specific plant.
+
+```ts
+{
+  ownerId: string;
+  ownerName: string;
+  dateDropped: string;
+  lastWatered: string;
+  seedId: number;
+  growLevel: number;
+  squareIndex: number; // Which square in the plot
+  wasHarvested: boolean;
+}
+```
+
+#### Visitor
+
+The data object attached to the visitor will store information for each visitor per world keyed by `urlSlug`.
+
+```ts
+{
+  [urlSlug]: {
+    coinsAvailable: number; // Current spendable coins
+    totalCoinsEarned: number; // Lifetime coins earned (for unlocks)
+    lastDateCoinsEarned: string; // ISO date string when the plot was claimed
+    ownedPlot: {
+      plotAssetId: string;
+      claimedDate: string;
+      plotSquares: {
+        [squareIndex: number]: string | null; // droppedAsset.id of plant or null if empty
+      };
+    } | null; // null if no plot claimed yet
+    seedsPurchased: {
+      [seedId: number]: {
+        id: number;
+        datePurchased: string;
+      };
+    };
+    plants: {
+      [droppedAssetId: string]: PlantDataObjectType;
+    };
+    decorations: {
+      [droppedAssetId: string]: DecorationType;
+    };
+  };
+};
+```
 
 ## Developers:
 

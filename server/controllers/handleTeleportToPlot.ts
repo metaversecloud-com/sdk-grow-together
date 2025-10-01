@@ -7,15 +7,16 @@ export const handleTeleportToPlot = async (req: Request, res: Response) => {
     const { assetId, urlSlug, visitorId } = credentials;
 
     const visitor = await Visitor.create(visitorId, urlSlug, { credentials });
+
     const visitorData = await initializeVisitorData(credentials);
     if (visitorData instanceof Error) throw visitorData;
 
-    const plotAssetId = visitorData.ownedPlot?.plotAssetId;
+    const visitorPlotData = visitorData.worlds[urlSlug];
+
+    const plotAssetId = visitorPlotData.ownedPlot?.plotAssetId;
     if (!plotAssetId) throw new Error("Plot asset id is undefined.");
 
-    const userAsset = await DroppedAsset.get(plotAssetId, urlSlug, {
-      credentials,
-    });
+    const userAsset = await DroppedAsset.get(plotAssetId, urlSlug, { credentials });
 
     const { x, y } = userAsset.position || { x: 0, y: 0 };
     await visitor.moveVisitor({

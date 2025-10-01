@@ -1,4 +1,4 @@
-import { seeds } from "../../../shared/constants.js";
+import { seeds } from "../../../shared/index.js";
 import { SeedType } from "../../types/index.js";
 
 export const getSeedConfig = (seedId: number): SeedType | null => {

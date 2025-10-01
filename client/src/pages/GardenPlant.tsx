@@ -37,7 +37,6 @@ export const GardenPlant = () => {
               type: SET_PLANT_DATA,
               payload: { plantData, error: "" },
             });
-            console.log(`Watered! Your plant just grew by 1 level.`);
           }
         })
         .catch((error) => setErrorMessage(dispatch, error as ErrorType))

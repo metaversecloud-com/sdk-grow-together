@@ -1,10 +1,8 @@
 /**
- * Shared constants between client and server
+ * Shared seed constants between client and server
  */
 
-import { SeedType } from "./types/index.js";
-
-const s3URL = "https://topia-dev-test.s3.us-east-1.amazonaws.com/bounty";
+import { SeedType, s3URL } from "../index.js";
 
 // Plant image variations for each growth level
 export const plantImages = {

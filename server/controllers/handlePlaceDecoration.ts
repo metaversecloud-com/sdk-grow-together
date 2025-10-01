@@ -3,31 +3,27 @@ import {
   errorHandler,
   getCredentials,
   initializeVisitorData,
-  getSeedConfig,
-  getPlantImageUrl,
   calculateSquarePosition,
   Visitor,
   DroppedAsset,
   Asset,
   World,
-  getBaseUrl,
 } from "../utils/index.js";
-import { DroppedAssetClickType } from "@rtsdk/topia";
-import { calculateNumberOfSquares } from "../../shared/index.js";
+import { calculateNumberOfSquares, decorations } from "../../shared/index.js";
 
 /**
- * Handle planting a seed - creates a new plant dropped asset in the world
+ * Handle placing a decoration - creates a new decoration dropped asset in the world
  */
-export const handlePlantSeed = async (req: Request, res: Response) => {
+export const handlePlaceDecoration = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
     const { assetId, displayName, urlSlug, visitorId, profileId } = credentials;
-    const { seedId, squareIndex } = req.body;
+    const { decorationId, squareIndex } = req.body;
 
-    if (!seedId || typeof seedId !== "number" || typeof squareIndex !== "number") {
+    if (!decorationId || typeof decorationId !== "number" || typeof squareIndex !== "number") {
       return res.status(400).json({
         success: false,
-        error: "Valid seedId and squareIndex are required",
+        error: "Valid decorationId and squareIndex are required",
       });
     }
 
@@ -39,12 +35,13 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
       });
     }
 
-    // Get seed configuration
-    const seedConfig = getSeedConfig(seedId);
-    if (!seedConfig) {
+    const decoration = decorations[decorationId];
+
+    // Verify decoration exists
+    if (!decoration) {
       return res.status(400).json({
         success: false,
-        error: "Invalid seed type",
+        error: "Invalid decoration type",
       });
     }
 
@@ -58,15 +55,15 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     if (!visitorPlotData.ownedPlot) {
       return res.status(400).json({
         success: false,
-        error: "You must claim a plot before planting seeds",
+        error: "You must claim a plot before placing decorations",
       });
     }
 
-    // Check if visitor has purchased this seed (for paid seeds)
-    if (seedConfig.cost > 0 && !visitorData.seedsPurchased[seedId]) {
+    // Check if visitor owns this decoration
+    if (!visitorData.decorationsOwned[decorationId] || visitorData.decorationsOwned[decorationId].numberAvailable < 1) {
       return res.status(400).json({
         success: false,
-        error: "You must purchase this seed before planting",
+        error: "You must own this decoration before placing",
       });
     }
 
@@ -81,9 +78,8 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     // Get the plot asset to determine position
     const plotAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
     const position = calculateSquarePosition(plotAsset.position, squareIndex);
-    const layer1 = getPlantImageUrl(seedId, 0); // Start at growth level 0
 
-    // Trigger planting particle effect
+    // Trigger particle effect
     const world = World.create(urlSlug, { credentials });
     await world
       .triggerParticle({
@@ -92,40 +88,28 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
         position,
       })
       .catch((error) => {
-        console.error("Failed to trigger planting particle effect:", error);
+        console.error("Failed to trigger placing particle effect:", error);
       });
 
     const asset = Asset.create("webImageAsset", { credentials });
 
-    // Drop a new plant asset at the calculated position
-    const baseUrl = getBaseUrl(req.hostname);
-    const newPlantAsset = await DroppedAsset.drop(asset, {
-      assetScale: 1.8,
-      clickType: DroppedAssetClickType.LINK,
-      clickableLink: `${baseUrl}/plant?ownerName=${encodeURIComponent(displayName)}&ownerProfileId=${profileId}`,
-      clickableLinkTitle: seedConfig.name,
-      isInteractive: true,
-      interactivePublicKey: credentials.interactivePublicKey,
-      isOpenLinkInDrawer: true,
-      layer1,
+    // Drop a new decoration asset at the calculated position
+    const newDecorationAsset = await DroppedAsset.drop(asset, {
+      layer1: decoration.imageSrc,
       position,
-      uniqueName: `BountyBuilders_plant_${profileId}`,
+      uniqueName: `BountyBuilders_decoration_${profileId}`,
       urlSlug,
     });
 
-    const plantAssetId = newPlantAsset.id;
+    const decorationAsset = newDecorationAsset.id;
     const now = new Date().toISOString();
-    const plantData = {
+    const decorationData = {
       dateDropped: now,
-      lastWatered: now,
-      seedId,
-      growLevel: 0,
-      squareIndex,
-      wasHarvested: false,
+      decorationId,
     };
 
-    await newPlantAsset.setDataObject({
-      ...plantData,
+    await newDecorationAsset.setDataObject({
+      ...decorationData,
       ownerId: profileId,
       ownerName: displayName,
     });
@@ -135,19 +119,27 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
 
     const updatedVisitorData = {
       ...visitorData,
+      decorationsOwned: {
+        ...visitorData.decorationsOwned,
+        [decorationId]: {
+          ...visitorData.decorationsOwned[decorationId],
+          numberAvailable: (visitorData.decorationsOwned[decorationId]?.numberAvailable || 0) - 1,
+        },
+      },
       worlds: {
         ...visitorData.worlds,
         [urlSlug]: {
+          ...visitorData.worlds[urlSlug],
           ownedPlot: {
             ...visitorPlotData.ownedPlot!,
             plotSquares: {
               ...visitorPlotData.ownedPlot!.plotSquares,
-              [`${squareIndex}`]: plantAssetId,
+              [`${squareIndex}`]: decorationAsset,
             },
           },
-          plants: {
-            ...visitorPlotData.plants,
-            [plantAssetId!]: plantData,
+          decorations: {
+            ...visitorPlotData.decorations,
+            [decorationAsset!]: decorationData,
           },
         },
       },
@@ -156,7 +148,7 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     await visitor.updateDataObject(updatedVisitorData, {
       analytics: [
         {
-          analyticName: "seedPlanted",
+          analyticName: "decorationPlaced",
         },
       ],
     });
@@ -169,8 +161,8 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
   } catch (error) {
     return errorHandler({
       error,
-      functionName: "handlePlantSeed",
-      message: "Error planting seed",
+      functionName: "handlePlaceDecoration",
+      message: "Error placing decoration",
       req,
       res,
     });
