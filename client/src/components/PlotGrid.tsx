@@ -1,40 +1,83 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 
 // components
-import { PlaceDecoration, PlantSeed } from "@/components";
+import { ConfirmationModal, PlaceDecoration, PlantSeed } from "@/components";
+
+// context
+import { GlobalDispatchContext } from "@/context/GlobalContext";
+import { ErrorType, SET_VISITOR_DATA, SET_VISITOR_PLOT_DATA } from "@/context/types";
 
 // types
-import { plotConfig, seeds, VisitorDataObjectType, VisitorWorldDataType } from "@shared/index.js";
+import { decorations, plotConfig, seeds, VisitorDataObjectType, VisitorWorldDataType } from "@shared/index.js";
+
+// utils
+import { backendAPI, setErrorMessage } from "@/utils";
 
 interface PlotGridProps {
   plotSquares: { [key: number]: string | null };
   plants: VisitorWorldDataType["plants"];
+  placedDecorations: VisitorWorldDataType["decorations"];
   isReadOnly: boolean;
   visitorData?: VisitorDataObjectType;
 }
 
-export const PlotGrid = ({ plotSquares, plants, isReadOnly, visitorData }: PlotGridProps) => {
+export const PlotGrid = ({ plotSquares, plants, placedDecorations, isReadOnly, visitorData }: PlotGridProps) => {
+  const dispatch = useContext(GlobalDispatchContext);
+
   const [selectedSquare, setSelectedSquare] = useState<number | null>(null);
   const [isUpdatingPlot, setIsUpdatingPlot] = useState(false);
+  const [showRemoveDecorationModal, setShowRemoveDecorationModal] = useState(false);
 
   const handleSquareClick = (squareIndex: number) => {
-    if (isReadOnly || plotSquares[squareIndex]) return;
+    if (isReadOnly || (plotSquares[squareIndex] !== null && plants[plotSquares[squareIndex]])) {
+      return;
+    }
+
     setSelectedSquare(selectedSquare === squareIndex ? null : squareIndex);
+
+    if (plotSquares[squareIndex] && placedDecorations[plotSquares[squareIndex]]) setShowRemoveDecorationModal(true);
+  };
+
+  const handleRemoveDecoration = async () => {
+    setIsUpdatingPlot(true);
+
+    await backendAPI
+      .post("/decoration/remove", {
+        squareIndex: selectedSquare,
+      })
+      .then((response) => {
+        const { visitorData, visitorPlotData } = response.data;
+        dispatch!({
+          type: SET_VISITOR_DATA,
+          payload: { visitorData, error: "" },
+        });
+        dispatch!({
+          type: SET_VISITOR_PLOT_DATA,
+          payload: { visitorPlotData, error: "" },
+        });
+        setSelectedSquare(null);
+      })
+      .catch((error) => {
+        setErrorMessage(dispatch, error as ErrorType);
+      })
+      .finally(() => {
+        setIsUpdatingPlot(false);
+      });
   };
 
   const renderSquare = (squareIndex: number) => {
-    const plantAssetId = plotSquares[squareIndex];
-    const plant = plantAssetId ? plants[plantAssetId] : null;
-    const isEmpty = !plantAssetId;
+    const squareAssetId = plotSquares[squareIndex];
+    const plant = squareAssetId ? plants[squareAssetId] : null;
+    const decoration = squareAssetId ? placedDecorations[squareAssetId] : null;
+    const isEmpty = !squareAssetId;
     const isSelected = selectedSquare === squareIndex;
 
     let squareClass = "card small flex items-center justify-center";
-    if (isEmpty && !isReadOnly && !isUpdatingPlot) {
+    if (decoration) {
+      squareClass += " cursor-pointer";
+    } else if (isEmpty && !isReadOnly && !isUpdatingPlot) {
       squareClass += " cursor-pointer";
       if (isSelected) squareClass += " success";
-    }
-    if (plant?.wasHarvested) {
-      squareClass += " opacity-50";
     }
 
     const isReserved = plotConfig.reservedSquares?.includes(squareIndex);
@@ -62,7 +105,7 @@ export const PlotGrid = ({ plotSquares, plants, isReadOnly, visitorData }: PlotG
         onClick={() => handleSquareClick(squareIndex)}
       >
         <div className="card-details text-center">
-          {plant && !plant.wasHarvested ? (
+          {plant ? (
             <div>
               <img className="m-auto" src={seeds[plant.seedId].icon} />
               <p className="p4 text-muted">
@@ -72,8 +115,8 @@ export const PlotGrid = ({ plotSquares, plants, isReadOnly, visitorData }: PlotG
                 <p className="p4 text-success">Ready!</p>
               )}
             </div>
-          ) : plant && plant.wasHarvested ? (
-            <p className="p4 text-muted">Harvested</p>
+          ) : decoration ? (
+            <img className="m-auto" src={decorations[decoration.id].icon} />
           ) : (
             <div>{emptySquareContent}</div>
           )}
@@ -107,6 +150,15 @@ export const PlotGrid = ({ plotSquares, plants, isReadOnly, visitorData }: PlotG
             seedsPurchased={visitorData?.seedsPurchased || {}}
           />
         ))}
+
+      {showRemoveDecorationModal && (
+        <ConfirmationModal
+          title="Remove Decoration?"
+          message="Removing this decoration will return it to your inventory so you can place it again later."
+          handleToggleShowConfirmationModal={() => setShowRemoveDecorationModal(false)}
+          handleOnConfirm={handleRemoveDecoration}
+        />
+      )}
     </div>
   );
 };

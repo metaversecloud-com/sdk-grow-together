@@ -58,38 +58,42 @@ The data objects attached to the dropped plant assets will store information rel
   seedId: number;
   growLevel: number;
   squareIndex: number; // Which square in the plot
-  wasHarvested: boolean;
 }
 ```
 
 #### Visitor
 
-The data object attached to the visitor will store information for each visitor per world keyed by `urlSlug`.
+The data object attached to the visitor will store ecosystem information for each visitor as well as plot ownership information per world keyed by `urlSlug`.
 
 ```ts
 {
-  [urlSlug]: {
-    coinsAvailable: number; // Current spendable coins
-    totalCoinsEarned: number; // Lifetime coins earned (for unlocks)
-    lastDateCoinsEarned: string; // ISO date string when the plot was claimed
-    ownedPlot: {
-      plotAssetId: string;
-      claimedDate: string;
-      plotSquares: {
-        [squareIndex: number]: string | null; // droppedAsset.id of plant or null if empty
-      };
-    } | null; // null if no plot claimed yet
-    seedsPurchased: {
-      [seedId: number]: {
-        id: number;
-        datePurchased: string;
-      };
+  coinsAvailable: number; // Current spendable coins
+  lastDateCoinsEarned: string; // ISO date string when the plot was claimed
+  totalCoinsEarned: number; // Lifetime coins earned (for unlocks)
+  decorationsOwned: {
+    [decorationId: number]: {
+      id: number;
+      dateReceived: string;
+      available: number;
+    };
+  };
+  seedsPurchased: {
+    [seedId: number]: {
+      id: number;
+      datePurchased: string;
+    };
+  };
+  worlds: {
+    plotAssetId: string | null;
+    claimedDate: string;
+    plotSquares: {
+      [squareIndex: number]: string | null; // droppedAssetId of plant or null if empty
     };
     plants: {
       [droppedAssetId: string]: PlantDataObjectType;
     };
     decorations: {
-      [droppedAssetId: string]: DecorationType;
+      [droppedAssetId: string]: PlacedDecorationType;
     };
   };
 };

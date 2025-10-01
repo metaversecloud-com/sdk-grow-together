@@ -17,8 +17,10 @@ export const handleGetGameState = async (req: Request, res: Response) => {
     const plotAssetData = (await plotAsset.fetchDataObject()) as PlotAssetDataObjectType;
 
     // Initialize visitor data with defaults if needed
-    let visitorData = await initializeVisitorData(credentials);
-    if (visitorData instanceof Error) throw visitorData;
+    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
+    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
+
+    const { visitorData } = initializeVisitorDataResponse;
 
     /* Commenting out for now but may be used for wilting and losing plants in future
     // Update plant growth levels for all plants
@@ -26,31 +28,29 @@ export const handleGetGameState = async (req: Request, res: Response) => {
     let hasUpdates = false;
 
     for (const [plantAssetId, plant] of Object.entries(visitorData.plants)) {
-      if (!plant.wasHarvested) {
-        const seedConfig = getSeedConfig(plant.seedId);
-        if (seedConfig) {
-          const currentGrowthLevel = calculateGrowthLevel(
-            plant.dateDropped,
-            seedConfig.growthTime,
-            seedConfig.harvestLevel,
-          );
+      const seedConfig = getSeedConfig(plant.seedId);
+      if (seedConfig) {
+        const currentGrowthLevel = calculateGrowthLevel(
+          plant.dateDropped,
+          seedConfig.growthTime,
+          seedConfig.harvestLevel,
+        );
 
-          if (currentGrowthLevel !== plant.growLevel) {
-            // Update growth level in memory
-            updatedPlants[plantAssetId] = {
-              ...plant,
-              growLevel: currentGrowthLevel,
-            };
-            hasUpdates = true;
+        if (currentGrowthLevel !== plant.growLevel) {
+          // Update growth level in memory
+          updatedPlants[plantAssetId] = {
+            ...plant,
+            growLevel: currentGrowthLevel,
+          };
+          hasUpdates = true;
 
-            try {
-              const droppedAsset = await DroppedAsset.create(plantAssetId, urlSlug, { credentials });
-              if (droppedAsset) {
-                await droppedAsset.updateWebImageLayers("", seedConfig.imageVariations[currentGrowthLevel]);
-              }
-            } catch (error) {
-              console.error("Failed to update dropped asset:", error);
+          try {
+            const droppedAsset = await DroppedAsset.create(plantAssetId, urlSlug, { credentials });
+            if (droppedAsset) {
+              await droppedAsset.updateWebImageLayers("", seedConfig.imageVariations[currentGrowthLevel]);
             }
+          } catch (error) {
+            console.error("Failed to update dropped asset:", error);
           }
         }
       }

@@ -6,7 +6,6 @@ import {
   getSeedConfig,
   getPlantImageUrl,
   calculateSquarePosition,
-  Visitor,
   DroppedAsset,
   Asset,
   World,
@@ -21,7 +20,7 @@ import { calculateNumberOfSquares } from "../../shared/index.js";
 export const handlePlantSeed = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { assetId, displayName, urlSlug, visitorId, profileId } = credentials;
+    const { assetId, displayName, profileId, urlSlug, visitorId } = credentials;
     const { seedId, squareIndex } = req.body;
 
     if (!seedId || typeof seedId !== "number" || typeof squareIndex !== "number") {
@@ -48,14 +47,15 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
       });
     }
 
-    // Initialize visitor data
-    const visitorData = await initializeVisitorData(credentials);
-    if (visitorData instanceof Error) throw visitorData;
+    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
+    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
+
+    const { visitor, visitorData } = initializeVisitorDataResponse;
 
     const visitorPlotData = visitorData.worlds[urlSlug];
 
     // Check if visitor owns a plot
-    if (!visitorPlotData.ownedPlot) {
+    if (!visitorPlotData.plotAssetId) {
       return res.status(400).json({
         success: false,
         error: "You must claim a plot before planting seeds",
@@ -71,7 +71,7 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     }
 
     // Check if the square is already occupied
-    if (visitorPlotData.ownedPlot.plotSquares?.[squareIndex]) {
+    if (visitorPlotData.plotSquares?.[squareIndex]) {
       return res.status(400).json({
         success: false,
         error: "This square is already occupied",
@@ -99,7 +99,7 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
 
     // Drop a new plant asset at the calculated position
     const baseUrl = getBaseUrl(req.hostname);
-    const newPlantAsset = await DroppedAsset.drop(asset, {
+    const plantAsset = await DroppedAsset.drop(asset, {
       assetScale: 1.8,
       clickType: DroppedAssetClickType.LINK,
       clickableLink: `${baseUrl}/plant?ownerName=${encodeURIComponent(displayName)}&ownerProfileId=${profileId}`,
@@ -113,7 +113,6 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
       urlSlug,
     });
 
-    const plantAssetId = newPlantAsset.id;
     const now = new Date().toISOString();
     const plantData = {
       dateDropped: now,
@@ -121,50 +120,33 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
       seedId,
       growLevel: 0,
       squareIndex,
-      wasHarvested: false,
     };
 
-    await newPlantAsset.setDataObject({
+    await plantAsset.setDataObject({
       ...plantData,
       ownerId: profileId,
       ownerName: displayName,
     });
 
     // Update visitor's data object
-    const visitor = await Visitor.create(visitorId, urlSlug, { credentials });
+    visitorData.worlds[urlSlug].plotSquares[squareIndex] = plantAsset.id!;
+    visitorData.worlds[urlSlug].plants[plantAsset.id!] = plantData;
 
-    const updatedVisitorData = {
-      ...visitorData,
-      worlds: {
-        ...visitorData.worlds,
-        [urlSlug]: {
-          ownedPlot: {
-            ...visitorPlotData.ownedPlot!,
-            plotSquares: {
-              ...visitorPlotData.ownedPlot!.plotSquares,
-              [`${squareIndex}`]: plantAssetId,
-            },
-          },
-          plants: {
-            ...visitorPlotData.plants,
-            [plantAssetId!]: plantData,
-          },
-        },
-      },
-    };
-
-    await visitor.updateDataObject(updatedVisitorData, {
+    await visitor.updateDataObject(visitorData, {
       analytics: [
         {
           analyticName: "seedPlanted",
+          profileId,
+          urlSlug,
+          uniqueKey: profileId,
         },
       ],
     });
 
     return res.json({
       success: true,
-      visitorData: updatedVisitorData,
-      visitorPlotData: updatedVisitorData.worlds[urlSlug],
+      visitorData,
+      visitorPlotData: visitorData.worlds[urlSlug],
     });
   } catch (error) {
     return errorHandler({

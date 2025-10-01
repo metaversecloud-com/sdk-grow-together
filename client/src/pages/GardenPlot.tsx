@@ -16,7 +16,7 @@ export const GardenPlot = () => {
   const { hasInteractiveParams, plotAssetData, visitorData, visitorPlotData } = useContext(GlobalStateContext);
   const { ownerId, ownerName } = plotAssetData || {};
   const { coinsAvailable, totalCoinsEarned } = visitorData || {};
-  const { ownedPlot, plants } = visitorPlotData || {};
+  const { plotAssetId, plotSquares, plants, decorations } = visitorPlotData || { plotSquares: {} };
 
   const [searchParams] = useSearchParams();
 
@@ -77,7 +77,7 @@ export const GardenPlot = () => {
         )}
 
         {/* Current user doesn't own any plot - show claim option */}
-        {!isOwnedByOtherUser && !ownedPlot && (
+        {!isOwnedByOtherUser && !plotAssetId && (
           <div className="grid gap-2">
             <h3>Claim This Plot</h3>
             <p>This plot is available! Claim it to start your garden.</p>
@@ -90,7 +90,7 @@ export const GardenPlot = () => {
         )}
 
         {/* Current user already owns a different plot */}
-        {!isOwnedByOtherUser && ownedPlot && !isOwnedByCurrentUser && (
+        {!isOwnedByOtherUser && plotAssetId && !isOwnedByCurrentUser && (
           <div className="grid gap-2">
             <h3>Cannot Claim Plot</h3>
             <p>You already own a plot! Each player can only claim one plot.</p>
@@ -98,7 +98,7 @@ export const GardenPlot = () => {
         )}
 
         {/* Current user's plot */}
-        {isOwnedByCurrentUser && ownedPlot && (
+        {isOwnedByCurrentUser && plotAssetId && (
           <div className="grid gap-4">
             <div className="card small">
               <div className="card-details text-center">
@@ -108,8 +108,9 @@ export const GardenPlot = () => {
             </div>
 
             <PlotGrid
-              plotSquares={ownedPlot.plotSquares}
+              plotSquares={plotSquares}
               plants={plants || {}}
+              placedDecorations={decorations || {}}
               isReadOnly={false}
               visitorData={visitorData}
             />
@@ -121,7 +122,7 @@ export const GardenPlot = () => {
         )}
 
         {/* Current user already owns a different plot */}
-        {ownedPlot && !isOwnedByCurrentUser && (
+        {plotAssetId && !isOwnedByCurrentUser && (
           <button className="btn btn-outline mt-4" onClick={() => handleTeleportToPlot()}>
             <img alt="Teleport" className="mr-1" src="https://sdk-style.s3.amazonaws.com/icons/walk.svg" />
             Teleport to my plot

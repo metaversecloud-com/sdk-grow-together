@@ -10,7 +10,9 @@ export const DEFAULT_VISITOR_DATA: VisitorDataObjectType = {
 };
 
 export const DEFAULT_VISITOR_WORLD_DATA: VisitorWorldDataType = {
-  ownedPlot: null, // No plot claimed initially
+  plotAssetId: null,
+  claimedDate: "",
+  plotSquares: {},
   plants: {},
   decorations: {},
 };
@@ -23,5 +25,4 @@ export const DEFAULT_PLANT_DATA: PlantDataObjectType = {
   seedId: 0,
   growLevel: 0,
   squareIndex: 0,
-  wasHarvested: false,
 };

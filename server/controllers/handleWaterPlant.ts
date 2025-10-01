@@ -4,7 +4,6 @@ import {
   getCredentials,
   initializeVisitorData,
   getSeedConfig,
-  Visitor,
   DroppedAsset,
   World,
 } from "../utils/index.js";
@@ -15,11 +14,12 @@ import {
 export const handleWaterPlant = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { assetId, urlSlug, visitorId } = credentials;
+    const { assetId, profileId, urlSlug, visitorId } = credentials;
 
-    // Initialize visitor data
-    const visitorData = await initializeVisitorData(credentials);
-    if (visitorData instanceof Error) throw visitorData;
+    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
+    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
+
+    const { visitor, visitorData } = initializeVisitorDataResponse;
 
     const visitorPlotData = visitorData.worlds[urlSlug];
 
@@ -48,26 +48,15 @@ export const handleWaterPlant = async (req: Request, res: Response) => {
     };
 
     // Update visitor's data object
-    const visitor = await Visitor.get(visitorId, urlSlug, { credentials });
+    visitorData.worlds[urlSlug].plants[assetId] = plantData;
 
-    const updatedVisitorData = {
-      ...visitorData,
-      worlds: {
-        ...visitorData.worlds,
-        [urlSlug]: {
-          ...visitorPlotData,
-          plants: {
-            ...visitorPlotData.plants,
-            [assetId]: plantData,
-          },
-        },
-      },
-    };
-
-    await visitor.updateDataObject(updatedVisitorData, {
+    await visitor.updateDataObject(visitorData, {
       analytics: [
         {
           analyticName: "plantWatered",
+          profileId,
+          urlSlug,
+          uniqueKey: profileId,
         },
       ],
     });

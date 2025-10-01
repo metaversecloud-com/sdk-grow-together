@@ -3,12 +3,11 @@
  */
 
 export type PlantDataObjectType = {
-  ownerId: string;
-  ownerName: string;
+  ownerId?: string;
+  ownerName?: string;
   dateDropped: string;
   lastWatered: string;
   seedId: number;
   growLevel: number;
   squareIndex: number; // Which square in the plot
-  wasHarvested: boolean;
 };

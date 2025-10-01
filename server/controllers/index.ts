@@ -5,5 +5,6 @@ export * from "./handleHarvestPlant.js";
 export * from "./handlePlaceDecoration.js";
 export * from "./handlePurchaseSeed.js";
 export * from "./handlePlantSeed.js";
+export * from "./handleRemoveDecoration.js";
 export * from "./handleTeleportToPlot.js";
 export * from "./handleWaterPlant.js";

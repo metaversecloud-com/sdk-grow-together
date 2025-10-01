@@ -2,21 +2,19 @@
  * Shared types between client and server for visitor data
  */
 
-import { DecorationType, PlantDataObjectType } from "./index.js";
+import { PlacedDecorationType, PlantDataObjectType } from "./index.js";
 
 export type VisitorWorldDataType = {
-  ownedPlot: {
-    plotAssetId: string;
-    claimedDate: string;
-    plotSquares: {
-      [squareIndex: number]: string | null; // droppedAssetId of plant or null if empty
-    };
-  } | null; // null if no plot claimed yet
+  plotAssetId: string | null;
+  claimedDate: string;
+  plotSquares: {
+    [squareIndex: number]: string | null; // droppedAssetId of plant or null if empty
+  };
   plants: {
     [droppedAssetId: string]: PlantDataObjectType;
   };
   decorations: {
-    [droppedAssetId: string]: DecorationType;
+    [droppedAssetId: string]: PlacedDecorationType;
   };
 };
 
@@ -28,7 +26,7 @@ export type VisitorDataObjectType = {
     [decorationId: number]: {
       id: number;
       dateReceived: string;
-      numberAvailable: number;
+      available: number;
     };
   };
   seedsPurchased: {

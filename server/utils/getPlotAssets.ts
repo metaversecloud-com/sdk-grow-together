@@ -36,7 +36,6 @@ export const getPlotAssets = async (credentials: Credentials): Promise<WorldData
 
     return { claimedPlots };
   } catch (error: any) {
-    console.log("🚀 ~ getPlotAssets.ts:39 ~ error:", error);
     return new Error(error);
   }
 };

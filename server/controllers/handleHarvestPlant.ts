@@ -4,7 +4,6 @@ import {
   getCredentials,
   initializeVisitorData,
   getSeedConfig,
-  Visitor,
   DroppedAsset,
   World,
 } from "../utils/index.js";
@@ -15,11 +14,12 @@ import {
 export const handleHarvestPlant = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { assetId, urlSlug, visitorId } = credentials;
+    const { assetId, profileId, urlSlug, visitorId } = credentials;
 
-    // Initialize visitor data
-    const visitorData = await initializeVisitorData(credentials);
-    if (visitorData instanceof Error) throw visitorData;
+    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
+    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
+
+    const { visitor, visitorData } = initializeVisitorDataResponse;
 
     const visitorPlotData = visitorData.worlds[urlSlug];
 
@@ -29,14 +29,6 @@ export const handleHarvestPlant = async (req: Request, res: Response) => {
       return res.status(400).json({
         success: false,
         error: "Plant not found",
-      });
-    }
-
-    // Check if plant was already harvested
-    if (plant.wasHarvested) {
-      return res.status(400).json({
-        success: false,
-        error: "Plant already harvested",
       });
     }
 
@@ -57,43 +49,24 @@ export const handleHarvestPlant = async (req: Request, res: Response) => {
       });
     }
 
-    const plantData = {
-      ...plant,
-      wasHarvested: true,
-    };
-
     // Update visitor's data object
-    const visitor = await Visitor.get(visitorId, urlSlug, { credentials });
-
     const updatedVisitorData = {
       ...visitorData,
       coinsAvailable: visitorData.coinsAvailable + seedConfig.reward,
       totalCoinsEarned: visitorData.totalCoinsEarned + seedConfig.reward,
       lastDateCoinsEarned: new Date().toISOString(),
-      worlds: {
-        ...visitorData.worlds,
-        [urlSlug]: {
-          ownedPlot: visitorPlotData.ownedPlot
-            ? {
-                ...visitorPlotData.ownedPlot,
-                plotSquares: {
-                  ...visitorPlotData.ownedPlot.plotSquares,
-                  [plant.squareIndex]: null, // Free up the square
-                },
-              }
-            : null,
-          plants: {
-            ...visitorPlotData.plants,
-            [assetId]: plantData,
-          },
-        },
-      },
     };
+
+    updatedVisitorData.worlds[urlSlug].plotSquares[plant.squareIndex] = null;
+    delete updatedVisitorData.worlds[urlSlug].plants[assetId];
 
     await visitor.updateDataObject(updatedVisitorData, {
       analytics: [
         {
           analyticName: "plantHarvested",
+          profileId,
+          urlSlug,
+          uniqueKey: profileId,
         },
       ],
     });
@@ -120,7 +93,6 @@ export const handleHarvestPlant = async (req: Request, res: Response) => {
 
     return res.json({
       success: true,
-      plantData,
     });
   } catch (error) {
     return errorHandler({

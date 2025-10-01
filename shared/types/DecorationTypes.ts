@@ -5,5 +5,11 @@
 export type DecorationType = {
   id: number;
   name: string;
+  icon: string;
   imageSrc: string;
+};
+
+export type PlacedDecorationType = {
+  id: number;
+  dateDropped: string;
 };

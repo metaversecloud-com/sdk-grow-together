@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { errorHandler, getCredentials, initializeVisitorData, getSeedConfig, Visitor } from "../utils/index.js";
+import { errorHandler, getCredentials, initializeVisitorData, getSeedConfig } from "../utils/index.js";
 
 /**
  * Handle seed purchase - allows visitor to purchase seeds with coins
@@ -7,7 +7,7 @@ import { errorHandler, getCredentials, initializeVisitorData, getSeedConfig, Vis
 export const handlePurchaseSeed = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { urlSlug, visitorId } = credentials;
+    const { profileId, urlSlug, visitorId } = credentials;
     const { seedId } = req.body;
 
     if (!seedId || typeof seedId !== "number") {
@@ -26,9 +26,10 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
       });
     }
 
-    // Initialize visitor data
-    const visitorData = await initializeVisitorData(credentials);
-    if (visitorData instanceof Error) throw visitorData;
+    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
+    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
+
+    const { visitor, visitorData } = initializeVisitorDataResponse;
 
     // Check if seed is already purchased (for paid seeds)
     if (seedConfig.cost > 0 && visitorData.seedsPurchased[seedId]) {
@@ -55,30 +56,25 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
     }
 
     // Purchase the seed
-    const visitor = await Visitor.get(visitorId, urlSlug, { credentials });
-    const updatedVisitorData = {
-      ...visitorData,
-      coinsAvailable: visitorData.coinsAvailable - seedConfig.cost,
-      seedsPurchased: {
-        ...visitorData.seedsPurchased,
-        [seedId]: {
-          id: seedId,
-          datePurchased: new Date().toISOString(),
-        },
-      },
+    visitorData.coinsAvailable = visitorData.coinsAvailable - seedConfig.cost;
+    visitorData.seedsPurchased[seedId] = {
+      id: seedId,
+      datePurchased: new Date().toISOString(),
     };
 
-    await visitor.updateDataObject(updatedVisitorData, {
+    await visitor.updateDataObject(visitorData, {
       analytics: [
         {
           analyticName: "seedPurchased",
+          profileId,
+          uniqueKey: profileId,
         },
       ],
     });
 
     return res.json({
       success: true,
-      visitorData: updatedVisitorData,
+      visitorData,
     });
   } catch (error) {
     return errorHandler({

@@ -18,7 +18,7 @@ interface PlantDetailsProps {
 export const PlantDetails = ({ plant, isReadOnly }: PlantDetailsProps) => {
   const dispatch = useContext(GlobalDispatchContext);
 
-  const { lastWatered, growLevel, seedId, wasHarvested, squareIndex, dateDropped } = plant;
+  const { lastWatered, growLevel, seedId, squareIndex, dateDropped } = plant;
   const seedConfig = seeds[seedId];
   const { name, icon, cost, reward, growthTime, harvestLevel } = seedConfig;
 
@@ -27,6 +27,7 @@ export const PlantDetails = ({ plant, isReadOnly }: PlantDetailsProps) => {
   const [readyForHarvest, setReadyForHarvest] = useState(false);
   const [isWatering, setIsWatering] = useState(false);
   const [isHarvesting, setIsHarvesting] = useState(false);
+  const [wasHarvested, setWasHarvested] = useState(false);
 
   // Update timeRemaining every second until ready for harvest or harvested
   useEffect(() => {
@@ -40,9 +41,9 @@ export const PlantDetails = ({ plant, isReadOnly }: PlantDetailsProps) => {
       const timeForNextLevel = (growLevel + 1) * timePerLevel;
       const remainingSeconds = Math.max(0, timeForNextLevel - elapsedSeconds);
 
-      if (!wasHarvested && remainingSeconds <= 0) {
+      if (!wasHarvested) {
         if (growLevel >= harvestLevel) setReadyForHarvest(true);
-        else setReadyForWater(true);
+        else if (remainingSeconds <= 0) setReadyForWater(true);
       }
 
       return remainingSeconds <= 0 ? 0 : remainingSeconds;
@@ -83,7 +84,6 @@ export const PlantDetails = ({ plant, isReadOnly }: PlantDetailsProps) => {
             type: SET_PLANT_DATA,
             payload: { plantData, error: "" },
           });
-          console.log(`Watered! Your plant just grew by 1 level.`);
         }
       })
       .catch((error) => {
@@ -99,22 +99,13 @@ export const PlantDetails = ({ plant, isReadOnly }: PlantDetailsProps) => {
     setIsHarvesting(true);
     await backendAPI
       .post("/plant/harvest")
-      .then((response) => {
-        const { success, plantData } = response.data;
-
-        if (success) {
-          dispatch!({
-            type: SET_PLANT_DATA,
-            payload: { plantData, error: "" },
-          });
-        }
-      })
       .catch((error) => {
         setErrorMessage(dispatch, error as ErrorType);
       })
       .finally(() => {
         setReadyForHarvest(false);
         setIsHarvesting(false);
+        setWasHarvested(true);
       });
   };
 

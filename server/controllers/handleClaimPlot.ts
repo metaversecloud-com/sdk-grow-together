@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { errorHandler, getCredentials, initializeVisitorData, Visitor, DroppedAsset, World } from "../utils/index.js";
+import { errorHandler, getCredentials, initializeVisitorData, DroppedAsset, World } from "../utils/index.js";
 import { PlotAssetDataObjectType, WorldDataObjectType } from "../types/index.js";
-import { calculateNumberOfSquares, decorations } from "../../shared/index.js";
+import { calculateNumberOfSquares } from "../../shared/index.js";
 
 /**
  * Handle plot claiming - allows visitor to claim ownership of a plot
@@ -10,13 +10,14 @@ import { calculateNumberOfSquares, decorations } from "../../shared/index.js";
 export const handleClaimPlot = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { assetId, urlSlug, visitorId, profileId, displayName } = credentials;
+    const { assetId, urlSlug, profileId, displayName } = credentials;
 
-    // Initialize visitor data and check if they already own a plot
-    const visitorData = await initializeVisitorData(credentials);
-    if (visitorData instanceof Error) throw visitorData;
+    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
+    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
 
-    if (visitorData.worlds[urlSlug].ownedPlot) {
+    const { visitor, visitorData } = initializeVisitorDataResponse;
+
+    if (visitorData.worlds[urlSlug].plotAssetId) {
       return res.status(400).json({
         success: false,
         error: "You already own a plot. Each player can only claim one plot.",
@@ -47,13 +48,10 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
     }
 
     // Update visitor's data object
-    const visitor = await Visitor.get(visitorId, urlSlug, { credentials });
     const visitorPlotData = {
-      ownedPlot: {
-        plotAssetId: assetId,
-        claimedDate,
-        plotSquares,
-      },
+      plotAssetId: assetId,
+      claimedDate,
+      plotSquares,
       plants: {},
       decorations: {},
     };
@@ -61,7 +59,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
     await visitor.updateDataObject(
       { [`worlds.${urlSlug}`]: visitorPlotData },
       {
-        analytics: [{ analyticName: "plotClaimed" }],
+        analytics: [{ analyticName: "plotClaimed", profileId, urlSlug, uniqueKey: profileId }],
       },
     );
 

@@ -9,6 +9,7 @@ import {
   handleWaterPlant,
   handleGetPlantInfo,
   handlePlaceDecoration,
+  handleRemoveDecoration,
 } from "./controllers/index.js";
 import { getVersion } from "./utils/getVersion.js";
 
@@ -42,5 +43,6 @@ router.post("/plant/drop", handlePlantSeed);
 router.post("/plant/water", handleWaterPlant);
 router.post("/plant/harvest", handleHarvestPlant);
 router.post("/decoration/drop", handlePlaceDecoration);
+router.post("/decoration/remove", handleRemoveDecoration);
 
 export default router;

@@ -4,7 +4,6 @@ import {
   getCredentials,
   initializeVisitorData,
   calculateSquarePosition,
-  Visitor,
   DroppedAsset,
   Asset,
   World,
@@ -45,14 +44,15 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
       });
     }
 
-    // Initialize visitor data
-    const visitorData = await initializeVisitorData(credentials);
-    if (visitorData instanceof Error) throw visitorData;
+    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
+    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
+
+    const { visitor, visitorData } = initializeVisitorDataResponse;
 
     const visitorPlotData = visitorData.worlds[urlSlug];
 
     // Check if visitor owns a plot
-    if (!visitorPlotData.ownedPlot) {
+    if (!visitorPlotData.plotAssetId) {
       return res.status(400).json({
         success: false,
         error: "You must claim a plot before placing decorations",
@@ -60,7 +60,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     }
 
     // Check if visitor owns this decoration
-    if (!visitorData.decorationsOwned[decorationId] || visitorData.decorationsOwned[decorationId].numberAvailable < 1) {
+    if (!visitorData.decorationsOwned[decorationId] || visitorData.decorationsOwned[decorationId].available < 1) {
       return res.status(400).json({
         success: false,
         error: "You must own this decoration before placing",
@@ -68,7 +68,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     }
 
     // Check if the square is already occupied
-    if (visitorPlotData.ownedPlot.plotSquares?.[squareIndex]) {
+    if (visitorPlotData.plotSquares?.[squareIndex]) {
       return res.status(400).json({
         success: false,
         error: "This square is already occupied",
@@ -94,69 +94,46 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     const asset = Asset.create("webImageAsset", { credentials });
 
     // Drop a new decoration asset at the calculated position
-    const newDecorationAsset = await DroppedAsset.drop(asset, {
+    const decorationAsset = await DroppedAsset.drop(asset, {
       layer1: decoration.imageSrc,
       position,
       uniqueName: `BountyBuilders_decoration_${profileId}`,
       urlSlug,
     });
 
-    const decorationAsset = newDecorationAsset.id;
     const now = new Date().toISOString();
     const decorationData = {
       dateDropped: now,
-      decorationId,
+      id: decorationId,
     };
 
-    await newDecorationAsset.setDataObject({
+    await decorationAsset.setDataObject({
       ...decorationData,
       ownerId: profileId,
       ownerName: displayName,
     });
 
     // Update visitor's data object
-    const visitor = await Visitor.create(visitorId, urlSlug, { credentials });
+    visitorData.decorationsOwned[decorationId].available =
+      (visitorData.decorationsOwned[decorationId].available || 0) - 1;
+    visitorData.worlds[urlSlug].plotSquares[squareIndex] = decorationAsset.id!;
+    visitorData.worlds[urlSlug].decorations[decorationAsset.id!] = decorationData;
 
-    const updatedVisitorData = {
-      ...visitorData,
-      decorationsOwned: {
-        ...visitorData.decorationsOwned,
-        [decorationId]: {
-          ...visitorData.decorationsOwned[decorationId],
-          numberAvailable: (visitorData.decorationsOwned[decorationId]?.numberAvailable || 0) - 1,
-        },
-      },
-      worlds: {
-        ...visitorData.worlds,
-        [urlSlug]: {
-          ...visitorData.worlds[urlSlug],
-          ownedPlot: {
-            ...visitorPlotData.ownedPlot!,
-            plotSquares: {
-              ...visitorPlotData.ownedPlot!.plotSquares,
-              [`${squareIndex}`]: decorationAsset,
-            },
-          },
-          decorations: {
-            ...visitorPlotData.decorations,
-            [decorationAsset!]: decorationData,
-          },
-        },
-      },
-    };
-
-    await visitor.updateDataObject(updatedVisitorData, {
+    await visitor.updateDataObject(visitorData, {
       analytics: [
         {
           analyticName: "decorationPlaced",
+          profileId,
+          urlSlug,
+          uniqueKey: profileId,
         },
       ],
     });
 
     return res.json({
       success: true,
-      visitorData: updatedVisitorData,
-      visitorPlotData: updatedVisitorData.worlds[urlSlug],
+      visitorData,
+      visitorPlotData: visitorData.worlds[urlSlug],
     });
   } catch (error) {
     return errorHandler({

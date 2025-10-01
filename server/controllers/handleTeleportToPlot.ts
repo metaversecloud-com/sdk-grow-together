@@ -1,19 +1,19 @@
 import { Request, Response } from "express";
-import { DroppedAsset, Visitor, errorHandler, getCredentials, initializeVisitorData } from "../utils/index.js";
+import { DroppedAsset, errorHandler, getCredentials, initializeVisitorData } from "../utils/index.js";
 
 export const handleTeleportToPlot = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { assetId, urlSlug, visitorId } = credentials;
+    const { assetId, urlSlug } = credentials;
 
-    const visitor = await Visitor.create(visitorId, urlSlug, { credentials });
+    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
+    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
 
-    const visitorData = await initializeVisitorData(credentials);
-    if (visitorData instanceof Error) throw visitorData;
+    const { visitor, visitorData } = initializeVisitorDataResponse;
 
     const visitorPlotData = visitorData.worlds[urlSlug];
 
-    const plotAssetId = visitorPlotData.ownedPlot?.plotAssetId;
+    const plotAssetId = visitorPlotData.plotAssetId;
     if (!plotAssetId) throw new Error("Plot asset id is undefined.");
 
     const userAsset = await DroppedAsset.get(plotAssetId, urlSlug, { credentials });

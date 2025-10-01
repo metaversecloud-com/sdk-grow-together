@@ -8,6 +8,7 @@ export const decorations: Record<number, DecorationType> = {
   1: {
     id: 1,
     name: "Mole",
+    icon: `${s3URL}/decoration-1.png`,
     imageSrc: `${s3URL}/decoration-1.png`,
   },
 };
