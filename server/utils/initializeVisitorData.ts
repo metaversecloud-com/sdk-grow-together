@@ -1,8 +1,7 @@
-import { VisitorInterface } from "@rtsdk/topia";
-import { Visitor } from "../topiaInit.js";
-import { Credentials } from "../../types/Credentials.js";
-import { VisitorDataObjectType } from "../../types/index.js";
-import { DEFAULT_VISITOR_DATA, DEFAULT_VISITOR_WORLD_DATA } from "../../constants.js";
+import { Visitor } from "./topiaInit.js";
+import { Credentials } from "../types/Credentials.js";
+import { VisitorDataObjectType } from "../types/index.js";
+import { DEFAULT_VISITOR_DATA, DEFAULT_VISITOR_WORLD_DATA } from "../constants.js";
 
 /**
  * Initialize visitor data object with default values if it doesn't exist or is missing properties

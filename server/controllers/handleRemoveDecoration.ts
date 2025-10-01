@@ -7,7 +7,7 @@ import { errorHandler, getCredentials, initializeVisitorData, DroppedAsset, Worl
 export const handleRemoveDecoration = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { profileId, urlSlug, visitorId } = credentials;
+    const { profileId, urlSlug } = credentials;
     const { squareIndex } = req.body;
 
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
@@ -18,16 +18,11 @@ export const handleRemoveDecoration = async (req: Request, res: Response) => {
     const visitorPlotData = visitorData.worlds[urlSlug];
     const assetId = visitorPlotData.plotSquares[squareIndex];
 
-    if (!assetId) {
-      return res.status(400).json({
-        success: false,
-        error: "No decoration found on the specified square",
-      });
-    }
+    if (!assetId) throw "No decoration found on the specified square";
 
     const decoration = visitorPlotData.decorations[assetId];
 
-    visitorData.decorationsOwned[decoration.id].available += 1;
+    visitorData.decorationsOwned[decoration.id].quantity += 1;
     visitorData.worlds[urlSlug].plotSquares[squareIndex] = null;
     delete visitorData.worlds[urlSlug].decorations[assetId];
 

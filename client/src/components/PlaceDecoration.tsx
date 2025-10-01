@@ -68,7 +68,7 @@ export const PlaceDecoration = ({
 
         <div className="grid gap-2 grid-cols-2">
           {Object.values(decorations).map((decoration) => {
-            const isOwned = decorationsOwned[decoration.id]?.available > 0;
+            const isOwned = decorationsOwned[decoration.id]?.quantity > 0;
 
             return (
               <div

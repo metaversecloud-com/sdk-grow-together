@@ -18,10 +18,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
     const { visitor, visitorData } = initializeVisitorDataResponse;
 
     if (visitorData.worlds[urlSlug].plotAssetId) {
-      return res.status(400).json({
-        success: false,
-        error: "You already own a plot. Each player can only claim one plot.",
-      });
+      throw "You already own a plot. Each player can only claim one plot.";
     }
 
     // Check if this plot is already claimed by someone else
@@ -31,10 +28,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
     let plotAssetData = plotAsset.dataObject as PlotAssetDataObjectType;
 
     if (plotAssetData?.ownerId && plotAssetData.ownerId !== profileId) {
-      return res.status(400).json({
-        success: false,
-        error: `This plot is already owned by ${plotAssetData.ownerName || "another player"}.`,
-      });
+      throw `This plot is already owned by ${plotAssetData.ownerName || "another player"}.`;
     }
 
     // Claim the plot

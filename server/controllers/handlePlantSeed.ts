@@ -3,8 +3,6 @@ import {
   errorHandler,
   getCredentials,
   initializeVisitorData,
-  getSeedConfig,
-  getPlantImageUrl,
   calculateSquarePosition,
   DroppedAsset,
   Asset,
@@ -12,7 +10,7 @@ import {
   getBaseUrl,
 } from "../utils/index.js";
 import { DroppedAssetClickType } from "@rtsdk/topia";
-import { calculateNumberOfSquares } from "../../shared/index.js";
+import { calculateNumberOfSquares, seeds } from "../../shared/index.js";
 
 /**
  * Handle planting a seed - creates a new plant dropped asset in the world
@@ -20,32 +18,21 @@ import { calculateNumberOfSquares } from "../../shared/index.js";
 export const handlePlantSeed = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { assetId, displayName, profileId, urlSlug, visitorId } = credentials;
+    const { assetId, displayName, profileId, urlSlug } = credentials;
     const { seedId, squareIndex } = req.body;
 
     if (!seedId || typeof seedId !== "number" || typeof squareIndex !== "number") {
-      return res.status(400).json({
-        success: false,
-        error: "Valid seedId and squareIndex are required",
-      });
+      throw "Valid seedId and squareIndex are required";
     }
 
     const noOfSquares = calculateNumberOfSquares(true);
     if (squareIndex < 0 || squareIndex > noOfSquares) {
-      return res.status(400).json({
-        success: false,
-        error: `squareIndex must be between 0 and ${noOfSquares}`,
-      });
+      throw `squareIndex must be between 0 and ${noOfSquares}`;
     }
 
     // Get seed configuration
-    const seedConfig = getSeedConfig(seedId);
-    if (!seedConfig) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid seed type",
-      });
-    }
+    const seedConfig = seeds[seedId];
+    if (!seedConfig) throw "Invalid seed type";
 
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
@@ -55,33 +42,20 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     const visitorPlotData = visitorData.worlds[urlSlug];
 
     // Check if visitor owns a plot
-    if (!visitorPlotData.plotAssetId) {
-      return res.status(400).json({
-        success: false,
-        error: "You must claim a plot before planting seeds",
-      });
-    }
+    if (!visitorPlotData.plotAssetId) throw "You must claim a plot before planting seeds";
 
     // Check if visitor has purchased this seed (for paid seeds)
     if (seedConfig.cost > 0 && !visitorData.seedsPurchased[seedId]) {
-      return res.status(400).json({
-        success: false,
-        error: "You must purchase this seed before planting",
-      });
+      throw "You must purchase this seed before planting";
     }
 
     // Check if the square is already occupied
-    if (visitorPlotData.plotSquares?.[squareIndex]) {
-      return res.status(400).json({
-        success: false,
-        error: "This square is already occupied",
-      });
-    }
+    if (visitorPlotData.plotSquares?.[squareIndex]) throw "This square is already occupied";
 
     // Get the plot asset to determine position
     const plotAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
     const position = calculateSquarePosition(plotAsset.position, squareIndex);
-    const layer1 = getPlantImageUrl(seedId, 0); // Start at growth level 0
+    const layer1 = seeds[seedId].imageVariations[0]; // Start at growth level 0
 
     // Trigger planting particle effect
     const world = World.create(urlSlug, { credentials });

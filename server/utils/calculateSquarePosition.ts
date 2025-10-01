@@ -1,4 +1,4 @@
-import { plotConfig } from "../../../shared/index.js";
+import { plotConfig } from "../../shared/index.js";
 
 /**
  * Calculate position for a plot square based on square index

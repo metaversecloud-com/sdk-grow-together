@@ -12,6 +12,7 @@ import {
   handleRemoveDecoration,
 } from "./controllers/index.js";
 import { getVersion } from "./utils/getVersion.js";
+import { handlePurchaseDecoration } from "./controllers/handlePurchaseDecoration.js";
 
 const router = express.Router();
 const SERVER_START_DATE = new Date();
@@ -35,13 +36,20 @@ router.get("/system/health", (req, res) => {
 });
 
 router.get("/game-state", handleGetGameState);
+
+// plot routes
 router.post("/plot/claim", handleClaimPlot);
 router.post("/plot/teleport", handleTeleportToPlot);
 router.post("/seed/purchase", handlePurchaseSeed);
+
+// plant routes
 router.get("/plant", handleGetPlantInfo);
 router.post("/plant/drop", handlePlantSeed);
 router.post("/plant/water", handleWaterPlant);
 router.post("/plant/harvest", handleHarvestPlant);
+
+// decoration routes
+router.post("/decoration/purchase", handlePurchaseDecoration);
 router.post("/decoration/drop", handlePlaceDecoration);
 router.post("/decoration/remove", handleRemoveDecoration);
 

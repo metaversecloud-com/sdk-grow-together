@@ -25,8 +25,7 @@ export type VisitorDataObjectType = {
   decorationsOwned: {
     [decorationId: number]: {
       id: number;
-      dateReceived: string;
-      available: number;
+      quantity: number;
     };
   };
   seedsPurchased: {

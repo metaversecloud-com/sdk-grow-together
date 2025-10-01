@@ -28,7 +28,7 @@ export const handleGetGameState = async (req: Request, res: Response) => {
     let hasUpdates = false;
 
     for (const [plantAssetId, plant] of Object.entries(visitorData.plants)) {
-      const seedConfig = getSeedConfig(plant.seedId);
+      const seedConfig = seeds[plant.seedId];
       if (seedConfig) {
         const currentGrowthLevel = calculateGrowthLevel(
           plant.dateDropped,

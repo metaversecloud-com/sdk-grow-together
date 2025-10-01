@@ -17,10 +17,10 @@ interface SeedMenuProps {
 
 export const SeedMenu = ({ visitorData, onClose }: SeedMenuProps) => {
   const dispatch = useContext(GlobalDispatchContext);
-  const [purchasingSeeds, setPurchasingSeeds] = useState<Set<number>>(new Set());
+  const [isPurchasing, setIsPurchasing] = useState(false);
 
   const handlePurchaseSeed = async (seedId: number) => {
-    setPurchasingSeeds((prev) => new Set([...prev, seedId]));
+    setIsPurchasing(true);
     await backendAPI
       .post("/seed/purchase", { seedId })
       .then((response) => {
@@ -31,11 +31,7 @@ export const SeedMenu = ({ visitorData, onClose }: SeedMenuProps) => {
       })
       .catch((error) => setErrorMessage(dispatch, error as ErrorType))
       .finally(() => {
-        setPurchasingSeeds((prev) => {
-          const updated = new Set(prev);
-          updated.delete(seedId);
-          return updated;
-        });
+        setIsPurchasing(false);
       });
   };
 
@@ -66,7 +62,6 @@ export const SeedMenu = ({ visitorData, onClose }: SeedMenuProps) => {
             const purchased = isPurchased(seed.id);
             const affordable = canAfford(seed.cost);
             const free = isFree(seed.cost);
-            const isPurchasing = purchasingSeeds.has(seed.id);
 
             return (
               <div key={seed.id} className={`card ${!affordable && !free && !purchased ? "opacity-50" : ""}`}>

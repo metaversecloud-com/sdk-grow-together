@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 // components
-import { PlotGrid, SeedMenu, PageContainer } from "@/components";
+import { PlotGrid, SeedMenu, PageContainer, DecorationMenu } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
@@ -21,8 +21,9 @@ export const GardenPlot = () => {
   const [searchParams] = useSearchParams();
 
   const [isLoading, setIsLoading] = useState(true);
-  const [showSeedMenu, setShowSeedMenu] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [showSeedMenu, setShowSeedMenu] = useState(false);
+  const [showDecorationMenu, setShowDecorationMenu] = useState(false);
 
   const profileId = searchParams.get("profileId");
 
@@ -59,11 +60,6 @@ export const GardenPlot = () => {
       .catch((error) => setErrorMessage(dispatch, error as ErrorType))
       .finally(() => setIsLoading(false));
   };
-
-  // Show seed menu overlay
-  if (visitorData && showSeedMenu && isOwnedByCurrentUser) {
-    return <SeedMenu visitorData={visitorData} onClose={() => setShowSeedMenu(false)} />;
-  }
 
   return (
     <PageContainer isLoading={isLoading} headerText="Garden Plot">
@@ -118,6 +114,10 @@ export const GardenPlot = () => {
             <button className="btn btn-outline" onClick={() => setShowSeedMenu(true)}>
               🌱 Open Seed Menu
             </button>
+
+            <button className="btn btn-outline" onClick={() => setShowDecorationMenu(true)}>
+              ⛲ Open Decorations Menu
+            </button>
           </div>
         )}
 
@@ -129,6 +129,8 @@ export const GardenPlot = () => {
           </button>
         )}
       </div>
+      {showSeedMenu && <SeedMenu visitorData={visitorData!} onClose={() => setShowSeedMenu(false)} />}
+      {showDecorationMenu && <DecorationMenu visitorData={visitorData!} onClose={() => setShowDecorationMenu(false)} />}
     </PageContainer>
   );
 };

@@ -1,12 +1,6 @@
 import { Request, Response } from "express";
-import {
-  errorHandler,
-  getCredentials,
-  initializeVisitorData,
-  getSeedConfig,
-  DroppedAsset,
-  World,
-} from "../utils/index.js";
+import { errorHandler, getCredentials, initializeVisitorData, DroppedAsset, World } from "../utils/index.js";
+import { seeds } from "../../shared/index.js";
 
 /**
  * Handle plant harvesting - removes plant from world and awards coins
@@ -14,7 +8,7 @@ import {
 export const handleHarvestPlant = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { assetId, profileId, urlSlug, visitorId } = credentials;
+    const { assetId, profileId, urlSlug } = credentials;
 
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
@@ -25,28 +19,15 @@ export const handleHarvestPlant = async (req: Request, res: Response) => {
 
     // Check if the plant exists in visitor's data
     const plant = visitorPlotData.plants[assetId];
-    if (!plant) {
-      return res.status(400).json({
-        success: false,
-        error: "Plant not found",
-      });
-    }
+    if (!plant) throw "Plant not found";
 
     // Get seed configuration for harvest level and reward calculation
-    const seedConfig = getSeedConfig(plant.seedId);
-    if (!seedConfig) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid plant type",
-      });
-    }
+    const seedConfig = seeds[plant.seedId];
+    if (!seedConfig) throw "Invalid plant type";
 
     // Check if plant is fully grown (at harvest level)
     if (plant.growLevel < seedConfig.harvestLevel) {
-      return res.status(400).json({
-        success: false,
-        error: `Plant is not ready for harvest. Current growth level: ${plant.growLevel}/${seedConfig.harvestLevel}`,
-      });
+      throw `Plant is not ready for harvest. Current growth level: ${plant.growLevel}/${seedConfig.harvestLevel}`;
     }
 
     // Update visitor's data object

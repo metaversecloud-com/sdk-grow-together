@@ -1,12 +1,6 @@
 import { Request, Response } from "express";
-import {
-  errorHandler,
-  getCredentials,
-  initializeVisitorData,
-  getSeedConfig,
-  DroppedAsset,
-  World,
-} from "../utils/index.js";
+import { errorHandler, getCredentials, initializeVisitorData, DroppedAsset, World } from "../utils/index.js";
+import { seeds } from "../../shared/index.js";
 
 /**
  * Handle plant watering - grows plant by 1 level and updates dropped asset image in world
@@ -25,21 +19,11 @@ export const handleWaterPlant = async (req: Request, res: Response) => {
 
     // Check if the plant exists in visitor's data
     const plant = visitorPlotData.plants[assetId];
-    if (!plant) {
-      return res.status(400).json({
-        success: false,
-        error: "Plant not found",
-      });
-    }
+    if (!plant) throw "Plant not found";
 
     // Get seed configuration for harvest level and reward calculation
-    const seedConfig = getSeedConfig(plant.seedId);
-    if (!seedConfig) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid plant type",
-      });
-    }
+    const seedConfig = seeds[plant.seedId];
+    if (!seedConfig) throw "Invalid plant type";
 
     const plantData = {
       ...plant,

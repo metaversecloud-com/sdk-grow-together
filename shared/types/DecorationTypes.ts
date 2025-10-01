@@ -5,6 +5,7 @@
 export type DecorationType = {
   id: number;
   name: string;
+  cost: number;
   icon: string;
   imageSrc: string;
 };
