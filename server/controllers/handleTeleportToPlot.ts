@@ -20,7 +20,7 @@ export const handleTeleportToPlot = async (req: Request, res: Response) => {
 
     const { x, y } = userAsset.position || { x: 0, y: 0 };
     await visitor.moveVisitor({
-      shouldTeleportVisitor: false,
+      shouldTeleportVisitor: true,
       x,
       y,
     });

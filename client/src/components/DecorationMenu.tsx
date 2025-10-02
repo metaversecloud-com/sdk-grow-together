@@ -17,9 +17,11 @@ interface DecorationMenuProps {
 
 export const DecorationMenu = ({ visitorData, onClose }: DecorationMenuProps) => {
   const dispatch = useContext(GlobalDispatchContext);
+  const [purchasingDecorations, setPurchasingDecorations] = useState<Set<number>>(new Set());
   const [isPurchasing, setIsPurchasing] = useState(false);
 
   const handlePurchaseDecoration = async (decorationId: number) => {
+    setPurchasingDecorations((prev) => new Set([...prev, decorationId]));
     setIsPurchasing(true);
     await backendAPI
       .post("/decoration/purchase", { decorationId })
@@ -31,6 +33,11 @@ export const DecorationMenu = ({ visitorData, onClose }: DecorationMenuProps) =>
       })
       .catch((error) => setErrorMessage(dispatch, error as ErrorType))
       .finally(() => {
+        setPurchasingDecorations((prev) => {
+          const updated = new Set(prev);
+          updated.delete(decorationId);
+          return updated;
+        });
         setIsPurchasing(false);
       });
   };
@@ -75,7 +82,7 @@ export const DecorationMenu = ({ visitorData, onClose }: DecorationMenuProps) =>
                         onClick={() => handlePurchaseDecoration(decoration.id)}
                         disabled={isPurchasing}
                       >
-                        {isPurchasing ? "Purchasing..." : "Purchase"}
+                        {purchasingDecorations.has(decoration.id) ? "Purchasing..." : "Purchase"}
                       </button>
                     ) : (
                       <span className="p3 text-muted">

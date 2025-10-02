@@ -17,9 +17,11 @@ interface SeedMenuProps {
 
 export const SeedMenu = ({ visitorData, onClose }: SeedMenuProps) => {
   const dispatch = useContext(GlobalDispatchContext);
+  const [purchasingSeeds, setPurchasingSeeds] = useState<Set<number>>(new Set());
   const [isPurchasing, setIsPurchasing] = useState(false);
 
   const handlePurchaseSeed = async (seedId: number) => {
+    setPurchasingSeeds((prev) => new Set([...prev, seedId]));
     setIsPurchasing(true);
     await backendAPI
       .post("/seed/purchase", { seedId })
@@ -31,6 +33,11 @@ export const SeedMenu = ({ visitorData, onClose }: SeedMenuProps) => {
       })
       .catch((error) => setErrorMessage(dispatch, error as ErrorType))
       .finally(() => {
+        setPurchasingSeeds((prev) => {
+          const updated = new Set(prev);
+          updated.delete(seedId);
+          return updated;
+        });
         setIsPurchasing(false);
       });
   };
@@ -92,7 +99,7 @@ export const SeedMenu = ({ visitorData, onClose }: SeedMenuProps) => {
                         onClick={() => handlePurchaseSeed(seed.id)}
                         disabled={isPurchasing}
                       >
-                        {isPurchasing ? "Purchasing..." : `Buy ${seed.cost} coins`}
+                        {purchasingSeeds.has(seed.id) ? "Purchasing..." : `Buy ${seed.cost} coins`}
                       </button>
                     ) : (
                       <span className="p3 text-muted">Need {seed.cost - visitorData.coinsAvailable} more coins</span>
