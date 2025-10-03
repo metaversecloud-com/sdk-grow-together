@@ -26,23 +26,28 @@ export const PlotGrid = ({ plotSquares, plants, placedDecorations, isReadOnly, v
 
   const [selectedSquare, setSelectedSquare] = useState<number | null>(null);
   const [isUpdatingPlot, setIsUpdatingPlot] = useState(false);
+  const [showRemovePlantModal, setShowRemovePlantModal] = useState(false);
   const [showRemoveDecorationModal, setShowRemoveDecorationModal] = useState(false);
 
   const handleSquareClick = (squareIndex: number) => {
-    if (isReadOnly || (plotSquares[squareIndex] !== null && plants[plotSquares[squareIndex]])) {
-      return;
-    }
+    if (isReadOnly) return;
 
     setSelectedSquare(selectedSquare === squareIndex ? null : squareIndex);
 
-    if (plotSquares[squareIndex] && placedDecorations[plotSquares[squareIndex]]) setShowRemoveDecorationModal(true);
+    if (plotSquares[squareIndex] && plants[plotSquares[squareIndex]]) setShowRemovePlantModal(true);
+    else if (plotSquares[squareIndex] && placedDecorations[plotSquares[squareIndex]])
+      setShowRemoveDecorationModal(true);
   };
 
-  const handleRemoveDecoration = async () => {
-    setIsUpdatingPlot(true);
+  const handleCancelRemove = () => {
+    setShowRemovePlantModal(false);
+    setShowRemoveDecorationModal(false);
+    setSelectedSquare(null);
+  };
 
+  const handleClearSquare = async ({ type }: { type: "plant" | "decoration" }) => {
     await backendAPI
-      .post("/decoration/remove", {
+      .post(`/${type}/remove`, {
         squareIndex: selectedSquare,
       })
       .then((response) => {
@@ -61,7 +66,8 @@ export const PlotGrid = ({ plotSquares, plants, placedDecorations, isReadOnly, v
         setErrorMessage(dispatch, error as ErrorType);
       })
       .finally(() => {
-        setIsUpdatingPlot(false);
+        setShowRemovePlantModal(false);
+        setShowRemoveDecorationModal(false);
       });
   };
 
@@ -69,13 +75,10 @@ export const PlotGrid = ({ plotSquares, plants, placedDecorations, isReadOnly, v
     const squareAssetId = plotSquares[squareIndex];
     const plant = squareAssetId ? plants[squareAssetId] : null;
     const decoration = squareAssetId ? placedDecorations[squareAssetId] : null;
-    const isEmpty = !squareAssetId;
     const isSelected = selectedSquare === squareIndex;
 
     let squareClass = "card small flex items-center justify-center";
-    if (decoration) {
-      squareClass += " cursor-pointer";
-    } else if (isEmpty && !isReadOnly && !isUpdatingPlot) {
+    if (!isReadOnly && !isUpdatingPlot) {
       squareClass += " cursor-pointer";
       if (isSelected) squareClass += " success";
     }
@@ -126,37 +129,46 @@ export const PlotGrid = ({ plotSquares, plants, placedDecorations, isReadOnly, v
   };
 
   return (
-    <div className="flex-col">
-      <h3 className="h3 text-center py-4">Garden Plot (4x4)</h3>
-
+    <div>
       <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
         {Array.from({ length: plotConfig.gridCols * plotConfig.gridRows }, (_, i) => renderSquare(i))}
       </div>
 
-      {!isReadOnly &&
-        selectedSquare !== null &&
-        (plotConfig.reservedSquares?.includes(selectedSquare) ? (
-          <PlaceDecoration
-            selectedSquare={selectedSquare}
-            setSelectedSquare={setSelectedSquare}
-            setIsUpdatingPlot={setIsUpdatingPlot}
-            decorationsOwned={visitorData?.decorationsOwned || {}}
-          />
-        ) : (
-          <PlantSeed
-            selectedSquare={selectedSquare}
-            setSelectedSquare={setSelectedSquare}
-            setIsUpdatingPlot={setIsUpdatingPlot}
-            seedsPurchased={visitorData?.seedsPurchased || {}}
-          />
-        ))}
+      {!isReadOnly && selectedSquare !== null && !plotSquares[selectedSquare] && (
+        <>
+          {plotConfig.reservedSquares?.includes(selectedSquare) ? (
+            <PlaceDecoration
+              selectedSquare={selectedSquare}
+              setSelectedSquare={setSelectedSquare}
+              setIsUpdatingPlot={setIsUpdatingPlot}
+              decorationsOwned={visitorData?.decorationsOwned || {}}
+            />
+          ) : (
+            <PlantSeed
+              selectedSquare={selectedSquare}
+              setSelectedSquare={setSelectedSquare}
+              setIsUpdatingPlot={setIsUpdatingPlot}
+              seedsPurchased={visitorData?.seedsPurchased || {}}
+            />
+          )}
+        </>
+      )}
+
+      {showRemovePlantModal && (
+        <ConfirmationModal
+          title="Remove Plant?"
+          message="Removing this plant will free up this plot square."
+          handleToggleShowConfirmationModal={handleCancelRemove}
+          handleOnConfirm={() => handleClearSquare({ type: "plant" })}
+        />
+      )}
 
       {showRemoveDecorationModal && (
         <ConfirmationModal
           title="Remove Decoration?"
           message="Removing this decoration will return it to your inventory so you can place it again later."
-          handleToggleShowConfirmationModal={() => setShowRemoveDecorationModal(false)}
-          handleOnConfirm={handleRemoveDecoration}
+          handleToggleShowConfirmationModal={handleCancelRemove}
+          handleOnConfirm={() => handleClearSquare({ type: "decoration" })}
         />
       )}
     </div>

@@ -12,10 +12,11 @@ import { seeds, PlantDataObjectType, calculateNumberOfSquares } from "@shared/in
 
 interface PlantDetailsProps {
   plant: PlantDataObjectType;
+  plotAssetId?: string | null;
   isReadOnly: boolean;
 }
 
-export const PlantDetails = ({ plant, isReadOnly }: PlantDetailsProps) => {
+export const PlantDetails = ({ plant, plotAssetId, isReadOnly }: PlantDetailsProps) => {
   const dispatch = useContext(GlobalDispatchContext);
 
   const { lastWatered, growLevel, seedId, squareIndex, dateDropped } = plant;
@@ -109,6 +110,12 @@ export const PlantDetails = ({ plant, isReadOnly }: PlantDetailsProps) => {
       });
   };
 
+  const handleOpenPlotIframe = async () => {
+    await backendAPI.post("/plot/view", { plotAssetId }).catch((error) => {
+      setErrorMessage(dispatch, error as ErrorType);
+    });
+  };
+
   const getGrowthStatus = () => {
     if (wasHarvested) return "Harvested";
     else if (readyForHarvest) return "Ready for Harvest!";
@@ -169,30 +176,33 @@ export const PlantDetails = ({ plant, isReadOnly }: PlantDetailsProps) => {
 
       {/* Water */}
       {!isReadOnly && readyForWater && (
-        <div className="actions">
-          <button className="btn" onClick={handleWater} disabled={isWatering}>
-            {isWatering ? "Watering..." : `Water (+1 growth level)`}
-          </button>
-        </div>
+        <button className="btn" onClick={handleWater} disabled={isWatering}>
+          {isWatering ? "Watering..." : `Water (+1 growth level)`}
+        </button>
       )}
 
       {/* Harvest */}
       {!isReadOnly && readyForHarvest && (
-        <div className="actions">
-          <button className="btn" onClick={handleHarvest} disabled={isHarvesting}>
-            {isHarvesting ? "Harvesting..." : `Harvest (+${reward} coins)`}
-          </button>
-        </div>
+        <button className="btn" onClick={handleHarvest} disabled={isHarvesting}>
+          {isHarvesting ? "Harvesting..." : `Harvest (+${reward} coins)`}
+        </button>
       )}
 
       {/* Already harvested */}
       {wasHarvested && (
-        <div className="card success">
-          <div className="card-details">
-            <p className="p2 text-center">Plant has been harvested!</p>
-            <p className="p3 text-center">Earned {reward} coins</p>
+        <>
+          <div className="card success">
+            <div className="card-details">
+              <p className="p2 text-center">Plant has been harvested!</p>
+              <p className="p3 text-center">Earned {reward} coins</p>
+            </div>
           </div>
-        </div>
+          {plotAssetId && (
+            <button className="btn" onClick={handleOpenPlotIframe}>
+              View Plot
+            </button>
+          )}
+        </>
       )}
     </div>
   );

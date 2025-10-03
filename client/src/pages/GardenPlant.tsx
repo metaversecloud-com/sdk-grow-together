@@ -7,14 +7,14 @@ import { PlantDetails } from "@/components/PlantDetails";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
-import { ErrorType, SET_PLANT_DATA } from "@/context/types";
+import { ErrorType, SET_PLANT_DATA, SET_VISITOR_PLOT_DATA } from "@/context/types";
 
 // utils
 import { backendAPI, setErrorMessage } from "@/utils";
 
 export const GardenPlant = () => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { hasInteractiveParams, plantData } = useContext(GlobalStateContext);
+  const { hasInteractiveParams, plantData, visitorPlotData } = useContext(GlobalStateContext);
 
   const [searchParams] = useSearchParams();
 
@@ -31,11 +31,15 @@ export const GardenPlant = () => {
       backendAPI
         .get("/plant")
         .then((response) => {
-          const { success, plantData } = response.data;
+          const { success, plantData, visitorPlotData } = response.data;
           if (success) {
             dispatch!({
               type: SET_PLANT_DATA,
               payload: { plantData, error: "" },
+            });
+            dispatch!({
+              type: SET_VISITOR_PLOT_DATA,
+              payload: { visitorPlotData, error: "" },
             });
           }
         })
@@ -53,12 +57,14 @@ export const GardenPlant = () => {
             {!isOwnedByCurrentUser && (
               <div className="grid gap-4">
                 <p className="pb-2 text-center">This plant belongs to {ownerName || "another player"}</p>
-                <PlantDetails plant={plantData} isReadOnly={true} />
+                <PlantDetails plant={plantData} plotAssetId={visitorPlotData?.plotAssetId} isReadOnly={true} />
               </div>
             )}
 
             {/* Current user's plant */}
-            {isOwnedByCurrentUser && <PlantDetails plant={plantData} isReadOnly={false} />}
+            {isOwnedByCurrentUser && (
+              <PlantDetails plant={plantData} plotAssetId={visitorPlotData?.plotAssetId} isReadOnly={false} />
+            )}
           </>
         ) : (
           <p className="p2">No plant data found.</p>

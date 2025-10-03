@@ -61,7 +61,7 @@ export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot
         <h4>Plant Seed in Square {selectedSquare}</h4>
         <p className="p3">Select a seed to decoration:</p>
 
-        <div className="grid gap-2">
+        <div className="grid gap-2 grid-cols-2">
           {Object.values(seeds).map((seed) => {
             const isFree = seed.cost === 0;
             const isPurchased = seedsPurchased[seed.id] || false;

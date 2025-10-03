@@ -68,7 +68,8 @@ export const PlaceDecoration = ({
 
         <div className="grid gap-2 grid-cols-2">
           {Object.values(decorations).map((decoration) => {
-            const isOwned = decorationsOwned[decoration.id]?.quantity > 0;
+            const quantity = decorationsOwned[decoration.id]?.quantity || 0;
+            const isOwned = quantity > 0;
 
             return (
               <div
@@ -81,7 +82,7 @@ export const PlaceDecoration = ({
                 <img className="mr-2" src={decoration.imageSrc} />
                 <div>
                   <p className="p2 p-0">{decoration.name}</p>
-                  <p className="p3 p-0 text-muted">{!isOwned && " (Not owned)"}</p>
+                  <p className="p3 p-0 text-muted">{quantity} available</p>
                 </div>
               </div>
             );

@@ -13,9 +13,9 @@ export const ConfirmationModal = ({
 }) => {
   const [areButtonsDisabled, setAreButtonsDisabled] = useState(false);
 
-  const onConfirm = () => {
+  const onConfirm = async () => {
     setAreButtonsDisabled(true);
-    handleOnConfirm();
+    await handleOnConfirm();
     handleToggleShowConfirmationModal();
   };
 

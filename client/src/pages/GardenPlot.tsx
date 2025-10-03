@@ -103,6 +103,15 @@ export const GardenPlot = () => {
               </div>
             </div>
 
+            <div className="grid gap-2 grid-cols-2">
+              <button className="btn btn-outline" onClick={() => setShowSeedMenu(true)}>
+                🌱 Seeds
+              </button>
+              <button className="btn btn-outline" onClick={() => setShowDecorationMenu(true)}>
+                ⛲ Decorations
+              </button>
+            </div>
+
             <PlotGrid
               plotSquares={plotSquares}
               plants={plants || {}}
@@ -110,14 +119,6 @@ export const GardenPlot = () => {
               isReadOnly={false}
               visitorData={visitorData}
             />
-
-            <button className="btn btn-outline" onClick={() => setShowSeedMenu(true)}>
-              🌱 Open Seed Menu
-            </button>
-
-            <button className="btn btn-outline" onClick={() => setShowDecorationMenu(true)}>
-              ⛲ Open Decorations Menu
-            </button>
           </div>
         )}
 

@@ -42,9 +42,6 @@ export const DecorationMenu = ({ visitorData, onClose }: DecorationMenuProps) =>
       });
   };
 
-  const canAfford = (cost: number) => visitorData.coinsAvailable >= cost;
-  const isPurchased = (decorationId: number) => visitorData.decorationsOwned[decorationId] || false;
-
   return (
     <div className="modal-container">
       <div className="modal">
@@ -59,21 +56,21 @@ export const DecorationMenu = ({ visitorData, onClose }: DecorationMenuProps) =>
 
         <div className="grid gap-2">
           {Object.values(decorations).map((decoration) => {
-            const purchased = isPurchased(decoration.id);
-            const affordable = canAfford(decoration.cost);
+            const affordable = visitorData.coinsAvailable >= decoration.cost;
 
             return (
-              <div
-                key={decoration.id}
-                className={`card small text-left ${!affordable && !purchased ? "opacity-50" : ""}`}
-              >
+              <div key={decoration.id} className={`card small text-left ${!affordable ? "opacity-50" : ""}`}>
                 <div className="card-image">
                   <img className="mr-2" src={decoration.imageSrc} />
                 </div>
                 <div className="card-details">
                   <h4 className="card-title">{decoration.name}</h4>
 
-                  <p className="card-description p2">Cost: {decoration.cost} coins</p>
+                  <p className="card-description p2">
+                    Cost: {decoration.cost} coins
+                    <br />
+                    Available: {visitorData.decorationsOwned[decoration.id].quantity || 0}
+                  </p>
 
                   <div className="card-actions">
                     {affordable ? (
