@@ -59,7 +59,7 @@ export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot
     <div className="card mt-4">
       <div className="card-details grid gap-4">
         <h4>Plant Seed in Square {selectedSquare}</h4>
-        <p className="p3">Select a seed to decoration:</p>
+        <p className="p3">Select a seed to plant:</p>
 
         <div className="grid gap-2 grid-cols-2">
           {Object.values(seeds).map((seed) => {
