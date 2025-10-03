@@ -77,7 +77,6 @@ export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot
               >
                 <img className="mr-2" src={seed.icon} style={{ opacity: !isAvailable ? 0.5 : 1 }} />
                 {seed.name}
-                {!isAvailable && " (Not purchased)"}
               </button>
             );
           })}
