@@ -54,6 +54,7 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
       .fireToast({
         groupId: "handlePurchaseDecoration",
         title: "You purchased a new decoration!",
+        text: `You can now place a ${decorationConfig.name} in your garden.`,
       })
       .catch((error: AxiosError) => {
         return errorHandler({

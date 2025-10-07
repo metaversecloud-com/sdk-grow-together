@@ -31,13 +31,13 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
       throw `Not enough coins. Need ${seedConfig.cost}, have ${visitorData.coinsAvailable}`;
     }
 
-    // Free seeds don't need to be "purchased", they're always available
-    if (seedConfig.cost === 0) {
-      return res.json({
-        success: true,
-        data: { coinsRemaining: visitorData.coinsAvailable },
-      });
-    }
+    // // Free seeds don't need to be "purchased", they're always available
+    // if (seedConfig.cost === 0) {
+    //   return res.json({
+    //     success: true,
+    //     visitorData,
+    //   });
+    // }
 
     // Purchase the seed
     visitorData.coinsAvailable = visitorData.coinsAvailable - seedConfig.cost;
@@ -60,6 +60,7 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
       .fireToast({
         groupId: "handlePurchaseSeed",
         title: "You purchased a new seed!",
+        text: `You can now plant ${seedConfig.name}s seeds in your garden.`,
       })
       .catch((error: AxiosError) => {
         return errorHandler({

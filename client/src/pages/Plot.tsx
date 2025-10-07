@@ -130,8 +130,8 @@ export const Plot = () => {
           </button>
         )}
       </div>
-      {showSeedMenu && <SeedMenu visitorData={visitorData!} onClose={() => setShowSeedMenu(false)} />}
-      {showDecorationMenu && <DecorationMenu visitorData={visitorData!} onClose={() => setShowDecorationMenu(false)} />}
+      {showSeedMenu && <SeedMenu onClose={() => setShowSeedMenu(false)} />}
+      {showDecorationMenu && <DecorationMenu onClose={() => setShowDecorationMenu(false)} />}
     </PageContainer>
   );
 };

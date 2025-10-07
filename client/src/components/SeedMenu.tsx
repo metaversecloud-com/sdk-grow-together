@@ -4,22 +4,20 @@ import { useContext, useState } from "react";
 import { ModalHeader, PurchaseItem, YourMoney } from "@/components";
 
 // context
-import { GlobalDispatchContext } from "@/context/GlobalContext";
+import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
 import { ErrorType, SET_VISITOR_DATA } from "@/context/types";
 
 // utils
 import { backendAPI, setErrorMessage } from "@/utils";
 
 // types
-import { seeds, VisitorDataObjectType } from "@shared/index.js";
+import { seeds } from "@shared/index.js";
 
-interface SeedMenuProps {
-  visitorData: VisitorDataObjectType;
-  onClose: () => void;
-}
-
-export const SeedMenu = ({ visitorData, onClose }: SeedMenuProps) => {
+export const SeedMenu = ({ onClose }: { onClose: () => void }) => {
   const dispatch = useContext(GlobalDispatchContext);
+  const { visitorData } = useContext(GlobalStateContext);
+  const { coinsAvailable, seedsPurchased } = visitorData || { coinsAvailable: 0 };
+
   const [purchasingSeeds, setPurchasingSeeds] = useState<Set<number>>(new Set());
   const [isPurchasing, setIsPurchasing] = useState(false);
 
@@ -45,10 +43,6 @@ export const SeedMenu = ({ visitorData, onClose }: SeedMenuProps) => {
       });
   };
 
-  const canAfford = (cost: number) => visitorData.coinsAvailable >= cost;
-  const isPurchased = (seedId: number) => visitorData.seedsPurchased[seedId] || false;
-  const isFree = (cost: number) => cost === 0;
-
   const formatTime = (seconds: number) => {
     if (seconds < 60) return `${seconds}s`;
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
@@ -60,28 +54,29 @@ export const SeedMenu = ({ visitorData, onClose }: SeedMenuProps) => {
       <div className="modal">
         <ModalHeader text="Buy Seeds" disabled={isPurchasing} handleOnClick={onClose} />
 
-        <YourMoney coinsAvailable={visitorData.coinsAvailable || 0} />
+        <YourMoney coinsAvailable={coinsAvailable || 0} />
 
         <div className="grid grid-cols-2 gap-2">
           {Object.values(seeds).map((seed) => {
-            const purchased = isPurchased(seed.id);
-            const affordable = canAfford(seed.cost);
-            const free = isFree(seed.cost);
+            const { id, name, rarity, cost, icon, growthTime, reward } = seed;
+            const purchased = seedsPurchased?.[id];
+            const affordable = coinsAvailable >= cost;
 
             return (
               <PurchaseItem
-                coinsAvailable={visitorData.coinsAvailable || 0}
-                id={seed.id}
-                available={!affordable && !free && !purchased}
-                imageSrc={seed.icon}
-                name={seed.name}
-                description={formatTime(seed.growthTime)}
-                rarity={seed.rarity}
-                cost={seed.cost}
-                value={`Profit: +${seed.reward - seed.cost} coins`}
+                key={id}
+                coinsAvailable={coinsAvailable || 0}
+                id={id}
+                available={affordable && !purchased}
+                imageSrc={icon}
+                name={name}
+                description={formatTime(growthTime)}
+                rarity={rarity}
+                cost={cost}
+                value={`Profit: +${reward - cost} coins`}
                 canPurchaseAdditional={false}
-                isPurchasing={purchasingSeeds.has(seed.id)}
-                handlePurchase={() => handlePurchaseSeed(seed.id)}
+                isPurchasing={purchasingSeeds.has(id)}
+                handlePurchase={() => handlePurchaseSeed(id)}
               />
             );
           })}
