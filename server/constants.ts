@@ -5,7 +5,12 @@ export const DEFAULT_VISITOR_DATA: VisitorDataObjectType = {
   lastDateCoinsEarned: "",
   totalCoinsEarned: 0,
   decorationsOwned: {},
-  seedsPurchased: {},
+  seedsPurchased: {
+    1: {
+      id: 1,
+      datePurchased: new Date().toISOString(),
+    },
+  },
   worlds: {},
 };
 

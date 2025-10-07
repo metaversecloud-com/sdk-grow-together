@@ -8,7 +8,8 @@ export type DecorationType = {
   cost: number;
   icon: string;
   imageSrc: string;
-  rarity: "common" | "uncommon" | "rare" | "epic" | "legendary";
+  rarity: "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary";
+  description: string;
 };
 
 export type PlacedDecorationDataObjectType = {

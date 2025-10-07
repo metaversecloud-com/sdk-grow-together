@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { errorHandler, getCredentials, initializeVisitorData } from "../utils/index.js";
 import { decorations } from "../../shared/index.js";
+import { AxiosError } from "axios";
 
 /**
  * Handle decoration purchase - allows visitor to purchase decorations with coins
@@ -48,6 +49,19 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
         },
       ],
     });
+
+    await visitor
+      .fireToast({
+        groupId: "handlePurchaseDecoration",
+        title: "You purchased a new decoration!",
+      })
+      .catch((error: AxiosError) => {
+        return errorHandler({
+          error,
+          functionName: "handlePurchaseDecoration",
+          message: "Error firing toast",
+        });
+      });
 
     return res.json({
       success: true,

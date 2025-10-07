@@ -1,5 +1,8 @@
 import { useContext, useState } from "react";
 
+// components
+import { ModalHeader, PurchaseItem, YourMoney } from "@/components";
+
 // context
 import { GlobalDispatchContext } from "@/context/GlobalContext";
 import { ErrorType, SET_VISITOR_DATA } from "@/context/types";
@@ -45,57 +48,31 @@ export const DecorationMenu = ({ visitorData, onClose }: DecorationMenuProps) =>
   return (
     <div className="modal-container">
       <div className="modal">
-        <h2 className="h2">⛲ Decoration Menu</h2>
+        <ModalHeader text="Buy Decorations" disabled={isPurchasing} handleOnClick={onClose} />
 
-        <div className="card small">
-          <div className="card-details">
-            <h4 className="card-title">Your Money: {visitorData.coinsAvailable} Coins</h4>
-          </div>
-        </div>
+        <YourMoney coinsAvailable={visitorData.coinsAvailable || 0} />
 
-        <div className="grid gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {Object.values(decorations).map((decoration) => {
             const affordable = visitorData.coinsAvailable >= decoration.cost;
 
             return (
-              <div key={decoration.id} className={`card small text-left ${!affordable ? "opacity-50" : ""}`}>
-                <div className="card-image">
-                  <img className="mr-2" src={decoration.imageSrc} />
-                </div>
-                <div className="card-details">
-                  <h4 className="card-title">{decoration.name}</h4>
-
-                  <p className="card-description p2">
-                    Cost: {decoration.cost} coins
-                    <br />
-                    Available: {visitorData.decorationsOwned?.[decoration.id]?.quantity || 0}
-                  </p>
-
-                  <div className="card-actions">
-                    {affordable ? (
-                      <button
-                        className="btn btn-outline"
-                        onClick={() => handlePurchaseDecoration(decoration.id)}
-                        disabled={isPurchasing}
-                      >
-                        {purchasingDecorations.has(decoration.id) ? "Purchasing..." : "Purchase"}
-                      </button>
-                    ) : (
-                      <span className="p3 text-muted">
-                        Need {decoration.cost - visitorData.coinsAvailable} more coins
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <PurchaseItem
+                coinsAvailable={visitorData.coinsAvailable || 0}
+                id={decoration.id}
+                available={affordable}
+                imageSrc={decoration.imageSrc}
+                name={decoration.name}
+                description={decoration.description}
+                rarity={decoration.rarity}
+                cost={decoration.cost}
+                value={`Available: ${visitorData.decorationsOwned?.[decoration.id]?.quantity || 0}`}
+                canPurchaseAdditional={true}
+                isPurchasing={purchasingDecorations.has(decoration.id)}
+                handlePurchase={() => handlePurchaseDecoration(decoration.id)}
+              />
             );
           })}
-        </div>
-
-        <div className="actions">
-          <button className="btn" onClick={onClose}>
-            Close Menu
-          </button>
         </div>
       </div>
     </div>

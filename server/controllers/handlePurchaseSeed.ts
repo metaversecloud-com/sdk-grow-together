@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { errorHandler, getCredentials, initializeVisitorData } from "../utils/index.js";
 import { seeds } from "../../shared/index.js";
+import { AxiosError } from "axios";
 
 /**
  * Handle seed purchase - allows visitor to purchase seeds with coins
@@ -54,6 +55,19 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
         },
       ],
     });
+
+    await visitor
+      .fireToast({
+        groupId: "handlePurchaseSeed",
+        title: "You purchased a new seed!",
+      })
+      .catch((error: AxiosError) => {
+        return errorHandler({
+          error,
+          functionName: "handlePurchaseSeed",
+          message: "Error firing toast",
+        });
+      });
 
     return res.json({
       success: true,

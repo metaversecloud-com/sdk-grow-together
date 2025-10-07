@@ -1,5 +1,8 @@
 import { useContext, useState } from "react";
 
+// components
+import { ModalHeader } from "@/components";
+
 // context
 import { GlobalDispatchContext } from "@/context/GlobalContext";
 import { ErrorType, SET_VISITOR_DATA, SET_VISITOR_PLOT_DATA } from "@/context/types";
@@ -24,7 +27,9 @@ export const PlaceDecoration = ({
   decorationsOwned,
 }: PlaceDecorationProps) => {
   const dispatch = useContext(GlobalDispatchContext);
+
   const [isPlacing, setIsPlacing] = useState(false);
+  const hasDecorations = Object.keys(decorationsOwned).length > 0;
 
   const handlePlaceDecoration = async (decorationId: number) => {
     if (!decorationId || selectedSquare === null) return;
@@ -61,38 +66,38 @@ export const PlaceDecoration = ({
   return (
     <div className="modal-container">
       <div className="modal">
-        <div className="modal-header flex gap-2 grid-cols-2">
-          <h4 className="flex-grow text-left">Place Decoration in Slot {selectedSquare}</h4>
-          <button
-            disabled={isPlacing}
-            onClick={() => {
-              setSelectedSquare(null);
-            }}
-          >
-            <img src="https://sdk-style.s3.amazonaws.com/icons/x.svg" style={{ width: "10px" }} />
-          </button>
-        </div>
+        <ModalHeader
+          text={hasDecorations ? `Place Decoration in Slot ${selectedSquare}` : "No decorations unlocked"}
+          disabled={isPlacing}
+          handleOnClick={() => {
+            setSelectedSquare(null);
+          }}
+        />
 
-        <div className="grid gap-2 grid-cols-2">
-          {Object.values(decorations).map((decoration) => {
-            const quantity = decorationsOwned[decoration.id]?.quantity || 0;
-            const isOwned = quantity > 0;
+        {!hasDecorations ? (
+          <p className="p2">Click “Buy Decorations” in the garden store to unlock your first decoration.</p>
+        ) : (
+          <div className="grid gap-2 grid-cols-2">
+            {Object.values(decorations).map((decoration) => {
+              const quantity = decorationsOwned[decoration.id]?.quantity || 0;
+              const isOwned = quantity > 0;
 
-            return (
-              <div
-                key={decoration.id}
-                className={`card text-center ${!isOwned || isPlacing ? "opacity-50" : "cursor-pointer"}`}
-                onClick={() => isOwned && handlePlaceDecoration(decoration.id)}
-              >
-                <img className="mr-2" src={decoration.imageSrc} />
-                <div>
-                  <p className="p2 p-0">{decoration.name}</p>
-                  <p className="p3 p-0 text-muted">{quantity} available</p>
+              return (
+                <div
+                  key={decoration.id}
+                  className={`card text-center ${!isOwned || isPlacing ? "opacity-50" : "cursor-pointer"}`}
+                  onClick={() => isOwned && handlePlaceDecoration(decoration.id)}
+                >
+                  <img className="mr-2" src={decoration.imageSrc} />
+                  <div>
+                    <p className="p2 p-0">{decoration.name}</p>
+                    <p className="p3 p-0 text-muted">{quantity} available</p>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

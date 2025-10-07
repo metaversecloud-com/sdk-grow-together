@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 // components
-import { PlotGrid, SeedMenu, PageContainer, DecorationMenu } from "@/components";
+import { PlotGrid, SeedMenu, PageContainer, DecorationMenu, YourMoney } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
@@ -62,26 +62,29 @@ export const Plot = () => {
   };
 
   return (
-    <PageContainer isLoading={isLoading} headerText={`${isOwnedByOtherUser ? `${ownerName}'s` : "Your"} Garden`}>
+    <PageContainer
+      isLoading={isLoading}
+      headerText={`${isOwnedByOtherUser ? `${ownerName}'s` : !isOwnedByOtherUser && !plotAssetId ? "Open" : "Your"} Garden`}
+    >
       <div className="container">
         {/* Plot owned by another user */}
         {isOwnedByOtherUser && (
           <div className="grid gap-2">
-            <h3>Plot Owned by {ownerName}</h3>
-            <p>This plot belongs to another player. You can view their garden but cannot make changes.</p>
+            <p>This garden belongs to another player. You can view their garden but cannot make changes.</p>
           </div>
         )}
 
         {/* Current user doesn't own any plot - show claim option */}
         {!isOwnedByOtherUser && !plotAssetId && (
           <div className="grid gap-2">
-            <h3>Claim This Plot</h3>
-            <p>This plot is available! Claim it to start your garden.</p>
-            <p className="p3 text-muted">Note: You can only claim one plot per world.</p>
-
             <button className="btn" onClick={handleClaimPlot} disabled={isClaiming}>
-              {isClaiming ? "Claiming..." : "Claim This Plot"}
+              {isClaiming ? "Claiming..." : "Start Your Garden"}
             </button>
+            <h3 className="pt-4">About Grow Together</h3>
+            <p>
+              Grow plants and add decorations to your very own garden. Water and harvest plants to earn coins and
+              purchase rare seeds and decorations in the Garden Store.
+            </p>
           </div>
         )}
 
@@ -95,15 +98,9 @@ export const Plot = () => {
 
         {/* Current user's plot */}
         {isOwnedByCurrentUser && plotAssetId && (
-          <div className="grid gap-4">
+          <div className="grid gap-2">
             <h4>Garden Store</h4>
-            <div className="card small">
-              <div className="card-details text-center">
-                <p className="card-title">
-                  <b>Your Money:</b> {coinsAvailable} Coins
-                </p>
-              </div>
-            </div>
+            <YourMoney coinsAvailable={coinsAvailable || 0} />
 
             <div className="grid gap-2 grid-cols-2">
               <button className="btn btn-outline p2 crop" onClick={() => setShowSeedMenu(true)}>

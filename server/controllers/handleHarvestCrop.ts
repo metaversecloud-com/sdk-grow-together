@@ -74,6 +74,8 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
 
     return res.json({
       success: true,
+      visitorData: updatedVisitorData,
+      visitorPlotData: updatedVisitorData.worlds[urlSlug],
     });
   } catch (error) {
     return errorHandler({

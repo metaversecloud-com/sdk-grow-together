@@ -113,8 +113,8 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly, vi
           {crop ? (
             <div>
               <img className="m-auto" src={seeds[crop.seedId].icon} />
-              <p className="p4">
-                Lv {crop.growLevel}/{seeds[crop.seedId]?.harvestLevel || 10}
+              <p className="p3">
+                lvl {crop.growLevel}/{seeds[crop.seedId]?.harvestLevel || 10}
               </p>
               {crop.growLevel >= (seeds[crop.seedId]?.harvestLevel || 10) && <p className="p4 text-success">Ready!</p>}
             </div>

@@ -1,5 +1,8 @@
 import { useContext, useState } from "react";
 
+// components
+import { ModalHeader } from "@/components";
+
 // context
 import { GlobalDispatchContext } from "@/context/GlobalContext";
 import { ErrorType, SET_VISITOR_DATA, SET_VISITOR_PLOT_DATA } from "@/context/types";
@@ -19,7 +22,9 @@ interface PlantSeedProps {
 
 export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot, seedsPurchased }: PlantSeedProps) => {
   const dispatch = useContext(GlobalDispatchContext);
+
   const [isPlanting, setIsPlanting] = useState(false);
+  const hasSeeds = Object.keys(seedsPurchased).length > 0;
 
   const handlePlantSeed = async (seedId: number) => {
     if (!seedId || selectedSquare === null) return;
@@ -56,42 +61,42 @@ export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot
   return (
     <div className="modal-container">
       <div className="modal">
-        <div className="modal-header flex gap-2 grid-cols-2">
-          <h4 className="flex-grow text-left">Plant Seed in Slot {selectedSquare}</h4>
-          <button
-            disabled={isPlanting}
-            onClick={() => {
-              setSelectedSquare(null);
-            }}
-          >
-            <img src="https://sdk-style.s3.amazonaws.com/icons/x.svg" style={{ width: "10px" }} />
-          </button>
-        </div>
+        <ModalHeader
+          text={hasSeeds ? `Plant Seed in Slot ${selectedSquare}` : "No seeds unlocked"}
+          disabled={isPlanting}
+          handleOnClick={() => {
+            setSelectedSquare(null);
+          }}
+        />
 
-        <div className="grid gap-2 grid-cols-3">
-          {Object.values(seeds).map((seed) => {
-            const growthTimeInMinutes = (seed.growthTime * seed.harvestLevel) / 60;
-            const isAvailable = seed.cost === 0 || seedsPurchased[seed.id];
-            let buttonClass = "card card-horizontal";
-            if (isAvailable && !isPlanting) buttonClass += " cursor-pointer available";
+        {!hasSeeds ? (
+          <p className="p2">Click “Buy Seeds” in the garden store to unlock your first seed.</p>
+        ) : (
+          <div className="grid gap-2 grid-cols-3">
+            {Object.values(seeds).map((seed) => {
+              const growthTimeInMinutes = (seed.growthTime * seed.harvestLevel) / 60;
+              const isAvailable = seed.cost === 0 || seedsPurchased[seed.id];
+              let buttonClass = "card card-horizontal";
+              if (isAvailable && !isPlanting) buttonClass += " cursor-pointer available";
 
-            return (
-              <div
-                key={seed.id}
-                className={buttonClass}
-                onClick={() => isAvailable && handlePlantSeed(seed.id)}
-                style={{ gap: "4px" }}
-              >
-                <img className="m-auto" src={seed.icon} style={{ opacity: !isAvailable ? 0.5 : 1 }} />
+              return (
+                <div
+                  key={seed.id}
+                  className={buttonClass}
+                  onClick={() => isAvailable && handlePlantSeed(seed.id)}
+                  style={{ gap: "0px" }}
+                >
+                  <img className="mb-2 m-auto" src={seed.icon} style={{ opacity: !isAvailable ? 0.5 : 1 }} />
 
-                <p className="p3">{seed.name}</p>
-                <p className="p4 text-muted">
-                  {growthTimeInMinutes} min{growthTimeInMinutes > 1 ? "s" : ""}
-                </p>
-              </div>
-            );
-          })}
-        </div>
+                  <p className="p3">{seed.name}</p>
+                  <p className="p4 text-muted">
+                    {growthTimeInMinutes} min{growthTimeInMinutes > 1 ? "s" : ""}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

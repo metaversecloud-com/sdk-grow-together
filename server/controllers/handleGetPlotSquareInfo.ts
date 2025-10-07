@@ -21,6 +21,7 @@ export const handleGetPlotSquareInfo = async (req: Request, res: Response) => {
     return res.json({
       success: true,
       squareData,
+      visitorData,
       visitorPlotData: visitorData.worlds[urlSlug],
     });
   } catch (error) {

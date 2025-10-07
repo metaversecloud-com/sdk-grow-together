@@ -2,19 +2,19 @@ import { useContext, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 // components
-import { PageContainer } from "@/components";
+import { PageContainer, YourMoney } from "@/components";
 import { CropDetails } from "@/components/CropDetails";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
-import { ErrorType, SET_CROP_DATA, SET_VISITOR_PLOT_DATA } from "@/context/types";
+import { ErrorType, SET_CROP_DATA } from "@/context/types";
 
 // utils
-import { backendAPI, setErrorMessage } from "@/utils";
+import { backendAPI, setErrorMessage, setGameState } from "@/utils";
 
 export const Crop = () => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { hasInteractiveParams, cropData, visitorPlotData } = useContext(GlobalStateContext);
+  const { hasInteractiveParams, cropData, visitorPlotData, visitorData } = useContext(GlobalStateContext);
   const { ownerId, ownerName } = cropData || {};
 
   const [searchParams] = useSearchParams();
@@ -28,18 +28,15 @@ export const Crop = () => {
   useEffect(() => {
     if (hasInteractiveParams) {
       backendAPI
-        .get("/square")
+        .get(`/square${visitorPlotData?.plotAssetId ? `?plotAssetId=${visitorPlotData.plotAssetId}` : ""}`)
         .then((response) => {
-          const { success, squareData, visitorPlotData } = response.data;
+          const { success, squareData } = response.data;
           if (success) {
             dispatch!({
               type: SET_CROP_DATA,
               payload: { cropData: squareData, error: "" },
             });
-            dispatch!({
-              type: SET_VISITOR_PLOT_DATA,
-              payload: { visitorPlotData, error: "" },
-            });
+            setGameState(dispatch, response.data);
           }
         })
         .catch((error) => setErrorMessage(dispatch, error as ErrorType))
@@ -62,7 +59,10 @@ export const Crop = () => {
 
             {/* Current user's crop */}
             {isOwnedByCurrentUser && (
-              <CropDetails crop={cropData} plotAssetId={visitorPlotData?.plotAssetId} isReadOnly={false} />
+              <div className="grid gap-2">
+                <YourMoney coinsAvailable={visitorData?.coinsAvailable || 0} />
+                <CropDetails crop={cropData} plotAssetId={visitorPlotData?.plotAssetId} isReadOnly={false} />
+              </div>
             )}
           </>
         ) : (

@@ -5,7 +5,7 @@ import { GlobalDispatchContext } from "@/context/GlobalContext";
 import { ErrorType, SET_CROP_DATA } from "@/context/types";
 
 // utils
-import { backendAPI, setErrorMessage } from "@/utils";
+import { backendAPI, setErrorMessage, setGameState } from "@/utils";
 
 // types
 import { seeds, CropDataObjectType } from "@shared/index.js";
@@ -109,6 +109,9 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
     setIsHarvesting(true);
     await backendAPI
       .post("/crop/harvest")
+      .then((response) => {
+        setGameState(dispatch, response.data);
+      })
       .catch((error) => {
         setErrorMessage(dispatch, error as ErrorType);
       })
@@ -152,13 +155,13 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
                 Lvl {growLevel}/{harvestLevel}
               </i>
             </p>
-            <p>+{reward} Coins</p>
+            <p className="text-success">+{reward} Coins</p>
             {isReadOnly ? (
               <div className="chip ">Owned by {ownerName}</div>
             ) : (
               <div className={`chip my-4 ${getGrowthColor()}`}>{getGrowthStatus()}</div>
             )}
-            {growLevel < harvestLevel - 1 && <p className="p3">Growth Time Remaining: {totalTimeRemaining}</p>}
+            {growLevel < harvestLevel - 1 ? <p className="p3">Growth Time Remaining: {totalTimeRemaining}</p> : <></>}
           </div>
         </div>
       </div>
@@ -182,8 +185,7 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
         <>
           <div className="card success">
             <div className="card-details">
-              <p className="p2 text-center">Crop has been harvested!</p>
-              <p className="p3 text-center">Earned {reward} coins</p>
+              <p className="text-center">Earned {reward} coins</p>
             </div>
           </div>
         </>

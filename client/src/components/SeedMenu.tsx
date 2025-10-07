@@ -1,5 +1,8 @@
 import { useContext, useState } from "react";
 
+// components
+import { ModalHeader, PurchaseItem, YourMoney } from "@/components";
+
 // context
 import { GlobalDispatchContext } from "@/context/GlobalContext";
 import { ErrorType, SET_VISITOR_DATA } from "@/context/types";
@@ -55,65 +58,33 @@ export const SeedMenu = ({ visitorData, onClose }: SeedMenuProps) => {
   return (
     <div className="modal-container">
       <div className="modal">
-        <h2 className="h2">🌱 Seed Menu</h2>
+        <ModalHeader text="Buy Seeds" disabled={isPurchasing} handleOnClick={onClose} />
 
-        <div className="card small">
-          <div className="card-details">
-            <h4 className="card-title">Your Money: {visitorData.coinsAvailable} Coins</h4>
-          </div>
-        </div>
+        <YourMoney coinsAvailable={visitorData.coinsAvailable || 0} />
 
-        <div className="grid gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {Object.values(seeds).map((seed) => {
             const purchased = isPurchased(seed.id);
             const affordable = canAfford(seed.cost);
             const free = isFree(seed.cost);
 
             return (
-              <div key={seed.id} className={`card ${!affordable && !free && !purchased ? "opacity-50" : ""}`}>
-                <div className="card-details text-center">
-                  <h4 className="card-title flex justify-center">
-                    <img className="mr-2" src={seed.icon} />
-                    {seed.name}
-                  </h4>
-                  <div className="flex justify-center mt-2">
-                    <div className="flex-col mr-2">
-                      <p className="p3">Cost: {seed.cost === 0 ? "Free" : `${seed.cost} coins`}</p>
-                      <p className="p3">Reward: {seed.reward} coins</p>
-                    </div>
-                    <div className="flex-col">
-                      <p className="p3">Growth: {formatTime(seed.growthTime)}</p>
-                      <p className="p3">Profit: +{seed.reward - seed.cost} coins</p>
-                    </div>
-                  </div>
-
-                  <div className="card-actions justify-center">
-                    {free ? (
-                      <span className="p3 text-success">✓ Available</span>
-                    ) : purchased ? (
-                      <span className="p3 text-success">✓ Purchased</span>
-                    ) : affordable ? (
-                      <button
-                        className="btn btn-outline"
-                        onClick={() => handlePurchaseSeed(seed.id)}
-                        disabled={isPurchasing}
-                      >
-                        {purchasingSeeds.has(seed.id) ? "Purchasing..." : `Buy ${seed.cost} coins`}
-                      </button>
-                    ) : (
-                      <span className="p3 text-muted">Need {seed.cost - visitorData.coinsAvailable} more coins</span>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <PurchaseItem
+                coinsAvailable={visitorData.coinsAvailable || 0}
+                id={seed.id}
+                available={!affordable && !free && !purchased}
+                imageSrc={seed.icon}
+                name={seed.name}
+                description={formatTime(seed.growthTime)}
+                rarity={seed.rarity}
+                cost={seed.cost}
+                value={`Profit: +${seed.reward - seed.cost} coins`}
+                canPurchaseAdditional={false}
+                isPurchasing={purchasingSeeds.has(seed.id)}
+                handlePurchase={() => handlePurchaseSeed(seed.id)}
+              />
             );
           })}
-        </div>
-
-        <div className="actions">
-          <button className="btn" onClick={onClose}>
-            Close Menu
-          </button>
         </div>
       </div>
     </div>
