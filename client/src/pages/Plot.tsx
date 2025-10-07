@@ -11,12 +11,12 @@ import { ErrorType } from "@/context/types";
 // utils
 import { backendAPI, setErrorMessage, setGameState } from "@/utils";
 
-export const GardenPlot = () => {
+export const Plot = () => {
   const dispatch = useContext(GlobalDispatchContext);
   const { hasInteractiveParams, plotAssetData, visitorData, visitorPlotData } = useContext(GlobalStateContext);
   const { ownerId, ownerName } = plotAssetData || {};
-  const { coinsAvailable, totalCoinsEarned } = visitorData || {};
-  const { plotAssetId, plotSquares, plants, decorations } = visitorPlotData || { plotSquares: {} };
+  const { coinsAvailable } = visitorData || {};
+  const { plotAssetId, plotSquares, crops, decorations } = visitorPlotData || { plotSquares: {} };
 
   const [searchParams] = useSearchParams();
 
@@ -62,7 +62,7 @@ export const GardenPlot = () => {
   };
 
   return (
-    <PageContainer isLoading={isLoading} headerText="Garden Plot">
+    <PageContainer isLoading={isLoading} headerText={`${isOwnedByOtherUser ? `${ownerName}'s` : "Your"} Garden`}>
       <div className="container">
         {/* Plot owned by another user */}
         {isOwnedByOtherUser && (
@@ -96,25 +96,28 @@ export const GardenPlot = () => {
         {/* Current user's plot */}
         {isOwnedByCurrentUser && plotAssetId && (
           <div className="grid gap-4">
+            <h4>Garden Store</h4>
             <div className="card small">
               <div className="card-details text-center">
-                <h3 className="card-title">💰 {coinsAvailable} Coins</h3>
-                <p className="p3">Total Earned: {totalCoinsEarned}</p>
+                <p className="card-title">
+                  <b>Your Money:</b> {coinsAvailable} Coins
+                </p>
               </div>
             </div>
 
             <div className="grid gap-2 grid-cols-2">
-              <button className="btn btn-outline" onClick={() => setShowSeedMenu(true)}>
-                🌱 Seeds
+              <button className="btn btn-outline p2 crop" onClick={() => setShowSeedMenu(true)}>
+                Buy Seeds
               </button>
-              <button className="btn btn-outline" onClick={() => setShowDecorationMenu(true)}>
-                ⛲ Decorations
+              <button className="btn btn-outline p2 decoration" onClick={() => setShowDecorationMenu(true)}>
+                Buy Decorations
               </button>
             </div>
-
+            <hr className="my-2" />
+            <h4>Garden Plot</h4>
             <PlotGrid
               plotSquares={plotSquares}
-              plants={plants || {}}
+              crops={crops || {}}
               placedDecorations={decorations || {}}
               isReadOnly={false}
               visitorData={visitorData}
@@ -136,4 +139,4 @@ export const GardenPlot = () => {
   );
 };
 
-export default GardenPlot;
+export default Plot;

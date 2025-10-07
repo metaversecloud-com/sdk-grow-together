@@ -3,39 +3,38 @@ import { useSearchParams } from "react-router-dom";
 
 // components
 import { PageContainer } from "@/components";
-import { PlantDetails } from "@/components/PlantDetails";
+import { CropDetails } from "@/components/CropDetails";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
-import { ErrorType, SET_PLANT_DATA, SET_VISITOR_PLOT_DATA } from "@/context/types";
+import { ErrorType, SET_CROP_DATA, SET_VISITOR_PLOT_DATA } from "@/context/types";
 
 // utils
 import { backendAPI, setErrorMessage } from "@/utils";
 
-export const GardenPlant = () => {
+export const Crop = () => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { hasInteractiveParams, plantData, visitorPlotData } = useContext(GlobalStateContext);
+  const { hasInteractiveParams, cropData, visitorPlotData } = useContext(GlobalStateContext);
+  const { ownerId, ownerName } = cropData || {};
 
   const [searchParams] = useSearchParams();
 
   const [isLoading, setIsLoading] = useState(true);
 
-  const ownerProfileId = searchParams.get("ownerProfileId");
-  const ownerName = searchParams.get("ownerName");
   const profileId = searchParams.get("profileId");
 
-  const isOwnedByCurrentUser = ownerProfileId === profileId;
+  const isOwnedByCurrentUser = ownerId === profileId;
 
   useEffect(() => {
     if (hasInteractiveParams) {
       backendAPI
-        .get("/plant")
+        .get("/square")
         .then((response) => {
-          const { success, plantData, visitorPlotData } = response.data;
+          const { success, squareData, visitorPlotData } = response.data;
           if (success) {
             dispatch!({
-              type: SET_PLANT_DATA,
-              payload: { plantData, error: "" },
+              type: SET_CROP_DATA,
+              payload: { cropData: squareData, error: "" },
             });
             dispatch!({
               type: SET_VISITOR_PLOT_DATA,
@@ -49,29 +48,29 @@ export const GardenPlant = () => {
   }, [hasInteractiveParams]);
 
   return (
-    <PageContainer isLoading={isLoading} headerText="Garden Plant">
+    <PageContainer isLoading={isLoading} headerText={`Slot ${cropData?.squareId || ""}`}>
       <div className="container">
-        {plantData ? (
+        {cropData ? (
           <>
-            {/* Plant owned by another user */}
+            {/* Crop owned by another user */}
             {!isOwnedByCurrentUser && (
               <div className="grid gap-4">
-                <p className="pb-2 text-center">This plant belongs to {ownerName || "another player"}</p>
-                <PlantDetails plant={plantData} plotAssetId={visitorPlotData?.plotAssetId} isReadOnly={true} />
+                <p className="pb-2 text-center">This crop belongs to {ownerName || "another player"}</p>
+                <CropDetails crop={cropData} plotAssetId={visitorPlotData?.plotAssetId} isReadOnly={true} />
               </div>
             )}
 
-            {/* Current user's plant */}
+            {/* Current user's crop */}
             {isOwnedByCurrentUser && (
-              <PlantDetails plant={plantData} plotAssetId={visitorPlotData?.plotAssetId} isReadOnly={false} />
+              <CropDetails crop={cropData} plotAssetId={visitorPlotData?.plotAssetId} isReadOnly={false} />
             )}
           </>
         ) : (
-          <p className="p2">No plant data found.</p>
+          <p className="p2">No crop data found.</p>
         )}
       </div>
     </PageContainer>
   );
 };
 
-export default GardenPlant;
+export default Crop;

@@ -4,9 +4,10 @@ import {
   SET_ERROR,
   SET_GAME_STATE,
   SET_HAS_INTERACTIVE_PARAMS,
-  SET_PLANT_DATA,
+  SET_CROP_DATA,
   SET_VISITOR_DATA,
   SET_VISITOR_PLOT_DATA,
+  SET_DECORATION_DATA,
 } from "./types";
 
 const globalReducer = (state: InitialState, action: ActionType) => {
@@ -38,10 +39,16 @@ const globalReducer = (state: InitialState, action: ActionType) => {
         visitorPlotData: payload.visitorPlotData,
         error: "",
       };
-    case SET_PLANT_DATA:
+    case SET_CROP_DATA:
       return {
         ...state,
-        plantData: payload.plantData,
+        cropData: payload.cropData,
+        error: "",
+      };
+    case SET_DECORATION_DATA:
+      return {
+        ...state,
+        decorationData: payload.decorationData,
         error: "",
       };
     case SET_ERROR:

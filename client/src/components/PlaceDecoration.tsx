@@ -24,19 +24,18 @@ export const PlaceDecoration = ({
   decorationsOwned,
 }: PlaceDecorationProps) => {
   const dispatch = useContext(GlobalDispatchContext);
-  const [selectedDecorationId, setSelectedDecorationId] = useState<number | null>(null);
   const [isPlacing, setIsPlacing] = useState(false);
 
-  const handlePlaceDecoration = async () => {
-    if (!selectedDecorationId || selectedSquare === null) return;
+  const handlePlaceDecoration = async (decorationId: number) => {
+    if (!decorationId || selectedSquare === null) return;
 
     setIsPlacing(true);
     setIsUpdatingPlot(true);
 
     await backendAPI
       .post("/decoration/drop", {
-        decorationId: selectedDecorationId,
-        squareIndex: selectedSquare,
+        decorationId,
+        squareId: selectedSquare,
       })
       .then((response) => {
         const { visitorData, visitorPlotData } = response.data;
@@ -49,7 +48,6 @@ export const PlaceDecoration = ({
           payload: { visitorPlotData, error: "" },
         });
         setSelectedSquare(null);
-        setSelectedDecorationId(null);
       })
       .catch((error) => {
         setErrorMessage(dispatch, error as ErrorType);
@@ -61,10 +59,19 @@ export const PlaceDecoration = ({
   };
 
   return (
-    <div className="card mt-4">
-      <div className="card-details grid gap-4">
-        <h4>Place Decoration in Square {selectedSquare}</h4>
-        <p className="p3">Select a decoration to place:</p>
+    <div className="modal-container">
+      <div className="modal">
+        <div className="modal-header flex gap-2 grid-cols-2">
+          <h4 className="flex-grow text-left">Place Decoration in Slot {selectedSquare}</h4>
+          <button
+            disabled={isPlacing}
+            onClick={() => {
+              setSelectedSquare(null);
+            }}
+          >
+            <img src="https://sdk-style.s3.amazonaws.com/icons/x.svg" style={{ width: "10px" }} />
+          </button>
+        </div>
 
         <div className="grid gap-2 grid-cols-2">
           {Object.values(decorations).map((decoration) => {
@@ -74,10 +81,8 @@ export const PlaceDecoration = ({
             return (
               <div
                 key={decoration.id}
-                className={`card text-center ${selectedDecorationId === decoration.id ? "card-success" : ""} ${
-                  !isOwned ? "opacity-50" : "cursor-pointer"
-                }`}
-                onClick={() => isOwned && setSelectedDecorationId(decoration.id)}
+                className={`card text-center ${!isOwned || isPlacing ? "opacity-50" : "cursor-pointer"}`}
+                onClick={() => isOwned && handlePlaceDecoration(decoration.id)}
               >
                 <img className="mr-2" src={decoration.imageSrc} />
                 <div>
@@ -87,21 +92,6 @@ export const PlaceDecoration = ({
               </div>
             );
           })}
-        </div>
-
-        <div className="flex">
-          <button className="btn" onClick={handlePlaceDecoration} disabled={!selectedDecorationId || isPlacing}>
-            {isPlacing ? "Placing..." : "Place"}
-          </button>
-          <button
-            className="btn btn-text"
-            onClick={() => {
-              setSelectedSquare(null);
-              setSelectedDecorationId(null);
-            }}
-          >
-            Cancel
-          </button>
         </div>
       </div>
     </div>

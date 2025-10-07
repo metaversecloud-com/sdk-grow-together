@@ -8,9 +8,13 @@ export type DecorationType = {
   cost: number;
   icon: string;
   imageSrc: string;
+  rarity: "common" | "uncommon" | "rare" | "epic" | "legendary";
 };
 
-export type PlacedDecorationType = {
-  id: number;
+export type PlacedDecorationDataObjectType = {
+  decorationId: number;
+  ownerId?: string;
+  ownerName?: string;
   dateDropped: string;
+  squareId: number; // Which square in the plot
 };

@@ -8,7 +8,7 @@ export const handleRemoveDecoration = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
     const { profileId, urlSlug } = credentials;
-    const { squareIndex } = req.body;
+    const { squareId } = req.body;
 
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
@@ -16,14 +16,14 @@ export const handleRemoveDecoration = async (req: Request, res: Response) => {
     const { visitor, visitorData } = initializeVisitorDataResponse;
 
     const visitorPlotData = visitorData.worlds[urlSlug];
-    const assetId = visitorPlotData.plotSquares[squareIndex];
+    const assetId = visitorPlotData.plotSquares[squareId];
 
     if (!assetId) throw "No decoration found on the specified square";
 
     const decoration = visitorPlotData.decorations[assetId];
 
-    visitorData.decorationsOwned[decoration.id].quantity += 1;
-    visitorData.worlds[urlSlug].plotSquares[squareIndex] = null;
+    visitorData.decorationsOwned[decoration.decorationId].quantity += 1;
+    visitorData.worlds[urlSlug].plotSquares[squareId] = null;
     delete visitorData.worlds[urlSlug].decorations[assetId];
 
     await visitor.updateDataObject(visitorData, {

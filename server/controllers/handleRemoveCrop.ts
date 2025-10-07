@@ -2,13 +2,13 @@ import { Request, Response } from "express";
 import { errorHandler, getCredentials, initializeVisitorData, DroppedAsset, World } from "../utils/index.js";
 
 /**
- * Handle plant removal - removes plant from world and frees up the plot square
+ * Handle crop removal - removes crop from world and frees up the plot square
  */
-export const handleRemovePlant = async (req: Request, res: Response) => {
+export const handleRemoveCrop = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
     const { profileId, urlSlug } = credentials;
-    const { squareIndex } = req.body;
+    const { squareId } = req.body;
 
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
@@ -16,17 +16,17 @@ export const handleRemovePlant = async (req: Request, res: Response) => {
     const { visitor, visitorData } = initializeVisitorDataResponse;
 
     const visitorPlotData = visitorData.worlds[urlSlug];
-    const assetId = visitorPlotData.plotSquares[squareIndex];
+    const assetId = visitorPlotData.plotSquares[squareId];
 
-    if (!assetId) throw "No plant found on the specified square";
+    if (!assetId) throw "No crop found on the specified square";
 
-    visitorData.worlds[urlSlug].plotSquares[squareIndex] = null;
-    delete visitorData.worlds[urlSlug].plants[assetId];
+    visitorData.worlds[urlSlug].plotSquares[squareId] = null;
+    delete visitorData.worlds[urlSlug].crops[assetId];
 
     await visitor.updateDataObject(visitorData, {
       analytics: [
         {
-          analyticName: "plantRemoved",
+          analyticName: "cropRemoved",
           profileId,
           urlSlug,
           uniqueKey: profileId,
@@ -57,8 +57,8 @@ export const handleRemovePlant = async (req: Request, res: Response) => {
   } catch (error) {
     return errorHandler({
       error,
-      functionName: "handleRemovePlant",
-      message: "Error removing plant",
+      functionName: "handleRemoveCrop",
+      message: "Error removing crop",
       req,
       res,
     });

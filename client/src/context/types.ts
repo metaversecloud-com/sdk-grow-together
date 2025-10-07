@@ -1,5 +1,6 @@
 import {
-  PlantDataObjectType,
+  CropDataObjectType,
+  PlacedDecorationDataObjectType,
   PlotAssetDataObjectType,
   VisitorDataObjectType,
   VisitorWorldDataType,
@@ -10,7 +11,8 @@ export const SET_GAME_STATE = "SET_GAME_STATE";
 export const SET_ERROR = "SET_ERROR";
 export const SET_VISITOR_DATA = "SET_VISITOR_DATA";
 export const SET_VISITOR_PLOT_DATA = "SET_VISITOR_PLOT_DATA";
-export const SET_PLANT_DATA = "SET_PLANT_DATA";
+export const SET_CROP_DATA = "SET_CROP_DATA";
+export const SET_DECORATION_DATA = "SET_DECORATION_DATA";
 
 export type InteractiveParams = {
   assetId: string;
@@ -30,8 +32,8 @@ export interface InitialState {
   isAdmin?: boolean;
   error?: string;
   hasInteractiveParams?: boolean;
-  PlantDataObjectType?: PlantDataObjectType;
-  plantData?: PlantDataObjectType;
+  cropData?: CropDataObjectType;
+  decorationData?: PlacedDecorationDataObjectType;
   plotAssetData?: PlotAssetDataObjectType;
   visitorData?: VisitorDataObjectType;
   visitorPlotData?: VisitorWorldDataType;

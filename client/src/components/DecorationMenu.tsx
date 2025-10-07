@@ -49,8 +49,7 @@ export const DecorationMenu = ({ visitorData, onClose }: DecorationMenuProps) =>
 
         <div className="card small">
           <div className="card-details">
-            <h4 className="card-title">💰 {visitorData.coinsAvailable} Coins Available</h4>
-            <p className="p3">Total Earned: {visitorData.totalCoinsEarned}</p>
+            <h4 className="card-title">Your Money: {visitorData.coinsAvailable} Coins</h4>
           </div>
         </div>
 
@@ -69,7 +68,7 @@ export const DecorationMenu = ({ visitorData, onClose }: DecorationMenuProps) =>
                   <p className="card-description p2">
                     Cost: {decoration.cost} coins
                     <br />
-                    Available: {visitorData.decorationsOwned[decoration.id].quantity || 0}
+                    Available: {visitorData.decorationsOwned?.[decoration.id]?.quantity || 0}
                   </p>
 
                   <div className="card-actions">

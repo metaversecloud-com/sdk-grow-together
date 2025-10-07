@@ -13,21 +13,21 @@ import { DroppedAssetClickType } from "@rtsdk/topia";
 import { calculateNumberOfSquares, seeds } from "../../shared/index.js";
 
 /**
- * Handle planting a seed - creates a new plant dropped asset in the world
+ * Handle planting a seed - creates a new crop dropped asset in the world
  */
 export const handlePlantSeed = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
     const { assetId, displayName, profileId, urlSlug } = credentials;
-    const { seedId, squareIndex } = req.body;
+    const { seedId, squareId } = req.body;
 
-    if (!seedId || typeof seedId !== "number" || typeof squareIndex !== "number") {
-      throw "Valid seedId and squareIndex are required";
+    if (!seedId || typeof seedId !== "number" || typeof squareId !== "number") {
+      throw "Valid seedId and squareId are required";
     }
 
-    const noOfSquares = calculateNumberOfSquares(true);
-    if (squareIndex < 0 || squareIndex > noOfSquares) {
-      throw `squareIndex must be between 0 and ${noOfSquares}`;
+    const noOfSquares = calculateNumberOfSquares();
+    if (squareId < 1 || squareId > noOfSquares) {
+      throw `squareId must be between 1 and ${noOfSquares}`;
     }
 
     // Get seed configuration
@@ -50,11 +50,11 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     }
 
     // Check if the square is already occupied
-    if (visitorPlotData.plotSquares?.[squareIndex]) throw "This square is already occupied";
+    if (visitorPlotData.plotSquares?.[squareId]) throw "This square is already occupied";
 
     // Get the plot asset to determine position
     const plotAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
-    const position = calculateSquarePosition(plotAsset.position, squareIndex);
+    const position = calculateSquarePosition(plotAsset.position, squareId);
     const layer1 = seeds[seedId].imageVariations[0]; // Start at growth level 0
 
     // Trigger planting particle effect
@@ -71,40 +71,40 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
 
     const asset = Asset.create("webImageAsset", { credentials });
 
-    // Drop a new plant asset at the calculated position
+    // Drop a new crop asset at the calculated position
     const baseUrl = getBaseUrl(req.hostname);
-    const plantAsset = await DroppedAsset.drop(asset, {
+    const cropAsset = await DroppedAsset.drop(asset, {
       assetScale: 1.8,
       clickType: DroppedAssetClickType.LINK,
-      clickableLink: `${baseUrl}/plant?ownerName=${encodeURIComponent(displayName)}&ownerProfileId=${profileId}`,
+      clickableLink: `${baseUrl}/crop?ownerName=${encodeURIComponent(displayName)}&ownerProfileId=${profileId}`,
       clickableLinkTitle: seedConfig.name,
       isInteractive: true,
       interactivePublicKey: credentials.interactivePublicKey,
       isOpenLinkInDrawer: true,
       layer1,
       position,
-      uniqueName: `BountyBuilders_plant_${profileId}`,
+      uniqueName: `BountyBuilders_crop_${profileId}`,
       urlSlug,
     });
 
     const now = new Date().toISOString();
-    const plantData = {
+    const cropData = {
       dateDropped: now,
       lastWatered: now,
       seedId,
       growLevel: 0,
-      squareIndex,
+      squareId,
     };
 
-    await plantAsset.setDataObject({
-      ...plantData,
+    await cropAsset.setDataObject({
+      ...cropData,
       ownerId: profileId,
       ownerName: displayName,
     });
 
     // Update visitor's data object
-    visitorData.worlds[urlSlug].plotSquares[squareIndex] = plantAsset.id!;
-    visitorData.worlds[urlSlug].plants[plantAsset.id!] = plantData;
+    visitorData.worlds[urlSlug].plotSquares[squareId] = cropAsset.id!;
+    visitorData.worlds[urlSlug].crops[cropAsset.id!] = cropData;
 
     await visitor.updateDataObject(visitorData, {
       analytics: [

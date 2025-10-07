@@ -36,7 +36,7 @@ export const handleOpenPlotIframe = async (req: Request, res: Response) => {
     return errorHandler({
       error,
       functionName: "handleOpenPlotIframe",
-      message: "Error viewing plot (opening in iframe from another plant iframe)",
+      message: "Error viewing plot (opening in iframe from another crop iframe)",
       req,
       res,
     });

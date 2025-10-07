@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
 import { errorHandler, getCredentials, DroppedAsset, initializeVisitorData } from "../utils/index.js";
-import { PlantDataObjectType } from "../../shared/types/PlantData.js";
+import { CropDataObjectType } from "../types/SharedTypes.js";
 
 /**
- * Get the plant info for a specific plant asset
+ * Get the info for a specific plot square
  */
-export const handleGetPlantInfo = async (req: Request, res: Response) => {
+export const handleGetPlotSquareInfo = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
     const { assetId, urlSlug } = credentials;
@@ -16,11 +16,11 @@ export const handleGetPlantInfo = async (req: Request, res: Response) => {
     const { visitorData } = initializeVisitorDataResponse;
 
     const droppedAsset = await DroppedAsset.create(assetId, urlSlug, { credentials });
-    const plantData = (await droppedAsset.fetchDataObject()) as PlantDataObjectType;
+    const squareData = (await droppedAsset.fetchDataObject()) as CropDataObjectType;
 
     return res.json({
       success: true,
-      plantData,
+      squareData,
       visitorPlotData: visitorData.worlds[urlSlug],
     });
   } catch (error) {

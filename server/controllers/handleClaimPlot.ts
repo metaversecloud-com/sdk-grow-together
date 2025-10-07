@@ -35,9 +35,9 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
     const claimedDate = new Date().toISOString();
 
     // Initialize empty grid
-    const noOfSquares = calculateNumberOfSquares(false);
+    const noOfSquares = calculateNumberOfSquares();
     const plotSquares: { [key: number]: string | null } = {};
-    for (let i = 0; i < noOfSquares; i++) {
+    for (let i = 1; i <= noOfSquares; i++) {
       plotSquares[i] = null;
     }
 
@@ -46,7 +46,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       plotAssetId: assetId,
       claimedDate,
       plotSquares,
-      plants: {},
+      crops: {},
       decorations: {},
     };
 

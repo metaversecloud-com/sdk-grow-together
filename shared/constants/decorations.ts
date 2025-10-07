@@ -11,5 +11,6 @@ export const decorations: Record<number, DecorationType> = {
     cost: 10,
     icon: `${s3URL}/decoration-1.png`,
     imageSrc: `${s3URL}/decoration-1.png`,
+    rarity: "common",
   },
 };

@@ -1,20 +1,21 @@
 import express from "express";
 import {
-  handleGetGameState,
   handleClaimPlot,
+  handleGetGameState,
+  handleGetPlotSquareInfo,
   handlePurchaseSeed,
   handlePlantSeed,
-  handleHarvestPlant,
+  handleHarvestCrop,
   handleTeleportToPlot,
-  handleWaterPlant,
-  handleGetPlantInfo,
+  handleWaterCrop,
   handlePlaceDecoration,
   handleRemoveDecoration,
   handleOpenPlotIframe,
-  handleRemovePlant,
+  handleRemoveCrop,
+  handlePurchaseDecoration,
+  handleOpenPlotSquareIframe,
 } from "./controllers/index.js";
 import { getVersion } from "./utils/getVersion.js";
-import { handlePurchaseDecoration } from "./controllers/handlePurchaseDecoration.js";
 
 const router = express.Router();
 const SERVER_START_DATE = new Date();
@@ -42,15 +43,16 @@ router.get("/game-state", handleGetGameState);
 // plot routes
 router.post("/plot/claim", handleClaimPlot);
 router.post("/plot/teleport", handleTeleportToPlot);
-router.post("/seed/purchase", handlePurchaseSeed);
 router.post("/plot/view", handleOpenPlotIframe);
+router.post("/square/view", handleOpenPlotSquareIframe);
+router.get("/square", handleGetPlotSquareInfo);
 
-// plant routes
-router.get("/plant", handleGetPlantInfo);
-router.post("/plant/drop", handlePlantSeed);
-router.post("/plant/water", handleWaterPlant);
-router.post("/plant/harvest", handleHarvestPlant);
-router.post("/plant/remove", handleRemovePlant);
+// crop routes
+router.post("/seed/purchase", handlePurchaseSeed);
+router.post("/crop/drop", handlePlantSeed);
+router.post("/crop/water", handleWaterCrop);
+router.post("/crop/harvest", handleHarvestCrop);
+router.post("/crop/remove", handleRemoveCrop);
 
 // decoration routes
 router.post("/decoration/purchase", handlePurchaseDecoration);

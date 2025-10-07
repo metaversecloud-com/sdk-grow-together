@@ -1,9 +1,9 @@
 // components
 import { PageContainer } from "@/components";
 
-export const GardenHome = () => {
+export const Home = () => {
   return (
-    <PageContainer isLoading={false} headerText="Welcome to Garden Game">
+    <PageContainer isLoading={false} headerText="Welcome to Bounty Builder">
       <div className="container grid gap-4">
         <h3>How to Play</h3>
         <div className="grid gap-4">
@@ -32,9 +32,7 @@ export const GardenHome = () => {
           <div className="card small">
             <div className="card-details">
               <h4 className="card-title">3. Plant & Wait</h4>
-              <p className="card-description p3">
-                Plant seeds in your 4x4 plot grid. Plants grow automatically over time.
-              </p>
+              <p className="card-description p3">Plant seeds in your plot grid. Crops grow automatically over time.</p>
             </div>
           </div>
 
@@ -42,7 +40,7 @@ export const GardenHome = () => {
             <div className="card-details">
               <h4 className="card-title">4. Harvest & Earn</h4>
               <p className="card-description p3">
-                When plants are fully grown, click on them and harvest for coins! Use your earnings to unlock more
+                When crops are fully grown, click on them and harvest for coins! Use your earnings to unlock more
                 expensive seeds.
               </p>
             </div>
@@ -63,4 +61,4 @@ export const GardenHome = () => {
   );
 };
 
-export default GardenHome;
+export default Home;

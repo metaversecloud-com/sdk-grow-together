@@ -59,8 +59,7 @@ export const SeedMenu = ({ visitorData, onClose }: SeedMenuProps) => {
 
         <div className="card small">
           <div className="card-details">
-            <h4 className="card-title">💰 {visitorData.coinsAvailable} Coins Available</h4>
-            <p className="p3">Total Earned: {visitorData.totalCoinsEarned}</p>
+            <h4 className="card-title">Your Money: {visitorData.coinsAvailable} Coins</h4>
           </div>
         </div>
 

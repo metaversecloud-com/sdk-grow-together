@@ -2,28 +2,29 @@ import { useContext, useState, useEffect } from "react";
 
 // context
 import { GlobalDispatchContext } from "@/context/GlobalContext";
-import { ErrorType, SET_PLANT_DATA } from "@/context/types";
+import { ErrorType, SET_CROP_DATA } from "@/context/types";
 
 // utils
 import { backendAPI, setErrorMessage } from "@/utils";
 
 // types
-import { seeds, PlantDataObjectType, calculateNumberOfSquares } from "@shared/index.js";
+import { seeds, CropDataObjectType } from "@shared/index.js";
 
-interface PlantDetailsProps {
-  plant: PlantDataObjectType;
+interface CropDetailsProps {
+  crop: CropDataObjectType;
   plotAssetId?: string | null;
   isReadOnly: boolean;
 }
 
-export const PlantDetails = ({ plant, plotAssetId, isReadOnly }: PlantDetailsProps) => {
+export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps) => {
   const dispatch = useContext(GlobalDispatchContext);
 
-  const { lastWatered, growLevel, seedId, squareIndex, dateDropped } = plant;
+  const { lastWatered, growLevel, ownerName, seedId } = crop;
   const seedConfig = seeds[seedId];
-  const { name, icon, cost, reward, growthTime, harvestLevel } = seedConfig;
+  const { name, icon, reward, growthTime, harvestLevel, rarity } = seedConfig;
 
   const [timeRemaining, setTimeRemaining] = useState<string | null>(null);
+  const [totalTimeRemaining, setTotalTimeRemaining] = useState<string | null>(null);
   const [readyForWater, setReadyForWater] = useState(false);
   const [readyForHarvest, setReadyForHarvest] = useState(false);
   const [isWatering, setIsWatering] = useState(false);
@@ -52,10 +53,19 @@ export const PlantDetails = ({ plant, plotAssetId, isReadOnly }: PlantDetailsPro
 
     const updateCountdown = () => {
       const remainingSeconds = getSecondsRemaining();
+
+      const levelsLeft = harvestLevel - growLevel - 1;
+      const totalTimeRemainingSeconds = levelsLeft * growthTime + remainingSeconds;
+      const totalMinutes = Math.floor(totalTimeRemainingSeconds / 60);
+      const totalSeconds = Math.floor(totalTimeRemainingSeconds % 60);
+      setTotalTimeRemaining(
+        `${totalMinutes} min${totalMinutes !== 1 ? "s" : ""} ${totalSeconds > 0 ? `${totalSeconds}s` : ""}`,
+      );
+
       if (remainingSeconds <= 0) return setTimeRemaining(null);
       const minutes = Math.floor(remainingSeconds / 60);
       const seconds = Math.floor(remainingSeconds % 60);
-      setTimeRemaining(`${minutes}m ${seconds}s`);
+      setTimeRemaining(`${minutes} min${minutes !== 1 ? "s" : ""} ${seconds > 0 ? `${seconds}s` : ""}`);
     };
 
     updateCountdown();
@@ -67,7 +77,7 @@ export const PlantDetails = ({ plant, plotAssetId, isReadOnly }: PlantDetailsPro
     return (
       <div className="card danger">
         <div className="card-details">
-          <p className="p2">Unknown plant type</p>
+          <p className="p2">Unknown crop type</p>
         </div>
       </div>
     );
@@ -76,14 +86,13 @@ export const PlantDetails = ({ plant, plotAssetId, isReadOnly }: PlantDetailsPro
   const handleWater = async () => {
     setIsWatering(true);
     await backendAPI
-      .post("/plant/water")
+      .post("/crop/water")
       .then((response) => {
-        const { success, plantData } = response.data;
-
+        const { success, cropData } = response.data;
         if (success) {
           dispatch!({
-            type: SET_PLANT_DATA,
-            payload: { plantData, error: "" },
+            type: SET_CROP_DATA,
+            payload: { cropData, error: "" },
           });
         }
       })
@@ -99,7 +108,7 @@ export const PlantDetails = ({ plant, plotAssetId, isReadOnly }: PlantDetailsPro
   const handleHarvest = async () => {
     setIsHarvesting(true);
     await backendAPI
-      .post("/plant/harvest")
+      .post("/crop/harvest")
       .catch((error) => {
         setErrorMessage(dispatch, error as ErrorType);
       })
@@ -127,49 +136,29 @@ export const PlantDetails = ({ plant, plotAssetId, isReadOnly }: PlantDetailsPro
   };
 
   const getGrowthColor = () => {
-    if (readyForWater || readyForHarvest) return "text-success";
-    return "text-muted";
+    if (readyForWater || readyForHarvest) return "chip-success";
   };
 
   return (
-    <div className="grid gap-4">
-      <img className="m-auto" src={icon} style={{ width: "40px" }} />
-      <div className="text-center">
-        <h3 className="card-title">{name}</h3>
-        <p className={`p2 ${getGrowthColor()}`}>{getGrowthStatus()}</p>
-      </div>
-
+    <div className="grid gap-2">
       <div className="card small">
         <div className="card-details" style={{ maxWidth: "100%" }}>
-          <h4 className="h4">Growth Progress</h4>
-          <div className="grid grid-cols-2">
-            <div>
-              <p className="p3">
-                Level: {growLevel}/{harvestLevel}
-              </p>
-              <p className="p3">
-                Plot Square: {squareIndex + 1}/{calculateNumberOfSquares(false)}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="p3">Planted: {new Date(dateDropped).toLocaleString()}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="card small">
-        <div className="card-details" style={{ maxWidth: "100%" }}>
-          <h4 className="h4">Seed Info</h4>
-          <div className="grid grid-cols-2">
-            <div>
-              <p className="p3">Cost: {cost === 0 ? "Free" : `${cost} coins`}</p>
-              <p className="p3">Growth Time: {Math.floor(growthTime / 60)}m</p>
-            </div>
-            <div className="text-right">
-              <p className="p3">Reward: {reward} coins</p>
-              <p className="p3">Profit: +{reward - cost} coins</p>
-            </div>
+          <img className="m-auto" src={icon} style={{ width: "40px" }} />
+          <div className="text-center">
+            <h3 className="card-title">{name}</h3>
+            <p className="text-muted">({rarity})</p>
+            <p>
+              <i>
+                Lvl {growLevel}/{harvestLevel}
+              </i>
+            </p>
+            <p>+{reward} Coins</p>
+            {isReadOnly ? (
+              <div className="chip ">Owned by {ownerName}</div>
+            ) : (
+              <div className={`chip my-4 ${getGrowthColor()}`}>{getGrowthStatus()}</div>
+            )}
+            {growLevel < harvestLevel - 1 && <p className="p3">Growth Time Remaining: {totalTimeRemaining}</p>}
           </div>
         </div>
       </div>
@@ -193,19 +182,20 @@ export const PlantDetails = ({ plant, plotAssetId, isReadOnly }: PlantDetailsPro
         <>
           <div className="card success">
             <div className="card-details">
-              <p className="p2 text-center">Plant has been harvested!</p>
+              <p className="p2 text-center">Crop has been harvested!</p>
               <p className="p3 text-center">Earned {reward} coins</p>
             </div>
           </div>
-          {plotAssetId && (
-            <button className="btn" onClick={handleOpenPlotIframe}>
-              View Plot
-            </button>
-          )}
         </>
+      )}
+
+      {plotAssetId && (
+        <button className="btn btn-outline" onClick={handleOpenPlotIframe}>
+          View Plot
+        </button>
       )}
     </div>
   );
 };
 
-export default PlantDetails;
+export default CropDetails;

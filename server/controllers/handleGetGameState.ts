@@ -3,7 +3,7 @@ import { errorHandler, getCredentials, initializeVisitorData, DroppedAsset, getP
 import { PlotAssetDataObjectType } from "../types/index.js";
 
 /**
- * Get the current game state for a visitor including their plot, plants, and coin balance
+ * Get the current game state for a visitor including their plot, crops, and coin balance
  */
 export const handleGetGameState = async (req: Request, res: Response) => {
   try {
@@ -22,30 +22,30 @@ export const handleGetGameState = async (req: Request, res: Response) => {
 
     const { visitorData } = initializeVisitorDataResponse;
 
-    /* Commenting out for now but may be used for wilting and losing plants in future
-    // Update plant growth levels for all plants
-    const updatedPlants = { ...visitorData.plants };
+    /* Commenting out for now but may be used for wilting and losing crops in future
+    // Update crop growth levels for all crops
+    const updatedCrops = { ...visitorData.crops };
     let hasUpdates = false;
 
-    for (const [plantAssetId, plant] of Object.entries(visitorData.plants)) {
-      const seedConfig = seeds[plant.seedId];
+    for (const [cropAssetId, crop] of Object.entries(visitorData.crops)) {
+      const seedConfig = seeds[crop.seedId];
       if (seedConfig) {
         const currentGrowthLevel = calculateGrowthLevel(
-          plant.dateDropped,
+          crop.dateDropped,
           seedConfig.growthTime,
           seedConfig.harvestLevel,
         );
 
-        if (currentGrowthLevel !== plant.growLevel) {
+        if (currentGrowthLevel !== crop.growLevel) {
           // Update growth level in memory
-          updatedPlants[plantAssetId] = {
-            ...plant,
+          updatedCrops[cropAssetId] = {
+            ...crop,
             growLevel: currentGrowthLevel,
           };
           hasUpdates = true;
 
           try {
-            const droppedAsset = await DroppedAsset.create(plantAssetId, urlSlug, { credentials });
+            const droppedAsset = await DroppedAsset.create(cropAssetId, urlSlug, { credentials });
             if (droppedAsset) {
               await droppedAsset.updateWebImageLayers("", seedConfig.imageVariations[currentGrowthLevel]);
             }
@@ -56,14 +56,14 @@ export const handleGetGameState = async (req: Request, res: Response) => {
       }
     }
 
-    // Save updated plant data if there were changes
+    // Save updated crop data if there were changes
     if (hasUpdates) {
       const visitor = await Visitor.get(visitorId, urlSlug, { credentials });
-      visitorData = { ...visitorData, plants: updatedPlants };
+      visitorData = { ...visitorData, crops: updatedCrops };
       await visitor.updateDataObject(
         { [urlSlug]: visitorData },
         {
-          analytics: [{ analyticName: "plantGrowthUpdated" }],
+          analytics: [{ analyticName: "cropGrowthUpdated" }],
         },
       );
     }

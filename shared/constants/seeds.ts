@@ -4,8 +4,8 @@
 
 import { SeedType, s3URL } from "../index.js";
 
-// Plant image variations for each growth level
-export const plantImages = {
+// Crop image variations for each growth level
+export const cropImages = {
   1: {
     // Potato (harvest at level 3)
     0: `${s3URL}/potato-0.png`,
@@ -60,8 +60,9 @@ export const seeds: Record<number, SeedType> = {
     reward: 2,
     growthTime: 60,
     harvestLevel: 1,
+    rarity: "common",
     icon: `${s3URL}/potato-icon.png`,
-    imageVariations: plantImages[1],
+    imageVariations: cropImages[1],
   },
   2: {
     id: 2,
@@ -70,8 +71,9 @@ export const seeds: Record<number, SeedType> = {
     reward: 3,
     growthTime: 60 * 5,
     harvestLevel: 1,
+    rarity: "common",
     icon: `${s3URL}/wheat-icon.png`,
-    imageVariations: plantImages[2],
+    imageVariations: cropImages[2],
   },
   3: {
     id: 3,
@@ -80,8 +82,9 @@ export const seeds: Record<number, SeedType> = {
     reward: 20,
     growthTime: 60 * 10,
     harvestLevel: 2,
+    rarity: "common",
     icon: `${s3URL}/tomato-icon.png`,
-    imageVariations: plantImages[3],
+    imageVariations: cropImages[3],
   },
   4: {
     id: 4,
@@ -90,7 +93,8 @@ export const seeds: Record<number, SeedType> = {
     reward: 65,
     growthTime: 60 * 30,
     harvestLevel: 2,
+    rarity: "common",
     icon: `${s3URL}/pumpkin-icon.png`,
-    imageVariations: plantImages[4],
+    imageVariations: cropImages[4],
   },
 };

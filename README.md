@@ -8,14 +8,14 @@ A relaxing, loop-based gardening game where players plant seeds, grow crops, and
 
 ### Canvas elements & interactions
 
-- Plot Assets: Users can claim a plot where they can then purchase seeds, plant seeds, watch their garden grow, and harvest plants.
-- Plant Assets: Users can click on a plant in the world and check on it's status and water if ready. If it's fully grown they can harvest that plant to earn coins to purchase additional seeds.
+- Plot Assets: Users can claim a plot where they can then purchase seeds, plant seeds, watch their garden grow, and harvest crops.
+- Crop Assets: Users can click on a crop in the world and check on it's status and water if ready. If it's fully grown they can harvest that crop to earn coins to purchase additional seeds.
 
 ### Drawer content
 
 - Claim a plot and view details
 - Purchase and plant seeds
-- Check on plant status to water and harvest once grown
+- Check on crop status to water and harvest once grown
 
 ### Data objects
 
@@ -45,9 +45,9 @@ The data objects attached to the dropped plot assets will store information rela
 };
 ```
 
-### Plant Assets
+### Crop Assets
 
-The data objects attached to the dropped plant assets will store information related to this specific plant.
+The data objects attached to the dropped crop assets will store information related to this specific crop.
 
 ```ts
 {
@@ -57,7 +57,7 @@ The data objects attached to the dropped plant assets will store information rel
   lastWatered: string;
   seedId: number;
   growLevel: number;
-  squareIndex: number; // Which square in the plot
+  squareId: number; // Which square in the plot
 }
 ```
 
@@ -87,13 +87,13 @@ The data object attached to the visitor will store ecosystem information for eac
     plotAssetId: string | null;
     claimedDate: string;
     plotSquares: {
-      [squareIndex: number]: string | null; // droppedAssetId of plant or null if empty
+      [squareId: number]: string | null; // droppedAssetId of crop or null if empty
     };
-    plants: {
-      [droppedAssetId: string]: PlantDataObjectType;
+    crops: {
+      [droppedAssetId: string]: CropDataObjectType;
     };
     decorations: {
-      [droppedAssetId: string]: PlacedDecorationType;
+      [droppedAssetId: string]: PlacedDecorationDataObjectType;
     };
   };
 };

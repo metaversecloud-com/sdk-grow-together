@@ -19,19 +19,18 @@ interface PlantSeedProps {
 
 export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot, seedsPurchased }: PlantSeedProps) => {
   const dispatch = useContext(GlobalDispatchContext);
-  const [selectedSeedId, setSelectedSeedId] = useState<number | null>(null);
   const [isPlanting, setIsPlanting] = useState(false);
 
-  const handlePlantSeed = async () => {
-    if (!selectedSeedId || selectedSquare === null) return;
+  const handlePlantSeed = async (seedId: number) => {
+    if (!seedId || selectedSquare === null) return;
 
     setIsPlanting(true);
     setIsUpdatingPlot(true);
 
     await backendAPI
-      .post("/plant/drop", {
-        seedId: selectedSeedId,
-        squareIndex: selectedSquare,
+      .post("/crop/drop", {
+        seedId: seedId,
+        squareId: selectedSquare,
       })
       .then((response) => {
         const { visitorData, visitorPlotData } = response.data;
@@ -44,7 +43,6 @@ export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot
           payload: { visitorPlotData, error: "" },
         });
         setSelectedSquare(null);
-        setSelectedSeedId(null);
       })
       .catch((error) => {
         setErrorMessage(dispatch, error as ErrorType);
@@ -56,45 +54,43 @@ export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot
   };
 
   return (
-    <div className="card mt-4">
-      <div className="card-details grid gap-4">
-        <h4>Plant Seed in Square {selectedSquare}</h4>
-        <p className="p3">Select a seed to plant:</p>
-
-        <div className="grid gap-2 grid-cols-2">
-          {Object.values(seeds).map((seed) => {
-            const isFree = seed.cost === 0;
-            const isPurchased = seedsPurchased[seed.id] || false;
-            const isAvailable = isFree || isPurchased;
-
-            return (
-              <button
-                key={seed.id}
-                className={`btn btn-outline ${selectedSeedId === seed.id ? "btn-success-outline" : ""} 
-                }`}
-                disabled={!isAvailable || isPlanting}
-                onClick={() => isAvailable && setSelectedSeedId(seed.id)}
-              >
-                <img className="mr-2" src={seed.icon} style={{ opacity: !isAvailable ? 0.5 : 1 }} />
-                {seed.name}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="flex">
-          <button className="btn" onClick={handlePlantSeed} disabled={!selectedSeedId || isPlanting}>
-            {isPlanting ? "Planting..." : "Plant Seed"}
-          </button>
+    <div className="modal-container">
+      <div className="modal">
+        <div className="modal-header flex gap-2 grid-cols-2">
+          <h4 className="flex-grow text-left">Plant Seed in Slot {selectedSquare}</h4>
           <button
-            className="btn btn-text"
+            disabled={isPlanting}
             onClick={() => {
               setSelectedSquare(null);
-              setSelectedSeedId(null);
             }}
           >
-            Cancel
+            <img src="https://sdk-style.s3.amazonaws.com/icons/x.svg" style={{ width: "10px" }} />
           </button>
+        </div>
+
+        <div className="grid gap-2 grid-cols-3">
+          {Object.values(seeds).map((seed) => {
+            const growthTimeInMinutes = (seed.growthTime * seed.harvestLevel) / 60;
+            const isAvailable = seed.cost === 0 || seedsPurchased[seed.id];
+            let buttonClass = "card card-horizontal";
+            if (isAvailable && !isPlanting) buttonClass += " cursor-pointer available";
+
+            return (
+              <div
+                key={seed.id}
+                className={buttonClass}
+                onClick={() => isAvailable && handlePlantSeed(seed.id)}
+                style={{ gap: "4px" }}
+              >
+                <img className="m-auto" src={seed.icon} style={{ opacity: !isAvailable ? 0.5 : 1 }} />
+
+                <p className="p3">{seed.name}</p>
+                <p className="p4 text-muted">
+                  {growthTimeInMinutes} min{growthTimeInMinutes > 1 ? "s" : ""}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

@@ -7,8 +7,10 @@ import {
   DroppedAsset,
   Asset,
   World,
+  getBaseUrl,
 } from "../utils/index.js";
 import { calculateNumberOfSquares, decorations } from "../../shared/index.js";
+import { DroppedAssetClickType } from "@rtsdk/topia";
 
 /**
  * Handle placing a decoration - creates a new decoration dropped asset in the world
@@ -17,15 +19,15 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
     const { assetId, displayName, urlSlug, visitorId, profileId } = credentials;
-    const { decorationId, squareIndex } = req.body;
+    const { decorationId, squareId } = req.body;
 
-    if (!decorationId || typeof decorationId !== "number" || typeof squareIndex !== "number") {
-      throw "Valid decorationId and squareIndex are required";
+    if (!decorationId || typeof decorationId !== "number" || typeof squareId !== "number") {
+      throw "Valid decorationId and squareId are required";
     }
 
-    const noOfSquares = calculateNumberOfSquares(true);
-    if (squareIndex < 0 || squareIndex > noOfSquares) {
-      throw `squareIndex must be between 0 and ${noOfSquares}`;
+    const noOfSquares = calculateNumberOfSquares();
+    if (squareId < 0 || squareId > noOfSquares) {
+      throw `squareId must be between 0 and ${noOfSquares}`;
     }
 
     const decoration = decorations[decorationId];
@@ -49,11 +51,11 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     }
 
     // Check if the square is already occupied
-    if (visitorPlotData.plotSquares?.[squareIndex]) throw "This square is already occupied";
+    if (visitorPlotData.plotSquares?.[squareId]) throw "This square is already occupied";
 
     // Get the plot asset to determine position
     const plotAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
-    const position = calculateSquarePosition(plotAsset.position, squareIndex);
+    const position = calculateSquarePosition(plotAsset.position, squareId);
 
     // Trigger particle effect
     const world = World.create(urlSlug, { credentials });
@@ -70,7 +72,14 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     const asset = Asset.create("webImageAsset", { credentials });
 
     // Drop a new decoration asset at the calculated position
+    const baseUrl = getBaseUrl(req.hostname);
     const decorationAsset = await DroppedAsset.drop(asset, {
+      clickType: DroppedAssetClickType.LINK,
+      clickableLink: `${baseUrl}/decoration?ownerName=${encodeURIComponent(displayName)}&ownerProfileId=${profileId}`,
+      clickableLinkTitle: decoration.name,
+      isInteractive: true,
+      interactivePublicKey: credentials.interactivePublicKey,
+      isOpenLinkInDrawer: true,
       layer1: decoration.imageSrc,
       position,
       uniqueName: `BountyBuilders_decoration_${profileId}`,
@@ -80,7 +89,8 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     const now = new Date().toISOString();
     const decorationData = {
       dateDropped: now,
-      id: decorationId,
+      decorationId: decorationId,
+      squareId,
     };
 
     await decorationAsset.setDataObject({
@@ -92,7 +102,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     // Update visitor's data object
     visitorData.decorationsOwned[decorationId].quantity =
       (visitorData.decorationsOwned[decorationId].quantity || 0) - 1;
-    visitorData.worlds[urlSlug].plotSquares[squareIndex] = decorationAsset.id!;
+    visitorData.worlds[urlSlug].plotSquares[squareId] = decorationAsset.id!;
     visitorData.worlds[urlSlug].decorations[decorationAsset.id!] = decorationData;
 
     await visitor.updateDataObject(visitorData, {
