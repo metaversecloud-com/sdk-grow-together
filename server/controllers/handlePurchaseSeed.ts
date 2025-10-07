@@ -60,7 +60,7 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
       .fireToast({
         groupId: "handlePurchaseSeed",
         title: "You purchased a new seed!",
-        text: `You can now plant ${seedConfig.name}s seeds in your garden.`,
+        text: `You can now plant ${seedConfig.name} seeds in your garden.`,
       })
       .catch((error: AxiosError) => {
         return errorHandler({

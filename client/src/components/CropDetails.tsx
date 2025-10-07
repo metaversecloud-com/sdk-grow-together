@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState, useEffect, useRef } from "react";
 
 // context
 import { GlobalDispatchContext } from "@/context/GlobalContext";
@@ -30,6 +30,27 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
   const [isWatering, setIsWatering] = useState(false);
   const [isHarvesting, setIsHarvesting] = useState(false);
   const [wasHarvested, setWasHarvested] = useState(false);
+
+  const [audioQueue, setAudioQueue] = useState<HTMLAudioElement[]>([]);
+  const waterAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    waterAudioRef.current = new Audio("https://sdk-race.s3.amazonaws.com/audio/positive.mp3");
+  }, []);
+
+  const playAudioQueue = () => {
+    if (audioQueue.length > 0) {
+      const audio = audioQueue[0];
+      audio.play();
+      audio.onended = () => {
+        setAudioQueue((prevQueue) => prevQueue.slice(1));
+      };
+    }
+  };
+
+  useEffect(() => {
+    playAudioQueue();
+  }, [audioQueue]);
 
   // Update timeRemaining every second until ready for harvest or harvested
   useEffect(() => {
@@ -94,6 +115,7 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
             type: SET_CROP_DATA,
             payload: { cropData, error: "" },
           });
+          setAudioQueue((prevQueue) => (waterAudioRef.current ? [...prevQueue, waterAudioRef.current] : prevQueue));
         }
       })
       .catch((error) => {
