@@ -1,7 +1,7 @@
 /**
  * Shared decoration constants between client and server
  */
-import { DecorationType } from "../index.js";
+import { DecorationType, rarityLevels } from "../index.js";
 import { s3URL } from "./plotConfig.js";
 
 export const decorations: Record<number, DecorationType> = {
@@ -11,7 +11,7 @@ export const decorations: Record<number, DecorationType> = {
     cost: 10,
     icon: `${s3URL}/decoration-1.png`,
     imageSrc: `${s3URL}/decoration-1.png`,
-    rarity: "Common",
+    rarity: rarityLevels[0],
     description: "A cute little mole.",
   },
   2: {
@@ -20,7 +20,7 @@ export const decorations: Record<number, DecorationType> = {
     cost: 10,
     icon: `${s3URL}/decoration-1.png`,
     imageSrc: `${s3URL}/decoration-1.png`,
-    rarity: "Common",
+    rarity: rarityLevels[1],
     description: "Def not a mole.",
   },
 };

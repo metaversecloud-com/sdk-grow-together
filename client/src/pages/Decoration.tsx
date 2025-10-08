@@ -67,7 +67,7 @@ export const Decoration = () => {
             <img className="m-auto" src={imageSrc} />
             <div className="text-center grid gap-1">
               <h3 className="card-title">{name}</h3>
-              <p className="text-muted">({rarity})</p>
+              <p className={`${rarity.toLowerCase()}`}></p>
               <p className="p2">{description}</p>
               <p className="text-success">{cost} Coins</p>
               {!isOwnedByCurrentUser && <div className="chip m-auto mt-2">Owned by {ownerName}</div>}

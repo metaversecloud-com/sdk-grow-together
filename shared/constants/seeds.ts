@@ -1,8 +1,8 @@
 /**
  * Shared seed constants between client and server
  */
-
-import { SeedType, s3URL } from "../index.js";
+import { SeedType, rarityLevels } from "../index.js";
+import { s3URL } from "./plotConfig.js";
 
 // Crop image variations for each growth level
 export const cropImages = {
@@ -60,7 +60,7 @@ export const seeds: Record<number, SeedType> = {
     reward: 2,
     growthTime: 60,
     harvestLevel: 1,
-    rarity: "common",
+    rarity: rarityLevels[0],
     icon: `${s3URL}/potato-icon.png`,
     imageVariations: cropImages[1],
   },
@@ -71,7 +71,7 @@ export const seeds: Record<number, SeedType> = {
     reward: 3,
     growthTime: 60 * 5,
     harvestLevel: 1,
-    rarity: "common",
+    rarity: rarityLevels[1],
     icon: `${s3URL}/wheat-icon.png`,
     imageVariations: cropImages[2],
   },
@@ -82,7 +82,7 @@ export const seeds: Record<number, SeedType> = {
     reward: 20,
     growthTime: 60 * 10,
     harvestLevel: 2,
-    rarity: "common",
+    rarity: rarityLevels[2],
     icon: `${s3URL}/tomato-icon.png`,
     imageVariations: cropImages[3],
   },
@@ -93,7 +93,7 @@ export const seeds: Record<number, SeedType> = {
     reward: 65,
     growthTime: 60 * 30,
     harvestLevel: 2,
-    rarity: "common",
+    rarity: rarityLevels[3],
     icon: `${s3URL}/pumpkin-icon.png`,
     imageVariations: cropImages[4],
   },

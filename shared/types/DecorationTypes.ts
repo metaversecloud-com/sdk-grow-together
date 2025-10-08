@@ -2,13 +2,15 @@
  * Shared decoration types between client and server
  */
 
+import { rarityLevels } from "../index.js";
+
 export type DecorationType = {
   id: number;
   name: string;
   cost: number;
   icon: string;
   imageSrc: string;
-  rarity: "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary";
+  rarity: (typeof rarityLevels)[number];
   description: string;
 };
 

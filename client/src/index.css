@@ -23,3 +23,19 @@
   background: #ffdc4b !important;
   border-color: #fff6b6 !important;
 }
+
+.common {
+  color: #6c7c8c !important; /* text-muted */
+}
+.uncommon {
+  color: #00875a !important; /* text-success */
+}
+.rare {
+  color: #305bab !important;
+}
+.epic {
+  color: #6631d7 !important;
+}
+.legendary {
+  color: #fe9f4d !important;
+}

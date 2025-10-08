@@ -29,12 +29,12 @@ export const PurchaseItem = ({
 }: PurchaseItemProps) => {
   return (
     <div key={id} className={`card ${!available ? "opacity-50" : ""}`}>
-      <img className="m-auto" src={imageSrc} />
+      <img className="mx-auto" src={imageSrc} />
       <div className="card-details">
         <h4 className="card-title">{name}</h4>
 
         <div className="card-description grid gap-3">
-          <p className="p3 text-muted">
+          <p className={`p3 ${rarity.toLowerCase()}`}>
             <i>{rarity}</i>
           </p>
           <p className="p3">{description}</p>
