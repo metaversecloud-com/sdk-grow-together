@@ -74,7 +74,8 @@ The data object attached to the visitor will store ecosystem information for eac
     [decorationId: number]: {
       id: number;
       dateReceived: string;
-      quantity: number;
+      owned: number;
+      available: number;
     };
   };
   seedsPurchased: {

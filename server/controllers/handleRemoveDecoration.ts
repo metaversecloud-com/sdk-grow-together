@@ -22,7 +22,7 @@ export const handleRemoveDecoration = async (req: Request, res: Response) => {
 
     const decoration = visitorPlotData.decorations[assetId];
 
-    visitorData.decorationsOwned[decoration.decorationId].quantity += 1;
+    visitorData.decorationsOwned[decoration.decorationId].available += 1;
     visitorData.worlds[urlSlug].plotSquares[squareId] = null;
     delete visitorData.worlds[urlSlug].decorations[assetId];
 
@@ -42,8 +42,8 @@ export const handleRemoveDecoration = async (req: Request, res: Response) => {
     const world = World.create(urlSlug, { credentials });
     await world
       .triggerParticle({
-        name: "lightBlueSmoke_puff",
-        duration: 2,
+        name: "dirt_grow_together",
+        duration: 1,
         position: droppedAsset.position,
       })
       .catch((error) => {

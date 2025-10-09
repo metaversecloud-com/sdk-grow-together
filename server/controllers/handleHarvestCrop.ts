@@ -58,7 +58,7 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
     const world = World.create(urlSlug, { credentials });
     await world
       .triggerParticle({
-        name: "lightBlueSmoke_puff",
+        name: "coin_drop_together",
         duration: 2,
         position: cropAsset.position,
       })

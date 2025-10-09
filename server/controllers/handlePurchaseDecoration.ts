@@ -34,10 +34,12 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
     if (!visitorData.decorationsOwned[decorationId]) {
       visitorData.decorationsOwned[decorationId] = {
         id: decorationId,
-        quantity: 1,
+        available: 1,
+        owned: 1,
       };
     } else {
-      visitorData.decorationsOwned[decorationId].quantity += 1;
+      visitorData.decorationsOwned[decorationId].available += 1;
+      visitorData.decorationsOwned[decorationId].owned += 1;
     }
 
     await visitor.updateDataObject(visitorData, {

@@ -12,6 +12,5 @@ export * from "./CropDetails.js";
 export * from "./PlantSeed.js";
 export * from "./PlotGrid.js";
 export * from "./PurchaseItem.js";
-export * from "./RemoveModal.js";
 export * from "./SeedMenu.js";
 export * from "./YourMoney.js";

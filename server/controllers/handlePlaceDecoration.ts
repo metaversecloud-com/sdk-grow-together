@@ -46,7 +46,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     if (!visitorPlotData.plotAssetId) throw "You must claim a plot before placing decorations";
 
     // Check if visitor owns this decoration
-    if (!visitorData.decorationsOwned[decorationId] || visitorData.decorationsOwned[decorationId].quantity < 1) {
+    if (!visitorData.decorationsOwned[decorationId] || visitorData.decorationsOwned[decorationId].available < 1) {
       throw "You must own this decoration before placing it";
     }
 
@@ -61,8 +61,8 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     const world = World.create(urlSlug, { credentials });
     await world
       .triggerParticle({
-        name: "lightBlueSmoke_puff",
-        duration: 2,
+        name: "dirt_grow_together",
+        duration: 1,
         position,
       })
       .catch((error) => {
@@ -100,8 +100,8 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     });
 
     // Update visitor's data object
-    visitorData.decorationsOwned[decorationId].quantity =
-      (visitorData.decorationsOwned[decorationId].quantity || 0) - 1;
+    visitorData.decorationsOwned[decorationId].available =
+      (visitorData.decorationsOwned[decorationId].available || 0) - 1;
     visitorData.worlds[urlSlug].plotSquares[squareId] = decorationAsset.id!;
     visitorData.worlds[urlSlug].decorations[decorationAsset.id!] = decorationData;
 

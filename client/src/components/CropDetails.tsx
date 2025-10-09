@@ -24,7 +24,6 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
   const { name, icon, reward, growthTime, harvestLevel, rarity } = seedConfig;
 
   const [timeRemaining, setTimeRemaining] = useState<string | null>(null);
-  const [totalTimeRemaining, setTotalTimeRemaining] = useState<string | null>(null);
   const [readyForWater, setReadyForWater] = useState(false);
   const [readyForHarvest, setReadyForHarvest] = useState(false);
   const [isWatering, setIsWatering] = useState(false);
@@ -75,15 +74,8 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
     const updateCountdown = () => {
       const remainingSeconds = getSecondsRemaining();
 
-      const levelsLeft = harvestLevel - growLevel - 1;
-      const totalTimeRemainingSeconds = levelsLeft * growthTime + remainingSeconds;
-      const totalMinutes = Math.floor(totalTimeRemainingSeconds / 60);
-      const totalSeconds = Math.floor(totalTimeRemainingSeconds % 60);
-      setTotalTimeRemaining(
-        `${totalMinutes} min${totalMinutes !== 1 ? "s" : ""} ${totalSeconds > 0 ? `${totalSeconds}s` : ""}`,
-      );
-
       if (remainingSeconds <= 0) return setTimeRemaining(null);
+
       const minutes = Math.floor(remainingSeconds / 60);
       const seconds = Math.floor(remainingSeconds % 60);
       setTimeRemaining(`${minutes} min${minutes !== 1 ? "s" : ""} ${seconds > 0 ? `${seconds}s` : ""}`);
@@ -151,7 +143,8 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
   };
 
   const getGrowthStatus = () => {
-    if (wasHarvested) return "Harvested";
+    if (isReadOnly) return `Owned by ${ownerName}`;
+    else if (wasHarvested) return "Harvested";
     else if (readyForHarvest) return "Ready for Harvest!";
     else if (readyForWater) return `Ready to Water!`;
     else if (growLevel < harvestLevel) return `Ready to water in: ${timeRemaining}`;
@@ -161,6 +154,7 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
   };
 
   const getGrowthColor = () => {
+    if (isReadOnly) return "chip-muted";
     if (readyForWater || readyForHarvest) return "chip-success";
   };
 
@@ -178,12 +172,7 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
               </i>
             </p>
             <p className="text-success">+{reward} Coins</p>
-            {isReadOnly ? (
-              <div className="chip ">Owned by {ownerName}</div>
-            ) : (
-              <div className={`chip my-4 ${getGrowthColor()}`}>{getGrowthStatus()}</div>
-            )}
-            {growLevel < harvestLevel - 1 ? <p className="p3">Growth Time Remaining: {totalTimeRemaining}</p> : <></>}
+            <div className={`chip my-4 ${getGrowthColor()}`}>{getGrowthStatus()}</div>
           </div>
         </div>
       </div>

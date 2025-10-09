@@ -40,11 +40,14 @@ export const PurchaseItem = ({
           <p className="p3">{description}</p>
           <p className="p3 text-success">{value}</p>
         </div>
+        <p className="p3 text-muted">
+          <i>Price: {cost} Coins</i>
+        </p>
 
         <div className="card-actions">
           {available ? (
             <button className="btn btn-outline p3" onClick={() => handlePurchase(id)} disabled={isPurchasing}>
-              {isPurchasing ? "Purchasing..." : `Buy (${cost} coins)`}
+              {isPurchasing ? "Purchasing..." : "Buy"}
             </button>
           ) : (
             canPurchaseAdditional && <span className="p3 text-muted">Need {cost - coinsAvailable} more coins</span>

@@ -25,7 +25,8 @@ export type VisitorDataObjectType = {
   decorationsOwned: {
     [decorationId: number]: {
       id: number;
-      quantity: number;
+      owned: number; // total owned
+      available: number; // available to place (owned - already placed)
     };
   };
   seedsPurchased: {

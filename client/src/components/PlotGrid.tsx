@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 
 // components
-import { RemoveModal, PlaceDecoration, PlantSeed } from "@/components";
+import { PlaceDecoration, PlantSeed, ModalHeader } from "@/components";
 
 // context
 import { GlobalDispatchContext } from "@/context/GlobalContext";
@@ -26,25 +26,24 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly, vi
 
   const [selectedSquare, setSelectedSquare] = useState<number | null>(null);
   const [isUpdatingPlot, setIsUpdatingPlot] = useState(false);
-  const [showRemoveCropModal, setShowRemoveCropModal] = useState(false);
-  const [showRemoveDecorationModal, setShowRemoveDecorationModal] = useState(false);
+  const [showSquareModal, setShowSquareModal] = useState(false);
+  const [areButtonsDisabled, setAreButtonsDisabled] = useState(false);
 
   const handleSquareClick = (squareId: number) => {
     if (isReadOnly) return;
 
     setSelectedSquare(selectedSquare === squareId ? null : squareId);
 
-    if (plotSquares[squareId] && crops[plotSquares[squareId]]) setShowRemoveCropModal(true);
-    else if (plotSquares[squareId] && placedDecorations[plotSquares[squareId]]) setShowRemoveDecorationModal(true);
+    if (plotSquares[squareId]) setShowSquareModal(true);
   };
 
   const handleCancelRemove = () => {
-    setShowRemoveCropModal(false);
-    setShowRemoveDecorationModal(false);
+    setShowSquareModal(false);
     setSelectedSquare(null);
   };
 
   const handleViewSquare = async ({ type }: { type: "crop" | "decoration" }) => {
+    setAreButtonsDisabled(true);
     await backendAPI
       .post(`/square/view`, {
         squareId: selectedSquare,
@@ -52,10 +51,14 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly, vi
       })
       .catch((error) => {
         setErrorMessage(dispatch, error as ErrorType);
+      })
+      .finally(() => {
+        setAreButtonsDisabled(false);
       });
   };
 
   const handleClearSquare = async ({ type }: { type: "crop" | "decoration" }) => {
+    setAreButtonsDisabled(true);
     await backendAPI
       .post(`/${type}/remove`, {
         squareId: selectedSquare,
@@ -76,8 +79,8 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly, vi
         setErrorMessage(dispatch, error as ErrorType);
       })
       .finally(() => {
-        setShowRemoveCropModal(false);
-        setShowRemoveDecorationModal(false);
+        setShowSquareModal(false);
+        setAreButtonsDisabled(false);
       });
   };
 
@@ -128,6 +131,75 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly, vi
     );
   };
 
+  const renderSquareModal = () => {
+    const squareAssetId = plotSquares[selectedSquare!];
+    const crop = squareAssetId ? crops[squareAssetId] : null;
+    const decoration = squareAssetId ? placedDecorations[squareAssetId] : null;
+
+    let title: string = `Slot ${selectedSquare!}`;
+    let icon: string | undefined;
+    let name: string | undefined;
+    let harvestLevel: number | undefined;
+    let type: "crop" | "decoration";
+
+    if (crop) {
+      name = seeds[crop.seedId].name;
+      title = `${name} in Slot ${selectedSquare!}`;
+      icon = seeds[crop.seedId].icon;
+      harvestLevel = seeds[crop.seedId]?.harvestLevel || 10;
+      type = "crop";
+    } else if (decoration) {
+      name = decorations[decoration.decorationId]?.name;
+      title = `${name} in Slot ${selectedSquare!}`;
+      icon = decorations[decoration.decorationId]?.icon;
+      type = "decoration";
+    }
+
+    return (
+      <div className="modal-container">
+        <div className="modal">
+          <ModalHeader
+            text={title}
+            disabled={areButtonsDisabled}
+            handleOnClick={() => {
+              handleCancelRemove();
+            }}
+          />
+          <div className="card m-auto" style={{ width: "auto" }}>
+            {crop ? (
+              <div>
+                <img className="m-auto" src={icon} />
+                <p className="p3">
+                  lvl {crop.growLevel}/{harvestLevel || 10}
+                </p>
+                {crop.growLevel >= (harvestLevel || 10) && <p className="p4 text-success">Ready!</p>}
+              </div>
+            ) : decoration ? (
+              <img className="m-auto" src={icon} />
+            ) : null}
+          </div>
+          <div className="actions">
+            <button
+              id="viewSquare"
+              className="btn btn-outline"
+              onClick={() => handleViewSquare({ type })}
+              disabled={areButtonsDisabled}
+            >
+              View Slot
+            </button>
+            <button
+              className="btn btn-danger-outline"
+              onClick={() => handleClearSquare({ type })}
+              disabled={areButtonsDisabled}
+            >
+              Remove
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div>
       <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
@@ -154,25 +226,7 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly, vi
         </>
       )}
 
-      {showRemoveCropModal && (
-        <RemoveModal
-          title="Remove Crop?"
-          message="Removing this crop will free up this plot square."
-          handleCancelRemove={handleCancelRemove}
-          handleViewSquare={() => handleViewSquare({ type: "crop" })}
-          handleOnConfirm={() => handleClearSquare({ type: "crop" })}
-        />
-      )}
-
-      {showRemoveDecorationModal && (
-        <RemoveModal
-          title="Remove Decoration?"
-          message="Removing this decoration will return it to your inventory so you can place it again later."
-          handleCancelRemove={handleCancelRemove}
-          handleViewSquare={() => handleViewSquare({ type: "decoration" })}
-          handleOnConfirm={() => handleClearSquare({ type: "decoration" })}
-        />
-      )}
+      {showSquareModal && selectedSquare !== null && renderSquareModal()}
     </div>
   );
 };

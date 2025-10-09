@@ -51,9 +51,12 @@ export const handleWaterCrop = async (req: Request, res: Response) => {
     const world = World.create(urlSlug, { credentials });
     await world
       .triggerParticle({
-        name: "lightBlueSmoke_puff",
-        duration: 2,
-        position: cropAsset.position,
+        name: "drop_grow_together",
+        duration: 1,
+        position: {
+          x: cropAsset.position.x,
+          y: cropAsset.position.y - 50,
+        },
       })
       .catch((error) => {
         console.error(`Failed to trigger water particle effect:`, error);

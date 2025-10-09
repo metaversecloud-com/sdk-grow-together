@@ -79,19 +79,19 @@ export const PlaceDecoration = ({
         ) : (
           <div className="grid gap-2 grid-cols-2">
             {Object.values(decorations).map((decoration) => {
-              const quantity = decorationsOwned[decoration.id]?.quantity || 0;
-              const isOwned = quantity > 0;
+              const available = decorationsOwned[decoration.id]?.available || 0;
+              const canPlace = available > 0;
 
               return (
                 <div
                   key={decoration.id}
-                  className={`card text-center ${!isOwned || isPlacing ? "opacity-50" : "cursor-pointer"}`}
-                  onClick={() => isOwned && handlePlaceDecoration(decoration.id)}
+                  className={`card text-center ${!canPlace || isPlacing ? "opacity-50" : "cursor-pointer"}`}
+                  onClick={() => canPlace && handlePlaceDecoration(decoration.id)}
                 >
                   <img className="mr-2" src={decoration.imageSrc} />
                   <div>
                     <p className="p2 p-0">{decoration.name}</p>
-                    <p className="p3 p-0 text-muted">{quantity} available</p>
+                    <p className="p3 p-0 text-muted">{available} available</p>
                   </div>
                 </div>
               );

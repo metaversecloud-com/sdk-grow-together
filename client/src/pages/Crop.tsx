@@ -15,7 +15,7 @@ import { backendAPI, setErrorMessage, setGameState } from "@/utils";
 export const Crop = () => {
   const dispatch = useContext(GlobalDispatchContext);
   const { hasInteractiveParams, cropData, visitorPlotData, visitorData } = useContext(GlobalStateContext);
-  const { ownerId, ownerName } = cropData || {};
+  const { ownerId } = cropData || {};
 
   const [searchParams] = useSearchParams();
 
@@ -51,10 +51,7 @@ export const Crop = () => {
           <>
             {/* Crop owned by another user */}
             {!isOwnedByCurrentUser && (
-              <div className="grid gap-4">
-                <p className="pb-2 text-center">This crop belongs to {ownerName || "another player"}</p>
-                <CropDetails crop={cropData} plotAssetId={visitorPlotData?.plotAssetId} isReadOnly={true} />
-              </div>
+              <CropDetails crop={cropData} plotAssetId={visitorPlotData?.plotAssetId} isReadOnly={true} />
             )}
 
             {/* Current user's crop */}

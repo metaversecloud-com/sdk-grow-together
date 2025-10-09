@@ -61,8 +61,8 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     const world = World.create(urlSlug, { credentials });
     await world
       .triggerParticle({
-        name: "lightBlueSmoke_puff",
-        duration: 2,
+        name: "dirt_grow_together",
+        duration: 1,
         position,
       })
       .catch((error) => {

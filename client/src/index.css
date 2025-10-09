@@ -39,3 +39,7 @@
 .legendary {
   color: #fe9f4d !important;
 }
+
+.chip-muted {
+  background-color: #f5f5f5 !important;
+}
