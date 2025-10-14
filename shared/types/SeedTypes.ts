@@ -1,9 +1,6 @@
 /**
  * Shared seed types between client and server
  */
-
-import { rarityLevels } from "../index.js";
-
 export type SeedType = {
   id: string;
   name: string;

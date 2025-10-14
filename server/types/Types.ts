@@ -11,7 +11,7 @@ export interface EcosystemItems extends InventoryItemInterface {
   metadata: {
     type?: string;
     cost?: number;
-    rarity?: string;
+    rarity?: number;
     reward?: number;
     growthTime?: number;
     harvestLevel?: number;

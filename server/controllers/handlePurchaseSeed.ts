@@ -41,14 +41,6 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
       throw `Not enough coins. Need ${seedConfig.cost}, have ${visitorInventory["Coins"].quantity}`;
     }
 
-    // // Free seeds don't need to be "purchased", they're always available
-    // if (seedConfig.cost === 0) {
-    //   return res.json({
-    //     success: true,
-    //     visitorData,
-    //   });
-    // }
-
     // Purchase the seed (modify quantity in inventory)
     const modifyCoinsResponse = await modifyInventoryItem({
       credentials,

@@ -1,9 +1,6 @@
 /**
  * Shared decoration types between client and server
  */
-
-import { rarityLevels } from "../index.js";
-
 export type DecorationType = {
   id: string;
   name: string;

@@ -5,7 +5,6 @@ import {
   initializeVisitorData,
   DroppedAsset,
   World,
-  Ecosystem,
   modifyInventoryItem,
 } from "../utils/index.js";
 import { PlotAssetDataObjectType, WorldDataObjectType } from "../types/index.js";

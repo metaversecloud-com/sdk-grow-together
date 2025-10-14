@@ -2,7 +2,6 @@ import { Visitor } from "./topiaInit.js";
 import { Credentials } from "../types/Credentials.js";
 import { EcosystemItems, VisitorDataObjectType } from "../types/index.js";
 import { DEFAULT_VISITOR_DATA, DEFAULT_VISITOR_WORLD_DATA } from "../constants.js";
-import { VisitorInventoryType } from "../../shared/types/VisitorDataTypes";
 
 /**
  * Initialize visitor data object with default values if it doesn't exist or is missing properties
@@ -37,32 +36,6 @@ export const initializeVisitorData = async (credentials: Credentials) => {
 
       visitorData = (await visitor.fetchDataObject()) as VisitorDataObjectType;
     }
-
-    // visitor items don't returning metadata
-    // await visitor.fetchInventoryItems();
-    // const allItems = visitor.inventoryItems as EcosystemItems[];
-    // console.log("🚀 ~ initializeVisitorData.ts:43 ~ allItems:", allItems)
-    // let visitorInventory: VisitorInventoryType = {
-    //   coinsAvailable: 0,
-    //   decorationsOwned: {},
-    //   seedsPurchased: {},
-    // };
-    // // const coinsInventoryItem = visitor.inventoryItems?.find((item) => item.name === "Coins");
-    // for (const item of allItems || []) {
-    //   if (item.name === "Coins") {
-    //     visitorInventory.coinsAvailable = item.quantity || 0;
-    //   } else if (item.metadata.type === "seed") {
-    //     visitorInventory.seedsPurchased[item.id] = {
-    //       id: item.id,
-    //       quantity: item.quantity || 0,
-    //     };
-    //   } else if (item.metadata.type === "decoration") {
-    //     visitorInventory.decorationsOwned[item.id] = {
-    //       id: item.id,
-    //       quantity: item.quantity || 0,
-    //     };
-    //   }
-    // }
 
     await visitor.fetchInventoryItems();
     const allItems = visitor.inventoryItems as EcosystemItems[];

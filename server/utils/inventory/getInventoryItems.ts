@@ -14,7 +14,7 @@ export const getInventoryItems = async (credentials: Credentials) => {
     let seeds: { [key: string]: SeedType } = {};
 
     for (const item of allItems) {
-      const rarity = getRarity(item.metadata?.rarity) || "Common";
+      const rarity = getRarity(item.metadata?.rarity || 0);
       if (item.metadata?.type === "decoration") {
         decorations[item.id] = {
           id: item.id,

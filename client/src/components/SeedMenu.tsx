@@ -13,7 +13,6 @@ import { backendAPI, setErrorMessage } from "@/utils";
 export const SeedMenu = ({ onClose }: { onClose: () => void }) => {
   const dispatch = useContext(GlobalDispatchContext);
   const { visitorInventory = {}, seeds } = useContext(GlobalStateContext);
-  const { coinsAvailable } = visitorInventory || { coinsAvailable: 0 };
 
   const [purchasingSeeds, setPurchasingSeeds] = useState<Set<string>>(new Set());
   const [isPurchasing, setIsPurchasing] = useState(false);
