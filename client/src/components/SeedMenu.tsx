@@ -57,6 +57,7 @@ export const SeedMenu = ({ onClose }: { onClose: () => void }) => {
           {seeds &&
             Object.values(seeds).map((seed) => {
               const { id, name, rarity, cost, growthTime, reward } = seed;
+
               if (visitorInventory?.[name]) return null;
 
               return (

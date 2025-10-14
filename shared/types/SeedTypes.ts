@@ -11,6 +11,6 @@ export type SeedType = {
   reward: number; // coins earned when harvested
   growthTime: number; // total time in seconds to reach harvest level
   harvestLevel: number; // level when crop is ready for harvest
-  rarity: (typeof rarityLevels)[number]; // rarity of the seed
+  rarity: string; // rarity of the seed
   icon: string;
 };

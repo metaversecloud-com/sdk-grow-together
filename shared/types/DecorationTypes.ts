@@ -9,7 +9,7 @@ export type DecorationType = {
   name: string;
   cost: number;
   imageSrc: string;
-  rarity: (typeof rarityLevels)[number];
+  rarity: string;
   description: string;
 };
 
