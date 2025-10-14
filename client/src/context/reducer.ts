@@ -8,6 +8,7 @@ import {
   SET_VISITOR_DATA,
   SET_VISITOR_PLOT_DATA,
   SET_DECORATION_DATA,
+  SET_VISITOR_INVENTORY,
 } from "./types";
 
 const globalReducer = (state: InitialState, action: ActionType) => {
@@ -21,10 +22,13 @@ const globalReducer = (state: InitialState, action: ActionType) => {
     case SET_GAME_STATE:
       return {
         ...state,
-        isAdmin: payload.isAdmin,
-        plotAssetData: payload.plotAssetData,
-        visitorData: payload.visitorData,
-        visitorPlotData: payload.visitorPlotData,
+        ...payload,
+        error: "",
+      };
+    case SET_VISITOR_INVENTORY:
+      return {
+        ...state,
+        visitorInventory: payload.visitorInventory,
         error: "",
       };
     case SET_VISITOR_DATA:

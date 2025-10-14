@@ -1,6 +1,18 @@
 import { Request, Response } from "express";
-import { errorHandler, getCredentials, initializeVisitorData, DroppedAsset, getPlotAssets } from "../utils/index.js";
+import {
+  errorHandler,
+  getCredentials,
+  initializeVisitorData,
+  DroppedAsset,
+  getPlotAssets,
+  getInventoryItems,
+} from "../utils/index.js";
 import { PlotAssetDataObjectType } from "../types/index.js";
+import { InventoryItemInterface } from "@rtsdk/topia";
+
+interface Items extends InventoryItemInterface {
+  metadata: { type?: string; cost?: number; rarity?: string };
+}
 
 /**
  * Get the current game state for a visitor including their plot, crops, and coin balance
@@ -20,7 +32,12 @@ export const handleGetGameState = async (req: Request, res: Response) => {
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
 
-    const { visitorData } = initializeVisitorDataResponse;
+    const { visitorData, visitorInventory } = initializeVisitorDataResponse;
+
+    const getInventoryItemsResponse = await getInventoryItems(credentials);
+    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
+
+    const { decorations, seeds } = getInventoryItemsResponse;
 
     /* Commenting out for now but may be used for wilting and losing crops in future
     // Update crop growth levels for all crops
@@ -47,7 +64,8 @@ export const handleGetGameState = async (req: Request, res: Response) => {
           try {
             const droppedAsset = await DroppedAsset.create(cropAssetId, urlSlug, { credentials });
             if (droppedAsset) {
-              await droppedAsset.updateWebImageLayers("", seedConfig.imageVariations[currentGrowthLevel]);
+              const layer1 = getImageVariation(crop.seedId, currentGrowthLevel)
+              await droppedAsset.updateWebImageLayers("", layer1);
             }
           } catch (error) {
             console.error("Failed to update dropped asset:", error);
@@ -74,6 +92,9 @@ export const handleGetGameState = async (req: Request, res: Response) => {
       plotAssetData,
       visitorData,
       visitorPlotData: visitorData.worlds[urlSlug],
+      visitorInventory,
+      decorations,
+      seeds,
     });
   } catch (error) {
     return errorHandler({

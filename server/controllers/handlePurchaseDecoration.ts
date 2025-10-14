@@ -1,6 +1,11 @@
 import { Request, Response } from "express";
-import { errorHandler, getCredentials, initializeVisitorData } from "../utils/index.js";
-import { decorations } from "../../shared/index.js";
+import {
+  errorHandler,
+  getCredentials,
+  getInventoryItems,
+  initializeVisitorData,
+  modifyInventoryItem,
+} from "../utils/index.js";
 import { AxiosError } from "axios";
 
 /**
@@ -12,45 +17,62 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
     const { profileId } = credentials;
     const { decorationId } = req.body;
 
-    if (!decorationId || typeof decorationId !== "number") throw "Valid decorationId is required";
+    if (!decorationId) throw "Valid decorationId is required";
 
     // Get decoration configuration
+    const getInventoryItemsResponse = await getInventoryItems(credentials);
+    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
+
+    const { decorations } = getInventoryItemsResponse;
+
     const decorationConfig = decorations[decorationId];
     if (!decorationConfig) throw "Invalid decoration type";
 
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
 
-    const { visitor, visitorData } = initializeVisitorDataResponse;
+    const { visitor, visitorInventory } = initializeVisitorDataResponse;
 
     // Check if visitor has enough coins
-    if (visitorData.coinsAvailable < decorationConfig.cost) {
-      throw `Not enough coins. Need ${decorationConfig.cost}, have ${visitorData.coinsAvailable}`;
+    if (visitorInventory["Coins"].quantity < decorationConfig.cost) {
+      throw `Not enough coins. Need ${decorationConfig.cost}, have ${visitorInventory["Coins"].quantity}`;
     }
 
-    // Purchase the decoration
-    visitorData.coinsAvailable = visitorData.coinsAvailable - decorationConfig.cost;
-
-    if (!visitorData.decorationsOwned[decorationId]) {
-      visitorData.decorationsOwned[decorationId] = {
-        id: decorationId,
-        available: 1,
-        owned: 1,
-      };
-    } else {
-      visitorData.decorationsOwned[decorationId].available += 1;
-      visitorData.decorationsOwned[decorationId].owned += 1;
-    }
-
-    await visitor.updateDataObject(visitorData, {
-      analytics: [
-        {
-          analyticName: "decorationPurchased",
-          profileId,
-          uniqueKey: profileId,
-        },
-      ],
+    // Purchase the decoration (modify quantity in inventory)
+    const modifyCoinsResponse = await modifyInventoryItem({
+      credentials,
+      visitor,
+      name: "Coins",
+      quantity: -decorationConfig.cost,
     });
+    if (modifyCoinsResponse instanceof Error) throw modifyCoinsResponse;
+    visitorInventory["Coins"].quantity = modifyCoinsResponse;
+
+    const modifyInventoryItemResponse = await modifyInventoryItem({
+      credentials,
+      visitor,
+      name: decorationConfig.name,
+      quantity: 1,
+    });
+    if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
+
+    visitorInventory[decorationConfig.name] = {
+      id: decorationConfig.name,
+      quantity: modifyInventoryItemResponse,
+    };
+
+    await visitor.updateDataObject(
+      {},
+      {
+        analytics: [
+          {
+            analyticName: "decorationPurchased",
+            profileId,
+            uniqueKey: profileId,
+          },
+        ],
+      },
+    );
 
     await visitor
       .fireToast({
@@ -68,7 +90,7 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
 
     return res.json({
       success: true,
-      visitorData,
+      visitorInventory,
     });
   } catch (error) {
     return errorHandler({

@@ -8,9 +8,10 @@ import {
   Asset,
   World,
   getBaseUrl,
+  getInventoryItems,
 } from "../utils/index.js";
 import { DroppedAssetClickType } from "@rtsdk/topia";
-import { calculateNumberOfSquares, seeds } from "../../shared/index.js";
+import { calculateNumberOfSquares, getSeedImageVariation } from "../../shared/index.js";
 
 /**
  * Handle planting a seed - creates a new crop dropped asset in the world
@@ -21,23 +22,24 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     const { assetId, displayName, profileId, urlSlug } = credentials;
     const { seedId, squareId } = req.body;
 
-    if (!seedId || typeof seedId !== "number" || typeof squareId !== "number") {
-      throw "Valid seedId and squareId are required";
-    }
+    if (!seedId || !squareId) throw "Valid seedId and squareId are required";
 
     const noOfSquares = calculateNumberOfSquares();
-    if (squareId < 1 || squareId > noOfSquares) {
-      throw `squareId must be between 1 and ${noOfSquares}`;
-    }
+    if (squareId < 1 || squareId > noOfSquares) throw `squareId must be between 1 and ${noOfSquares}`;
 
     // Get seed configuration
+    const getInventoryItemsResponse = await getInventoryItems(credentials);
+    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
+
+    const { seeds } = getInventoryItemsResponse;
+
     const seedConfig = seeds[seedId];
     if (!seedConfig) throw "Invalid seed type";
 
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
 
-    const { visitor, visitorData } = initializeVisitorDataResponse;
+    const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
 
     const visitorPlotData = visitorData.worlds[urlSlug];
 
@@ -45,7 +47,7 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     if (!visitorPlotData.plotAssetId) throw "You must claim a plot before planting seeds";
 
     // Check if visitor has purchased this seed (for paid seeds)
-    if (seedConfig.cost > 0 && !visitorData.seedsPurchased[seedId]) {
+    if (seedConfig.cost > 0 && !visitorInventory[seedConfig.name]) {
       throw "You must purchase this seed before planting";
     }
 
@@ -55,7 +57,7 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     // Get the plot asset to determine position
     const plotAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
     const position = calculateSquarePosition(plotAsset.position, squareId);
-    const layer1 = seeds[seedId].imageVariations[0]; // Start at growth level 0
+    const layer1 = getSeedImageVariation(seeds, seedConfig.name, 0); // Start at growth level 0
 
     // Trigger planting particle effect
     const world = World.create(urlSlug, { credentials });
@@ -74,7 +76,6 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     // Drop a new crop asset at the calculated position
     const baseUrl = getBaseUrl(req.hostname);
     const cropAsset = await DroppedAsset.drop(asset, {
-      assetScale: 1.8,
       clickType: DroppedAssetClickType.LINK,
       clickableLink: `${baseUrl}/crop?ownerName=${encodeURIComponent(displayName)}&ownerProfileId=${profileId}`,
       clickableLinkTitle: seedConfig.name,

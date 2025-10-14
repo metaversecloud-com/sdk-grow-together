@@ -5,31 +5,28 @@ import { ModalHeader, PurchaseItem, YourMoney } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
-import { ErrorType, SET_VISITOR_DATA } from "@/context/types";
+import { ErrorType, SET_VISITOR_INVENTORY } from "@/context/types";
 
 // utils
 import { backendAPI, setErrorMessage } from "@/utils";
 
-// types
-import { seeds } from "@shared/index.js";
-
 export const SeedMenu = ({ onClose }: { onClose: () => void }) => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { visitorData } = useContext(GlobalStateContext);
-  const { coinsAvailable, seedsPurchased } = visitorData || { coinsAvailable: 0 };
+  const { visitorInventory = {}, seeds } = useContext(GlobalStateContext);
+  const { coinsAvailable } = visitorInventory || { coinsAvailable: 0 };
 
-  const [purchasingSeeds, setPurchasingSeeds] = useState<Set<number>>(new Set());
+  const [purchasingSeeds, setPurchasingSeeds] = useState<Set<string>>(new Set());
   const [isPurchasing, setIsPurchasing] = useState(false);
 
-  const handlePurchaseSeed = async (seedId: number) => {
+  const handlePurchaseSeed = async (seedId: string) => {
     setPurchasingSeeds((prev) => new Set([...prev, seedId]));
     setIsPurchasing(true);
     await backendAPI
       .post("/seed/purchase", { seedId })
       .then((response) => {
         dispatch!({
-          type: SET_VISITOR_DATA,
-          payload: { visitorData: response.data.visitorData, error: "" },
+          type: SET_VISITOR_INVENTORY,
+          payload: { visitorInventory: response.data.visitorInventory, error: "" },
         });
       })
       .catch((error) => setErrorMessage(dispatch, error as ErrorType))
@@ -54,32 +51,31 @@ export const SeedMenu = ({ onClose }: { onClose: () => void }) => {
       <div className="modal">
         <ModalHeader text="Buy Seeds" disabled={isPurchasing} handleOnClick={onClose} />
 
-        <YourMoney coinsAvailable={coinsAvailable || 0} />
+        <YourMoney coinsAvailable={visitorInventory["Coins"]?.quantity || 0} />
 
         <div className="grid grid-cols-2 gap-2">
-          {Object.values(seeds).map((seed) => {
-            const { id, name, rarity, cost, icon, growthTime, reward } = seed;
-            const purchased = seedsPurchased?.[id];
-            const affordable = coinsAvailable >= cost;
+          {seeds &&
+            Object.values(seeds).map((seed) => {
+              const { id, name, rarity, cost, growthTime, reward } = seed;
+              if (visitorInventory?.[name]) return null;
 
-            return (
-              <PurchaseItem
-                key={id}
-                coinsAvailable={coinsAvailable || 0}
-                id={id}
-                available={affordable && !purchased}
-                imageSrc={icon}
-                name={name}
-                description={formatTime(growthTime)}
-                rarity={rarity}
-                cost={cost}
-                value={`Profit: +${reward - cost} coins`}
-                canPurchaseAdditional={false}
-                isPurchasing={purchasingSeeds.has(id)}
-                handlePurchase={() => handlePurchaseSeed(id)}
-              />
-            );
-          })}
+              return (
+                <PurchaseItem
+                  key={id}
+                  coinsAvailable={visitorInventory["Coins"]?.quantity || 0}
+                  id={id}
+                  imageSrc={seeds[id].icon}
+                  name={name}
+                  description={formatTime(growthTime)}
+                  rarity={rarity}
+                  cost={cost}
+                  value={`Profit: +${reward} coins`}
+                  canPurchaseAdditional={false}
+                  isPurchasing={purchasingSeeds.has(id)}
+                  handlePurchase={() => handlePurchaseSeed(id)}
+                />
+              );
+            })}
         </div>
       </div>
     </div>

@@ -8,8 +8,10 @@ import {
   Asset,
   World,
   getBaseUrl,
+  getInventoryItems,
+  modifyInventoryItem,
 } from "../utils/index.js";
-import { calculateNumberOfSquares, decorations } from "../../shared/index.js";
+import { calculateNumberOfSquares, getDecorationImageVariation } from "../../shared/index.js";
 import { DroppedAssetClickType } from "@rtsdk/topia";
 
 /**
@@ -18,17 +20,21 @@ import { DroppedAssetClickType } from "@rtsdk/topia";
 export const handlePlaceDecoration = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { assetId, displayName, urlSlug, visitorId, profileId } = credentials;
+    const { assetId, displayName, urlSlug, profileId } = credentials;
     const { decorationId, squareId } = req.body;
 
-    if (!decorationId || typeof decorationId !== "number" || typeof squareId !== "number") {
-      throw "Valid decorationId and squareId are required";
-    }
+    if (!decorationId || !squareId) throw "Valid decorationId and squareId are required";
 
     const noOfSquares = calculateNumberOfSquares();
     if (squareId < 0 || squareId > noOfSquares) {
       throw `squareId must be between 0 and ${noOfSquares}`;
     }
+
+    // Get decorations configuration
+    const getInventoryItemsResponse = await getInventoryItems(credentials);
+    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
+
+    const { decorations } = getInventoryItemsResponse;
 
     const decoration = decorations[decorationId];
 
@@ -38,7 +44,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
 
-    const { visitor, visitorData } = initializeVisitorDataResponse;
+    const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
 
     const visitorPlotData = visitorData.worlds[urlSlug];
 
@@ -46,7 +52,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     if (!visitorPlotData.plotAssetId) throw "You must claim a plot before placing decorations";
 
     // Check if visitor owns this decoration
-    if (!visitorData.decorationsOwned[decorationId] || visitorData.decorationsOwned[decorationId].available < 1) {
+    if (!visitorInventory[decoration.name] || visitorInventory[decoration.name].quantity < 1) {
       throw "You must own this decoration before placing it";
     }
 
@@ -73,6 +79,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
 
     // Drop a new decoration asset at the calculated position
     const baseUrl = getBaseUrl(req.hostname);
+    const layer1 = getDecorationImageVariation(decorations, decoration.name);
     const decorationAsset = await DroppedAsset.drop(asset, {
       clickType: DroppedAssetClickType.LINK,
       clickableLink: `${baseUrl}/decoration?ownerName=${encodeURIComponent(displayName)}&ownerProfileId=${profileId}`,
@@ -80,7 +87,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
       isInteractive: true,
       interactivePublicKey: credentials.interactivePublicKey,
       isOpenLinkInDrawer: true,
-      layer1: decoration.imageSrc,
+      layer1,
       position,
       uniqueName: `BountyBuilders_decoration_${profileId}`,
       urlSlug,
@@ -99,9 +106,18 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
       ownerName: displayName,
     });
 
+    // Deduct the decoration from visitor's inventory
+    const modifyInventoryItemResponse = await modifyInventoryItem({
+      credentials,
+      visitor,
+      name: decoration.name,
+      quantity: -1,
+    });
+    if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
+
+    visitorInventory[decoration.name].quantity = modifyInventoryItemResponse;
+
     // Update visitor's data object
-    visitorData.decorationsOwned[decorationId].available =
-      (visitorData.decorationsOwned[decorationId].available || 0) - 1;
     visitorData.worlds[urlSlug].plotSquares[squareId] = decorationAsset.id!;
     visitorData.worlds[urlSlug].decorations[decorationAsset.id!] = decorationData;
 
@@ -118,8 +134,8 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
 
     return res.json({
       success: true,
-      visitorData,
       visitorPlotData: visitorData.worlds[urlSlug],
+      visitorInventory,
     });
   } catch (error) {
     return errorHandler({

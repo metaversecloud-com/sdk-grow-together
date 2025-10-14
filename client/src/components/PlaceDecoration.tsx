@@ -1,37 +1,41 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 // components
 import { ModalHeader } from "@/components";
 
 // context
-import { GlobalDispatchContext } from "@/context/GlobalContext";
-import { ErrorType, SET_VISITOR_DATA, SET_VISITOR_PLOT_DATA } from "@/context/types";
+import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
+import { ErrorType, SET_VISITOR_INVENTORY, SET_VISITOR_PLOT_DATA } from "@/context/types";
 
 // utils
 import { backendAPI, setErrorMessage } from "@/utils";
-
-// types
-import { decorations, VisitorDataObjectType } from "@shared/index.js";
 
 interface PlaceDecorationProps {
   selectedSquare: number;
   setSelectedSquare: (square: number | null) => void;
   setIsUpdatingPlot: (isUpdatingPlot: boolean) => void;
-  decorationsOwned: VisitorDataObjectType["decorationsOwned"];
 }
 
-export const PlaceDecoration = ({
-  selectedSquare,
-  setSelectedSquare,
-  setIsUpdatingPlot,
-  decorationsOwned,
-}: PlaceDecorationProps) => {
+export const PlaceDecoration = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot }: PlaceDecorationProps) => {
   const dispatch = useContext(GlobalDispatchContext);
+  const { decorations = {}, visitorInventory = {} } = useContext(GlobalStateContext);
 
   const [isPlacing, setIsPlacing] = useState(false);
-  const hasDecorations = Object.keys(decorationsOwned).length > 0;
+  const [hasDecorations, setHasDecorations] = useState(false);
 
-  const handlePlaceDecoration = async (decorationId: number) => {
+  useEffect(() => {
+    // Check if any keys in visitorInventory exist in decorations
+    const hasAvailableDecorations = Object.keys(visitorInventory).some((key) => {
+      // Look for a decoration with name that matches the visitorInventory key
+      const matchingDecoration = Object.values(decorations).find(
+        (decoration) => decoration.name.toLowerCase() === key.toLowerCase(),
+      );
+      return matchingDecoration && visitorInventory[key]?.quantity > 0;
+    });
+    setHasDecorations(hasAvailableDecorations);
+  }, [visitorInventory, decorations]);
+
+  const handlePlaceDecoration = async (decorationId: string) => {
     if (!decorationId || selectedSquare === null) return;
 
     setIsPlacing(true);
@@ -43,10 +47,10 @@ export const PlaceDecoration = ({
         squareId: selectedSquare,
       })
       .then((response) => {
-        const { visitorData, visitorPlotData } = response.data;
+        const { visitorInventory, visitorPlotData } = response.data;
         dispatch!({
-          type: SET_VISITOR_DATA,
-          payload: { visitorData, error: "" },
+          type: SET_VISITOR_INVENTORY,
+          payload: { visitorInventory, error: "" },
         });
         dispatch!({
           type: SET_VISITOR_PLOT_DATA,
@@ -79,7 +83,7 @@ export const PlaceDecoration = ({
         ) : (
           <div className="grid gap-2 grid-cols-2">
             {Object.values(decorations).map((decoration) => {
-              const available = decorationsOwned[decoration.id]?.available || 0;
+              const available = visitorInventory[decoration.name]?.quantity || 0;
               const canPlace = available > 0;
 
               return (

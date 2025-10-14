@@ -1,14 +1,14 @@
 import { useContext, useState, useEffect, useRef } from "react";
 
 // context
-import { GlobalDispatchContext } from "@/context/GlobalContext";
+import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
 import { ErrorType, SET_CROP_DATA } from "@/context/types";
 
 // utils
 import { backendAPI, setErrorMessage, setGameState } from "@/utils";
 
 // types
-import { seeds, CropDataObjectType } from "@shared/index.js";
+import { CropDataObjectType } from "@shared/index.js";
 
 interface CropDetailsProps {
   crop: CropDataObjectType;
@@ -18,10 +18,11 @@ interface CropDetailsProps {
 
 export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps) => {
   const dispatch = useContext(GlobalDispatchContext);
+  const { seeds = {} } = useContext(GlobalStateContext);
 
   const { lastWatered, growLevel, ownerName, seedId } = crop;
   const seedConfig = seeds[seedId];
-  const { name, icon, reward, growthTime, harvestLevel, rarity } = seedConfig;
+  const { name, reward, growthTime, harvestLevel, rarity } = seedConfig;
 
   const [timeRemaining, setTimeRemaining] = useState<string | null>(null);
   const [readyForWater, setReadyForWater] = useState(false);
@@ -32,9 +33,11 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
 
   const [audioQueue, setAudioQueue] = useState<HTMLAudioElement[]>([]);
   const waterAudioRef = useRef<HTMLAudioElement | null>(null);
+  const harvestAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    waterAudioRef.current = new Audio("https://sdk-race.s3.amazonaws.com/audio/positive.mp3");
+    waterAudioRef.current = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/water_plant.mp3");
+    harvestAudioRef.current = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/harvest_coins.mp3");
   }, []);
 
   const playAudioQueue = () => {
@@ -125,6 +128,7 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
       .post("/crop/harvest")
       .then((response) => {
         setGameState(dispatch, response.data);
+        setAudioQueue((prevQueue) => (harvestAudioRef.current ? [...prevQueue, harvestAudioRef.current] : prevQueue));
       })
       .catch((error) => {
         setErrorMessage(dispatch, error as ErrorType);
@@ -162,7 +166,7 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
     <div className="grid gap-2">
       <div className="card small">
         <div className="card-details" style={{ maxWidth: "100%" }}>
-          <img className="m-auto" src={icon} style={{ width: "40px" }} />
+          <img className="m-auto" src={seeds[seedId].icon} style={{ width: "40px" }} />
           <div className="text-center">
             <h3 className="card-title">{name}</h3>
             <p className="text-muted">({rarity})</p>

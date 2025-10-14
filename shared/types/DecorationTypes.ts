@@ -5,17 +5,16 @@
 import { rarityLevels } from "../index.js";
 
 export type DecorationType = {
-  id: number;
+  id: string;
   name: string;
   cost: number;
-  icon: string;
   imageSrc: string;
   rarity: (typeof rarityLevels)[number];
   description: string;
 };
 
 export type PlacedDecorationDataObjectType = {
-  decorationId: number;
+  decorationId: string;
   ownerId?: string;
   ownerName?: string;
   dateDropped: string;

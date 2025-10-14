@@ -4,177 +4,122 @@
 import { SeedType, rarityLevels } from "../index.js";
 import { s3URL } from "./plotConfig.js";
 
-// Crop image variations for each growth level
-export const cropImages = {
-  1: { 0: `${s3URL}/potatoes-0.png` },
-  2: { 0: `${s3URL}/onions-0.png`, 1: `${s3URL}/onions-1.png` },
-  3: { 0: `${s3URL}/blueberries-0.png`, 1: `${s3URL}/blueberries-1.png`, 2: `${s3URL}/blueberries-2.png` },
-  4: { 0: `${s3URL}/daisies-0.png`, 1: `${s3URL}/daisies-1.png` },
-  5: { 0: `${s3URL}/tomatoes-0.png`, 1: `${s3URL}/tomatoes-1.png` },
-  6: { 0: `${s3URL}/cabbages-0.png`, 1: `${s3URL}/cabbages-1.png`, 2: `${s3URL}/cabbages-2.png` },
-  7: { 0: `${s3URL}/strawberries-0.png`, 1: `${s3URL}/strawberries-1.png` },
-  8: { 0: `${s3URL}/red-tulips-0.png`, 1: `${s3URL}/red-tulips-1.png`, 2: `${s3URL}/red-tulips-2.png` },
-  9: { 0: `${s3URL}/bell-peppers-0.png` },
-  10: { 0: `${s3URL}/sweet-corn-0.png`, 1: `${s3URL}/sweet-corn-1.png` },
-  11: { 0: `${s3URL}/raspberries-0.png`, 1: `${s3URL}/raspberries-1.png`, 2: `${s3URL}/raspberries-2.png` },
-  12: { 0: `${s3URL}/broccoli-0.png` },
-  13: { 0: `${s3URL}/pumpkins-0.png`, 1: `${s3URL}/pumpkins-1.png` },
-  14: { 0: `${s3URL}/sunflowers-0.png`, 1: `${s3URL}/sunflowers-1.png` },
+export const getImageVariation = (seedId: string, level: number | string) => {
+  const nameDashed = seeds[seedId].name.replace(/\s+/g, "-");
+  const imageUrl = `${s3URL}/crops/${nameDashed}-${level}.png`;
+  return imageUrl;
 };
 
-export const seeds: Record<number, SeedType> = {
-  1: {
-    id: 1,
-    name: "Potatoes",
+// {"cost":0,"type":"seed","rarity": 0,"reward": 1,"growthTime": 60,"levels": 1}
+
+export const seeds: Record<string, SeedType> = {
+  "carrots": {
+    id: "carrots",
+    name: "Carrots",
     cost: 0,
     reward: 1,
     growthTime: 1 * 60,
     harvestLevel: 1,
     rarity: rarityLevels[0],
-    icon: `${s3URL}/potatoes-icon.png`,
-    imageVariations: cropImages[1],
   },
-  2: {
-    id: 2,
+  "onions": {
+    id: "onions",
     name: "Onions",
     cost: 10,
     reward: 5,
     growthTime: 2 * 60,
     harvestLevel: 2,
     rarity: rarityLevels[0],
-    icon: `${s3URL}/onions-icon.png`,
-    imageVariations: cropImages[2],
   },
-  3: {
-    id: 3,
+
+  "blueberries": {
+    id: "blueberries",
     name: "Blueberries",
     cost: 500,
     reward: 20,
     growthTime: 5 * 60,
     harvestLevel: 3,
     rarity: rarityLevels[0],
-    icon: `${s3URL}/blueberries-icon.png`,
-    imageVariations: cropImages[3],
   },
-  4: {
-    id: 4,
+  "daisies": {
+    id: "daisies",
     name: "Daisies",
     cost: 500,
     reward: 100,
     growthTime: 60 * 60,
     harvestLevel: 2,
     rarity: rarityLevels[0],
-    icon: `${s3URL}/daisies-icon.png`,
-    imageVariations: cropImages[4],
   },
-  5: {
-    id: 5,
+  "tomatoes": {
+    id: "tomatoes",
     name: "Tomatoes",
     cost: 2000,
     reward: 4,
     growthTime: 1 * 60,
     harvestLevel: 2,
     rarity: rarityLevels[0],
-    icon: `${s3URL}/tomatoes-icon.png`,
-    imageVariations: cropImages[5],
   },
-  6: {
-    id: 6,
-    name: "Cabbages",
+  "watermelon": {
+    id: "watermelon",
+    name: "Watermelon",
     cost: 2000,
     reward: 15,
     growthTime: 2 * 60,
     harvestLevel: 3,
     rarity: rarityLevels[0],
-    icon: `${s3URL}/cabbages-icon.png`,
-    imageVariations: cropImages[6],
   },
-  7: {
-    id: 7,
+  "strawberries": {
+    id: "strawberries",
     name: "Strawberries",
     cost: 3000,
     reward: 55,
     growthTime: 10 * 60,
     harvestLevel: 2,
     rarity: rarityLevels[0],
-    icon: `${s3URL}/strawberries-icon.png`,
-    imageVariations: cropImages[7],
   },
-  8: {
-    id: 8,
+  "red tulips": {
+    id: "red tulips",
     name: "Red Tulips",
     cost: 3000,
     reward: 300,
     growthTime: 75 * 60,
     harvestLevel: 3,
     rarity: rarityLevels[0],
-    icon: `${s3URL}/red-tulips-icon.png`,
-    imageVariations: cropImages[8],
   },
-  9: {
-    id: 9,
-    name: "Bell Peppers",
+  "peppers": {
+    id: "peppers",
+    name: "Peppers",
     cost: 6000,
     reward: 9,
     growthTime: 2 * 60,
     harvestLevel: 1,
     rarity: rarityLevels[1],
-    icon: `${s3URL}/bell-peppers-icon.png`,
-    imageVariations: cropImages[9],
   },
-  10: {
-    id: 10,
+  "sweet corn": {
+    id: "sweet corn",
     name: "Sweet Corn",
     cost: 6000,
     reward: 30,
     growthTime: 2.5 * 60,
     harvestLevel: 2,
     rarity: rarityLevels[1],
-    icon: `${s3URL}/sweet-corn-icon.png`,
-    imageVariations: cropImages[10],
   },
-  11: {
-    id: 11,
-    name: "Raspberries",
-    cost: 10000,
-    reward: 150,
-    growthTime: 10 * 60,
-    harvestLevel: 3,
-    rarity: rarityLevels[1],
-    icon: `${s3URL}/raspberries-icon.png`,
-    imageVariations: cropImages[11],
-  },
-  12: {
-    id: 12,
-    name: "Broccoli",
-    cost: 20000,
-    reward: 20,
-    growthTime: 3 * 60,
-    harvestLevel: 1,
-    rarity: rarityLevels[1],
-    icon: `${s3URL}/broccoli-icon.png`,
-    imageVariations: cropImages[12],
-  },
-  13: {
-    id: 13,
+  "pumpkins": {
+    id: "pumpkins",
     name: "Pumpkins",
     cost: 25000,
     reward: 70,
     growthTime: 4 * 60,
     harvestLevel: 2,
     rarity: rarityLevels[1],
-    icon: `${s3URL}/pumpkins-icon.png`,
-    imageVariations: cropImages[13],
   },
-  14: {
-    id: 14,
+  "sunflowers": {
+    id: "sunflowers",
     name: "Sunflowers",
     cost: 15000,
     reward: 1000,
     growthTime: 120 * 60,
     harvestLevel: 2,
     rarity: rarityLevels[2],
-    icon: `${s3URL}/sunflowers-icon.png`,
-    imageVariations: cropImages[14],
   },
 };

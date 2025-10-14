@@ -18,23 +18,33 @@ export type VisitorWorldDataType = {
   };
 };
 
+export type VisitorInventoryType = {
+  [itemId: string]: {
+    id: string;
+    quantity: number;
+  };
+};
+
+// export type VisitorInventoryType = {
+//   coinsAvailable: number; // Current spendable coins
+//   decorationsOwned: {
+//     [decorationId: string]: {
+//       id: string;
+//       quantity: number; // total owned
+//       // available: number; // available to place (owned - already placed)
+//     };
+//   };
+//   seedsPurchased: {
+//     [seedId: string]: {
+//       id: string;
+//       quantity: number;
+//     };
+//   };
+// };
+
 export type VisitorDataObjectType = {
-  coinsAvailable: number; // Current spendable coins
   lastDateCoinsEarned: string; // ISO date string when the plot was claimed
   totalCoinsEarned: number; // Lifetime coins earned (for unlocks)
-  decorationsOwned: {
-    [decorationId: number]: {
-      id: number;
-      owned: number; // total owned
-      available: number; // available to place (owned - already placed)
-    };
-  };
-  seedsPurchased: {
-    [seedId: number]: {
-      id: number;
-      datePurchased: string;
-    };
-  };
   worlds: {
     [urlSlug: string]: VisitorWorldDataType;
   };

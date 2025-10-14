@@ -1,16 +1,15 @@
 import { CropDataObjectType, VisitorDataObjectType, VisitorWorldDataType } from "./types/index.js";
 
 export const DEFAULT_VISITOR_DATA: VisitorDataObjectType = {
-  coinsAvailable: 0, // Starting coins
   lastDateCoinsEarned: "",
   totalCoinsEarned: 0,
-  decorationsOwned: {},
-  seedsPurchased: {
-    1: {
-      id: 1,
-      datePurchased: new Date().toISOString(),
-    },
-  },
+  // decorationsOwned: {},
+  // seedsPurchased: {
+  //   carrots: {
+  //     id: "carrots",
+  //     datePurchased: new Date().toISOString(),
+  //   },
+  // },
   worlds: {},
 };
 
@@ -27,7 +26,7 @@ export const DEFAULT_PLANT_DATA: CropDataObjectType = {
   ownerName: "",
   dateDropped: "",
   lastWatered: "",
-  seedId: 0,
+  seedId: "carrots",
   growLevel: 0,
   squareId: 0,
 };

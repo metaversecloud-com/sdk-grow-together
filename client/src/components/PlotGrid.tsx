@@ -4,11 +4,11 @@ import { useContext, useState } from "react";
 import { PlaceDecoration, PlantSeed, ModalHeader } from "@/components";
 
 // context
-import { GlobalDispatchContext } from "@/context/GlobalContext";
-import { ErrorType, SET_VISITOR_DATA, SET_VISITOR_PLOT_DATA } from "@/context/types";
+import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
+import { ErrorType, SET_VISITOR_DATA, SET_VISITOR_INVENTORY, SET_VISITOR_PLOT_DATA } from "@/context/types";
 
 // types
-import { decorations, plotConfig, seeds, VisitorDataObjectType, VisitorWorldDataType } from "@shared/index.js";
+import { plotConfig, VisitorInventoryType, VisitorWorldDataType } from "@shared/index.js";
 
 // utils
 import { backendAPI, setErrorMessage } from "@/utils";
@@ -18,11 +18,12 @@ interface PlotGridProps {
   crops: VisitorWorldDataType["crops"];
   placedDecorations: VisitorWorldDataType["decorations"];
   isReadOnly: boolean;
-  visitorData?: VisitorDataObjectType;
+  visitorInventory?: VisitorInventoryType;
 }
 
-export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly, visitorData }: PlotGridProps) => {
+export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly, visitorInventory }: PlotGridProps) => {
   const dispatch = useContext(GlobalDispatchContext);
+  const { decorations = {}, seeds = {} } = useContext(GlobalStateContext);
 
   const [selectedSquare, setSelectedSquare] = useState<number | null>(null);
   const [isUpdatingPlot, setIsUpdatingPlot] = useState(false);
@@ -64,7 +65,11 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly, vi
         squareId: selectedSquare,
       })
       .then((response) => {
-        const { visitorData, visitorPlotData } = response.data;
+        const { visitorInventory, visitorData, visitorPlotData } = response.data;
+        dispatch!({
+          type: SET_VISITOR_INVENTORY,
+          payload: { visitorInventory, error: "" },
+        });
         dispatch!({
           type: SET_VISITOR_DATA,
           payload: { visitorData, error: "" },
@@ -109,7 +114,7 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly, vi
       <div
         key={squareId}
         className={squareClass}
-        style={{ minHeight: "70px" }}
+        style={{ height: "75px", width: "75px" }}
         onClick={() => handleSquareClick(squareId)}
       >
         <div className="card-details text-center">
@@ -122,7 +127,7 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly, vi
               {crop.growLevel >= (seeds[crop.seedId]?.harvestLevel || 10) && <p className="p4 text-success">Ready!</p>}
             </div>
           ) : decoration ? (
-            <img className="m-auto" src={decorations[decoration.decorationId]?.icon} />
+            <img className="m-auto" src={decorations[decoration.decorationId]?.imageSrc} />
           ) : (
             <div>{emptySquareContent}</div>
           )}
@@ -151,7 +156,7 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly, vi
     } else if (decoration) {
       name = decorations[decoration.decorationId]?.name;
       title = `${name} in Slot ${selectedSquare!}`;
-      icon = decorations[decoration.decorationId]?.icon;
+      icon = decorations[decoration.decorationId]?.imageSrc;
       type = "decoration";
     }
 
@@ -213,14 +218,12 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly, vi
               selectedSquare={selectedSquare}
               setSelectedSquare={setSelectedSquare}
               setIsUpdatingPlot={setIsUpdatingPlot}
-              decorationsOwned={visitorData?.decorationsOwned || {}}
             />
           ) : (
             <PlantSeed
               selectedSquare={selectedSquare}
               setSelectedSquare={setSelectedSquare}
               setIsUpdatingPlot={setIsUpdatingPlot}
-              seedsPurchased={visitorData?.seedsPurchased || {}}
             />
           )}
         </>

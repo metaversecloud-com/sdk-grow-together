@@ -3,7 +3,7 @@ import { PageContainer } from "@/components";
 
 export const Home = () => {
   return (
-    <PageContainer isLoading={false} headerText="Welcome to Bounty Builder">
+    <PageContainer isLoading={false} headerText="Welcome to Grow Together">
       <div className="container grid gap-4">
         <h3>How to Play</h3>
         <div className="grid gap-4">

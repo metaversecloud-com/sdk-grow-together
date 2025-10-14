@@ -1,4 +1,4 @@
-# Bounty Builders
+# Grow Together
 
 ## Introduction / Summary
 

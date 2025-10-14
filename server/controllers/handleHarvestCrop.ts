@@ -1,6 +1,13 @@
 import { Request, Response } from "express";
-import { errorHandler, getCredentials, initializeVisitorData, DroppedAsset, World } from "../utils/index.js";
-import { seeds } from "../../shared/index.js";
+import {
+  errorHandler,
+  getCredentials,
+  initializeVisitorData,
+  DroppedAsset,
+  World,
+  modifyInventoryItem,
+  getInventoryItems,
+} from "../utils/index.js";
 
 /**
  * Handle crop harvesting - removes crop from world and awards coins
@@ -13,13 +20,18 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
 
-    const { visitor, visitorData } = initializeVisitorDataResponse;
+    const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
 
     const visitorPlotData = visitorData.worlds[urlSlug];
 
     // Check if the crop exists in visitor's data
     const crop = visitorPlotData.crops[assetId];
     if (!crop) throw "Crop not found";
+
+    const getInventoryItemsResponse = await getInventoryItems(credentials);
+    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
+
+    const { seeds } = getInventoryItemsResponse;
 
     // Get seed configuration for harvest level and reward calculation
     const seedConfig = seeds[crop.seedId];
@@ -30,10 +42,20 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
       throw `Crop is not ready for harvest. Current growth level: ${crop.growLevel}/${seedConfig.harvestLevel}`;
     }
 
+    // Grant coins to visitor (modify quantity or add to inventory)
+    const name = "Coins";
+    const modifyInventoryItemResponse = await modifyInventoryItem({
+      credentials,
+      visitor,
+      name,
+      quantity: seedConfig.reward,
+    });
+    if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
+    visitorInventory[name] = { id: name, quantity: modifyInventoryItemResponse };
+
     // Update visitor's data object
     const updatedVisitorData = {
       ...visitorData,
-      coinsAvailable: visitorData.coinsAvailable + seedConfig.reward,
       totalCoinsEarned: visitorData.totalCoinsEarned + seedConfig.reward,
       lastDateCoinsEarned: new Date().toISOString(),
     };
@@ -76,6 +98,7 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
       success: true,
       visitorData: updatedVisitorData,
       visitorPlotData: updatedVisitorData.worlds[urlSlug],
+      visitorInventory,
     });
   } catch (error) {
     return errorHandler({

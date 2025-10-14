@@ -1,6 +1,11 @@
 import { Request, Response } from "express";
-import { errorHandler, getCredentials, initializeVisitorData } from "../utils/index.js";
-import { seeds } from "../../shared/index.js";
+import {
+  errorHandler,
+  getCredentials,
+  getInventoryItems,
+  initializeVisitorData,
+  modifyInventoryItem,
+} from "../utils/index.js";
 import { AxiosError } from "axios";
 
 /**
@@ -12,23 +17,28 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
     const { profileId } = credentials;
     const { seedId } = req.body;
 
-    if (!seedId || typeof seedId !== "number") throw "Valid seedId is required";
+    if (!seedId) throw "Valid seedId is required";
 
     // Get seed configuration
+    const getInventoryItemsResponse = await getInventoryItems(credentials);
+    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
+
+    const { seeds } = getInventoryItemsResponse;
+
     const seedConfig = seeds[seedId];
     if (!seedConfig) throw "Invalid seed type";
 
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
 
-    const { visitor, visitorData } = initializeVisitorDataResponse;
+    const { visitor, visitorInventory } = initializeVisitorDataResponse;
 
     // Check if seed is already purchased (for paid seeds)
-    if (seedConfig.cost > 0 && visitorData.seedsPurchased[seedId]) throw "Seed already purchased";
+    if (seedConfig.cost > 0 && visitorInventory[seedId]) throw "Seed already purchased";
 
     // Check if visitor has enough coins
-    if (visitorData.coinsAvailable < seedConfig.cost) {
-      throw `Not enough coins. Need ${seedConfig.cost}, have ${visitorData.coinsAvailable}`;
+    if (visitorInventory["Coins"].quantity < seedConfig.cost) {
+      throw `Not enough coins. Need ${seedConfig.cost}, have ${visitorInventory["Coins"].quantity}`;
     }
 
     // // Free seeds don't need to be "purchased", they're always available
@@ -39,22 +49,41 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
     //   });
     // }
 
-    // Purchase the seed
-    visitorData.coinsAvailable = visitorData.coinsAvailable - seedConfig.cost;
-    visitorData.seedsPurchased[seedId] = {
-      id: seedId,
-      datePurchased: new Date().toISOString(),
+    // Purchase the seed (modify quantity in inventory)
+    const modifyCoinsResponse = await modifyInventoryItem({
+      credentials,
+      visitor,
+      name: "Coins",
+      quantity: -seedConfig.cost,
+    });
+    if (modifyCoinsResponse instanceof Error) throw modifyCoinsResponse;
+    visitorInventory["Coins"].quantity = modifyCoinsResponse;
+
+    const modifyInventoryItemResponse = await modifyInventoryItem({
+      credentials,
+      visitor,
+      name: seedConfig.name,
+      quantity: 1,
+    });
+    if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
+
+    visitorInventory[seedConfig.name] = {
+      id: seedConfig.name,
+      quantity: modifyInventoryItemResponse,
     };
 
-    await visitor.updateDataObject(visitorData, {
-      analytics: [
-        {
-          analyticName: "seedPurchased",
-          profileId,
-          uniqueKey: profileId,
-        },
-      ],
-    });
+    await visitor.updateDataObject(
+      {},
+      {
+        analytics: [
+          {
+            analyticName: "seedPurchased",
+            profileId,
+            uniqueKey: profileId,
+          },
+        ],
+      },
+    );
 
     await visitor
       .fireToast({
@@ -72,7 +101,7 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
 
     return res.json({
       success: true,
-      visitorData,
+      visitorInventory,
     });
   } catch (error) {
     return errorHandler({

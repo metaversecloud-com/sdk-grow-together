@@ -13,9 +13,13 @@ import { backendAPI, setErrorMessage, setGameState } from "@/utils";
 
 export const Plot = () => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { hasInteractiveParams, plotAssetData, visitorData, visitorPlotData } = useContext(GlobalStateContext);
+  const {
+    hasInteractiveParams,
+    plotAssetData,
+    visitorInventory = {},
+    visitorPlotData,
+  } = useContext(GlobalStateContext);
   const { ownerId, ownerName } = plotAssetData || {};
-  const { coinsAvailable } = visitorData || {};
   const { plotAssetId, plotSquares, crops, decorations } = visitorPlotData || { plotSquares: {} };
 
   const [searchParams] = useSearchParams();
@@ -100,7 +104,7 @@ export const Plot = () => {
         {isOwnedByCurrentUser && plotAssetId && (
           <div className="grid gap-2">
             <h4>Garden Store</h4>
-            <YourMoney coinsAvailable={coinsAvailable || 0} />
+            <YourMoney coinsAvailable={visitorInventory["Coins"]?.quantity || 0} />
 
             <div className="grid gap-2 grid-cols-2">
               <button className="btn btn-outline p2 crop" onClick={() => setShowSeedMenu(true)}>
@@ -117,7 +121,6 @@ export const Plot = () => {
               crops={crops || {}}
               placedDecorations={decorations || {}}
               isReadOnly={false}
-              visitorData={visitorData}
             />
           </div>
         )}

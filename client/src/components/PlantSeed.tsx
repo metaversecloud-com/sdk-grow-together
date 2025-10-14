@@ -1,32 +1,60 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 
 // components
 import { ModalHeader } from "@/components";
 
 // context
-import { GlobalDispatchContext } from "@/context/GlobalContext";
+import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
 import { ErrorType, SET_VISITOR_DATA, SET_VISITOR_PLOT_DATA } from "@/context/types";
 
 // utils
 import { backendAPI, setErrorMessage } from "@/utils";
 
-// types
-import { seeds, VisitorDataObjectType } from "@shared/index.js";
-
 interface PlantSeedProps {
   selectedSquare: number;
   setSelectedSquare: (square: number | null) => void;
   setIsUpdatingPlot: (isUpdatingPlot: boolean) => void;
-  seedsPurchased: VisitorDataObjectType["seedsPurchased"];
 }
 
-export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot, seedsPurchased }: PlantSeedProps) => {
+export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot }: PlantSeedProps) => {
   const dispatch = useContext(GlobalDispatchContext);
+  const { seeds = {}, visitorInventory = {} } = useContext(GlobalStateContext);
 
   const [isPlanting, setIsPlanting] = useState(false);
-  const hasSeeds = Object.keys(seedsPurchased).length > 0;
+  const [hasSeeds, setHasSeeds] = useState(false);
 
-  const handlePlantSeed = async (seedId: number) => {
+  useEffect(() => {
+    // Check if any keys in visitorInventory exist in seeds
+    const hasAvailableSeeds = Object.keys(visitorInventory).some((key) => {
+      // Look for a seed with name that matches the visitorInventory key
+      const matchingSeed = Object.values(seeds).find((seed) => seed.name.toLowerCase() === key.toLowerCase());
+      return matchingSeed && visitorInventory[key]?.quantity > 0;
+    });
+    setHasSeeds(hasAvailableSeeds);
+  }, [visitorInventory, seeds]);
+
+  const [audioQueue, setAudioQueue] = useState<HTMLAudioElement[]>([]);
+  const plantAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    plantAudioRef.current = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/crop_planted.mp3");
+  }, []);
+
+  const playAudioQueue = () => {
+    if (audioQueue.length > 0) {
+      const audio = audioQueue[0];
+      audio.play();
+      audio.onended = () => {
+        setAudioQueue((prevQueue) => prevQueue.slice(1));
+      };
+    }
+  };
+
+  useEffect(() => {
+    playAudioQueue();
+  }, [audioQueue]);
+
+  const handlePlantSeed = async (seedId: string) => {
     if (!seedId || selectedSquare === null) return;
 
     setIsPlanting(true);
@@ -48,6 +76,7 @@ export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot
           payload: { visitorPlotData, error: "" },
         });
         setSelectedSquare(null);
+        setAudioQueue((prevQueue) => (plantAudioRef.current ? [...prevQueue, plantAudioRef.current] : prevQueue));
       })
       .catch((error) => {
         setErrorMessage(dispatch, error as ErrorType);
@@ -75,7 +104,7 @@ export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot
           <div className="grid gap-2 grid-cols-3">
             {Object.values(seeds).map((seed) => {
               const growthTimeInMinutes = (seed.growthTime * seed.harvestLevel) / 60;
-              const isAvailable = seed.cost === 0 || seedsPurchased[seed.id];
+              const isAvailable = seed.cost === 0 || visitorInventory[seed.name]?.quantity > 0;
               let buttonClass = "card card-horizontal";
               if (isAvailable && !isPlanting) buttonClass += " cursor-pointer available";
 

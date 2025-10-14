@@ -1,7 +1,6 @@
 interface PurchaseItemProps {
   coinsAvailable: number;
-  id: number;
-  available: boolean;
+  id: string;
   imageSrc: string;
   name: string;
   description: string;
@@ -10,13 +9,12 @@ interface PurchaseItemProps {
   value: string;
   canPurchaseAdditional: boolean;
   isPurchasing: boolean;
-  handlePurchase: (id: number) => void;
+  handlePurchase: (id: string) => void;
 }
 
 export const PurchaseItem = ({
   coinsAvailable,
   id,
-  available,
   imageSrc,
   name,
   description,
@@ -27,13 +25,14 @@ export const PurchaseItem = ({
   isPurchasing,
   handlePurchase,
 }: PurchaseItemProps) => {
+  const affordable = coinsAvailable >= cost;
   return (
-    <div key={id} className={`card ${!available ? "opacity-50" : ""}`}>
-      <img className="mx-auto" src={imageSrc} />
+    <div key={id} className={`card ${!affordable ? "opacity-50" : ""}`}>
+      <img className="mx-auto" src={imageSrc} style={{ maxHeight: "100px" }} />
       <div className="card-details">
         <h4 className="card-title">{name}</h4>
 
-        <div className="card-description grid gap-3">
+        <div className="grid">
           <p className={`p3 ${rarity.toLowerCase()}`}>
             <i>{rarity}</i>
           </p>
@@ -45,7 +44,7 @@ export const PurchaseItem = ({
         </p>
 
         <div className="card-actions">
-          {available ? (
+          {affordable ? (
             <button className="btn btn-outline p3" onClick={() => handlePurchase(id)} disabled={isPurchasing}>
               {isPurchasing ? "Purchasing..." : "Buy"}
             </button>

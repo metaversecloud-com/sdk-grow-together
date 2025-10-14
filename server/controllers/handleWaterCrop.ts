@@ -1,6 +1,14 @@
 import { Request, Response } from "express";
-import { errorHandler, getCredentials, initializeVisitorData, DroppedAsset, World } from "../utils/index.js";
-import { seeds } from "../../shared/index.js";
+import {
+  errorHandler,
+  getCredentials,
+  initializeVisitorData,
+  DroppedAsset,
+  World,
+  getInventoryItems,
+} from "../utils/index.js";
+import { getSeedImageVariation } from "../../shared/index.js";
+import { plotConfig } from "../../shared/constants/plotConfig";
 
 /**
  * Handle crop watering - grows crop by 1 level and updates dropped asset image in world
@@ -22,6 +30,11 @@ export const handleWaterCrop = async (req: Request, res: Response) => {
     if (!crop) throw "Crop not found";
 
     // Get seed configuration for harvest level and reward calculation
+    const getInventoryItemsResponse = await getInventoryItems(credentials);
+    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
+
+    const { seeds } = getInventoryItemsResponse;
+
     const seedConfig = seeds[crop.seedId];
     if (!seedConfig) throw "Invalid crop type";
 
@@ -54,8 +67,8 @@ export const handleWaterCrop = async (req: Request, res: Response) => {
         name: "drop_grow_together",
         duration: 1,
         position: {
-          x: cropAsset.position.x,
-          y: cropAsset.position.y - 50,
+          x: cropAsset.position.x - plotConfig.squareSpacing / 2,
+          y: cropAsset.position.y - 100,
         },
       })
       .catch((error) => {
@@ -68,7 +81,8 @@ export const handleWaterCrop = async (req: Request, res: Response) => {
     await cropAsset.updateDataObject({ ...cropAssetData, ...cropData });
 
     // Update the crop asset image to reflect new growth level
-    await cropAsset.updateWebImageLayers("", seedConfig.imageVariations[crop.growLevel + 1]).catch((error) => {
+    const layer1 = getSeedImageVariation(seeds, seedConfig.name, crop.growLevel + 1);
+    await cropAsset.updateWebImageLayers("", layer1).catch((error) => {
       console.error(`Failed to update crop asset ${assetId}:`, error);
     });
 

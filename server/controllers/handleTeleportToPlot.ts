@@ -9,7 +9,7 @@ export const handleTeleportToPlot = async (req: Request, res: Response) => {
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
 
-    const { visitor, visitorData } = initializeVisitorDataResponse;
+    const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
 
     const visitorPlotData = visitorData.worlds[urlSlug];
 

@@ -13,7 +13,7 @@ export const handleRemoveCrop = async (req: Request, res: Response) => {
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
 
-    const { visitor, visitorData } = initializeVisitorDataResponse;
+    const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
 
     const visitorPlotData = visitorData.worlds[urlSlug];
     const assetId = visitorPlotData.plotSquares[squareId];
@@ -34,25 +34,31 @@ export const handleRemoveCrop = async (req: Request, res: Response) => {
       ],
     });
 
-    const droppedAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
+    try {
+      const droppedAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
 
-    const world = World.create(urlSlug, { credentials });
-    await world
-      .triggerParticle({
-        name: "dirt_grow_together",
-        duration: 1,
-        position: droppedAsset.position,
-      })
-      .catch((error) => {
-        console.error(`Failed to trigger particle effect:`, error);
-      });
+      const world = World.create(urlSlug, { credentials });
+      await world
+        .triggerParticle({
+          name: "dirt_grow_together",
+          duration: 1,
+          position: droppedAsset.position,
+        })
+        .catch((error) => {
+          console.error(`Failed to trigger particle effect:`, error);
+        });
 
-    await droppedAsset.deleteDroppedAsset();
+      await droppedAsset.deleteDroppedAsset();
+    } catch (error) {
+      console.error(`Failed to remove crop asset ${assetId} from world:`, error);
+      // Continue with removal even if asset deletion fails (it might have been manually removed from world)
+    }
 
     return res.json({
       success: true,
       visitorData,
       visitorPlotData: visitorData.worlds[urlSlug],
+      visitorInventory,
     });
   } catch (error) {
     return errorHandler({

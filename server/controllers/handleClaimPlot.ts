@@ -1,5 +1,13 @@
 import { Request, Response } from "express";
-import { errorHandler, getCredentials, initializeVisitorData, DroppedAsset, World } from "../utils/index.js";
+import {
+  errorHandler,
+  getCredentials,
+  initializeVisitorData,
+  DroppedAsset,
+  World,
+  Ecosystem,
+  modifyInventoryItem,
+} from "../utils/index.js";
 import { PlotAssetDataObjectType, WorldDataObjectType } from "../types/index.js";
 import { calculateNumberOfSquares } from "../../shared/index.js";
 
@@ -15,7 +23,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
 
-    const { visitor, visitorData } = initializeVisitorDataResponse;
+    const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
 
     if (visitorData.worlds[urlSlug].plotAssetId) {
       throw "You already own a plot. Each player can only claim one plot.";
@@ -57,27 +65,27 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       },
     );
 
+    // Add free seed to visitor's inventory
+    const name = "Carrots";
+    const modifyInventoryItemResponse = await modifyInventoryItem({
+      credentials,
+      visitor,
+      name,
+      quantity: 1,
+    });
+    if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
+    visitorInventory[name] = { id: name, quantity: modifyInventoryItemResponse };
+
     // Update plot asset's data object to mark ownership
     plotAssetData = {
       ownerId: profileId,
       ownerName: displayName,
       claimedDate,
     };
-    await plotAsset.setDataObject(plotAssetData);
-
-    // Update plot's clickable link
-    // const baseUrl = getBaseUrl(req.hostname);
-    // const updatedLink = `${baseUrl}/plot?ownerName=${encodeURIComponent(displayName)}&ownerProfileId=${profileId}`;
-    // const text = `${displayName}'s Plot`;
-    // await Promise.all([
-    //   plotAsset.updateClickType({
-    //     clickableLink: updatedLink,
-    //     clickableLinkTitle: text,
-    //     isOpenLinkInDrawer: true,
-    //   }),
-    //   plotAsset.updateCustomTextAsset({}, text),
-    // ]);
-    await plotAsset.updateCustomTextAsset({}, `${displayName}'s Plot`);
+    await Promise.all([
+      plotAsset.setDataObject(plotAssetData),
+      plotAsset.updateCustomTextAsset({}, `${displayName}'s Plot`),
+    ]);
 
     const world = await World.create(urlSlug, { credentials });
     const worldDataObject = (await world.fetchDataObject()) as WorldDataObjectType;
@@ -101,6 +109,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       plotAssetData,
       visitorData: updatedVisitorData,
       visitorPlotData,
+      visitorInventory,
     });
   } catch (error) {
     return errorHandler({
