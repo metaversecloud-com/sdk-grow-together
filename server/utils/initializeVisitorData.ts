@@ -3,13 +3,14 @@ import { Credentials } from "../types/Credentials.js";
 import { EcosystemItems, VisitorDataObjectType } from "../types/index.js";
 import { DEFAULT_VISITOR_DATA, DEFAULT_VISITOR_WORLD_DATA } from "../constants.js";
 import { VisitorInterface } from "@rtsdk/topia";
+import { standardizedError } from "./standardizedError.js";
 
 /**
  * Initialize visitor data object with default values if it doesn't exist or is missing properties
  */
 export const initializeVisitorData = async (credentials: Credentials) => {
   try {
-    const { assetId, urlSlug, visitorId } = credentials;
+    const { urlSlug, visitorId } = credentials;
 
     const visitor = (await Visitor.create(visitorId, urlSlug, { credentials })) as VisitorInterface;
     let visitorData = (await visitor.fetchDataObject()) as VisitorDataObjectType;
@@ -50,6 +51,6 @@ export const initializeVisitorData = async (credentials: Credentials) => {
 
     return { visitor, visitorData, visitorInventory };
   } catch (error: any) {
-    throw new Error(`Failed to initialize visitor data: ${error.message}`);
+    return standardizedError(error);
   }
 };
