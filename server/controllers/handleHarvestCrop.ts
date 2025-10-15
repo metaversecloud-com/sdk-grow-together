@@ -66,7 +66,13 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
     await visitor.updateDataObject(updatedVisitorData, {
       analytics: [
         {
-          analyticName: "cropHarvested",
+          analyticName: "cropsHarvested",
+          profileId,
+          urlSlug,
+          uniqueKey: profileId,
+        },
+        {
+          analyticName: `${seedConfig.name.toLowerCase()}Harvested`,
           profileId,
           urlSlug,
           uniqueKey: profileId,

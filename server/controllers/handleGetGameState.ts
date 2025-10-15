@@ -20,7 +20,7 @@ interface Items extends InventoryItemInterface {
 export const handleGetGameState = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { assetId, urlSlug } = credentials;
+    const { assetId, profileId, urlSlug } = credentials;
 
     const getPlotAssetsResult = await getPlotAssets(credentials);
     if (getPlotAssetsResult instanceof Error) throw getPlotAssetsResult;
@@ -32,7 +32,23 @@ export const handleGetGameState = async (req: Request, res: Response) => {
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
 
-    const { visitorData, visitorInventory } = initializeVisitorDataResponse;
+    const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
+
+    await visitor.fetchVisitor();
+
+    await visitor.updateDataObject(
+      {},
+      {
+        analytics: [
+          {
+            analyticName: `plotDrawerViews-${plotAssetData.ownerId === profileId ? "self" : "non-self"}`,
+            profileId,
+            urlSlug,
+            uniqueKey: profileId,
+          },
+        ],
+      },
+    );
 
     const getInventoryItemsResponse = await getInventoryItems(credentials);
     if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
@@ -89,6 +105,7 @@ export const handleGetGameState = async (req: Request, res: Response) => {
 
     return res.json({
       success: true,
+      isAdmin: visitor.isAdmin,
       plotAssetData,
       visitorData,
       visitorPlotData: visitorData.worlds[urlSlug],

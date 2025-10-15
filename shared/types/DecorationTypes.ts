@@ -5,7 +5,7 @@ export type DecorationType = {
   id: string;
   name: string;
   cost: number;
-  imageSrc: string;
+  icon: string;
   rarity: string;
   description: string;
 };

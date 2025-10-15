@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 
 // components
-import { PageFooter, ConfirmationModal } from "@/components";
+import { ConfirmationModal } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
@@ -12,40 +12,36 @@ import { backendAPI, setErrorMessage } from "@/utils";
 
 export const AdminView = () => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { droppedAsset } = useContext(GlobalStateContext);
+  const { plotAssetData } = useContext(GlobalStateContext);
 
-  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [showClearPlotModal, setShowClearPlotModal] = useState(false);
+  const [showClearAllPlotsModal, setShowClearAllPlotsModal] = useState(false);
   const [areButtonsDisabled, setAreButtonsDisabled] = useState(false);
 
-  const handleToggleShowConfirmationModal = () => {
-    setShowConfirmationModal(!showConfirmationModal);
+  const handleToggleShowClearPlotModal = () => {
+    setShowClearPlotModal(!showClearPlotModal);
   };
 
-  const handleDropAsset = async () => {
+  const handleToggleShowClearAllPlotsModal = () => {
+    setShowClearAllPlotsModal(!showClearAllPlotsModal);
+  };
+
+  const handleClearThisPlot = async () => {
     setAreButtonsDisabled(true);
 
     backendAPI
-      .post("/dropped-asset")
-      .then(() => {
-        backendAPI.put("/world/fire-toast", { title: "Asset successfully dropped!" });
-      })
+      .post("/admin/clear-plot")
       .catch((error) => setErrorMessage(dispatch, error as ErrorType))
       .finally(() => {
         setAreButtonsDisabled(false);
       });
   };
 
-  const handleRemoveDroppedAssets = async () => {
+  const handleClearAllPlots = async () => {
     setAreButtonsDisabled(true);
 
     backendAPI
-      .post("/remove-dropped-assets")
-      .then(() => {
-        backendAPI.put("/world/fire-toast", {
-          title: "Dropped assets successfully removed!",
-          text: "All dropped assets with matching unique name have been removed from this world.",
-        });
-      })
+      .post("/admin/clear-all-plots")
       .catch((error) => setErrorMessage(dispatch, error as ErrorType))
       .finally(() => {
         setAreButtonsDisabled(false);
@@ -53,33 +49,54 @@ export const AdminView = () => {
   };
 
   return (
-    <div style={{ position: "relative" }}>
-      {droppedAsset && (
-        <img
-          className="w-96 h-96 object-cover rounded-2xl my-4"
-          alt="preview"
-          src={droppedAsset.topLayerURL || droppedAsset.bottomLayerURL}
+    <div>
+      {plotAssetData?.ownerId && (
+        <div className="grid gap-2 mb-10">
+          <h4>Clear This Plot</h4>
+          <p>
+            Removes the garden owner and completely clears this plot's game progress. A new player will be able to claim
+            this plot.
+          </p>
+          <button
+            className="btn btn-danger-outline mt-4"
+            onClick={handleToggleShowClearPlotModal}
+            disabled={areButtonsDisabled}
+          >
+            Clear This Plot
+          </button>
+        </div>
+      )}
+
+      <div className="grid gap-2 mb-10">
+        <h4>Clear All Plots</h4>
+        <p>
+          WARNING: This setting will completely clear game progress for all plots in this world and all garden owners
+          will have to claim a new plot.
+        </p>
+        <button
+          className="btn btn-danger mt-4"
+          onClick={handleToggleShowClearAllPlotsModal}
+          disabled={areButtonsDisabled}
+        >
+          Clear All Plots
+        </button>
+      </div>
+
+      {showClearPlotModal && (
+        <ConfirmationModal
+          title="Clear This Plot"
+          message="Are you sure you want to clear this plot? This action cannot be undone."
+          handleOnConfirm={handleClearThisPlot}
+          handleToggleShowConfirmationModal={handleToggleShowClearPlotModal}
         />
       )}
-      <PageFooter>
-        <button className="btn mt-2" disabled={areButtonsDisabled} onClick={handleDropAsset}>
-          Drop Asset
-        </button>
-        <button
-          className="btn btn-danger mt-2"
-          disabled={areButtonsDisabled}
-          onClick={() => handleToggleShowConfirmationModal()}
-        >
-          Remove Dropped Assets
-        </button>
-      </PageFooter>
 
-      {showConfirmationModal && (
+      {showClearAllPlotsModal && (
         <ConfirmationModal
-          title="Remove Dropped Assets"
-          message="Are you sure you want to remove all dropped assets? This action cannot be undone."
-          handleOnConfirm={handleRemoveDroppedAssets}
-          handleToggleShowConfirmationModal={handleToggleShowConfirmationModal}
+          title="Clear All Plots"
+          message="Are you sure you want to clear all plots? This action cannot be undone."
+          handleOnConfirm={handleClearAllPlots}
+          handleToggleShowConfirmationModal={handleToggleShowClearAllPlotsModal}
         />
       )}
     </div>

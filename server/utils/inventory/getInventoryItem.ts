@@ -1,5 +1,5 @@
-import { Credentials } from "../../types";
-import { Ecosystem } from "../topiaInit";
+import { Credentials } from "../../types/index.js";
+import { Ecosystem } from "../topiaInit.js";
 
 export const getInventoryItem = async (credentials: Credentials, itemName: string) => {
   try {

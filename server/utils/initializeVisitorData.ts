@@ -2,15 +2,16 @@ import { Visitor } from "./topiaInit.js";
 import { Credentials } from "../types/Credentials.js";
 import { EcosystemItems, VisitorDataObjectType } from "../types/index.js";
 import { DEFAULT_VISITOR_DATA, DEFAULT_VISITOR_WORLD_DATA } from "../constants.js";
+import { VisitorInterface } from "@rtsdk/topia";
 
 /**
  * Initialize visitor data object with default values if it doesn't exist or is missing properties
  */
 export const initializeVisitorData = async (credentials: Credentials) => {
   try {
-    const { urlSlug, visitorId } = credentials;
+    const { assetId, urlSlug, visitorId } = credentials;
 
-    const visitor = await Visitor.create(visitorId, urlSlug, { credentials });
+    const visitor = (await Visitor.create(visitorId, urlSlug, { credentials })) as VisitorInterface;
     let visitorData = (await visitor.fetchDataObject()) as VisitorDataObjectType;
 
     if (!visitorData?.worlds?.[urlSlug]) {

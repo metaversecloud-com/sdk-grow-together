@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { AxiosError } from "axios";
 import {
   errorHandler,
   getCredentials,
@@ -6,7 +7,6 @@ import {
   initializeVisitorData,
   modifyInventoryItem,
 } from "../utils/index.js";
-import { AxiosError } from "axios";
 
 /**
  * Handle seed purchase - allows visitor to purchase seeds with coins
@@ -14,7 +14,7 @@ import { AxiosError } from "axios";
 export const handlePurchaseSeed = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { profileId } = credentials;
+    const { profileId, urlSlug } = credentials;
     const { seedId } = req.body;
 
     if (!seedId) throw "Valid seedId is required";
@@ -69,8 +69,14 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
       {
         analytics: [
           {
-            analyticName: "seedPurchased",
+            analyticName: "seedsUnlocked",
             profileId,
+            uniqueKey: profileId,
+          },
+          {
+            analyticName: `${seedConfig.name.toLowerCase()}Unlocked`,
+            profileId,
+            urlSlug,
             uniqueKey: profileId,
           },
         ],

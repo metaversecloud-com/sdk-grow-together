@@ -64,7 +64,7 @@ export const SeedMenu = ({ onClose }: { onClose: () => void }) => {
                   key={id}
                   coinsAvailable={visitorInventory["Coins"]?.quantity || 0}
                   id={id}
-                  imageSrc={seeds[id].icon}
+                  icon={seeds[id].icon}
                   name={name}
                   description={formatTime(growthTime)}
                   rarity={rarity}

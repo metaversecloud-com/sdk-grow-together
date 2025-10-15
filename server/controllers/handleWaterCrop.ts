@@ -8,7 +8,7 @@ import {
   getInventoryItems,
 } from "../utils/index.js";
 import { getSeedImageVariation } from "../../shared/index.js";
-import { plotConfig } from "../../shared/constants/plotConfig";
+import { plotConfig } from "../../shared/constants/plotConfig.js";
 
 /**
  * Handle crop watering - grows crop by 1 level and updates dropped asset image in world
@@ -50,7 +50,13 @@ export const handleWaterCrop = async (req: Request, res: Response) => {
     await visitor.updateDataObject(visitorData, {
       analytics: [
         {
-          analyticName: "cropWatered",
+          analyticName: "cropsWatered",
+          profileId,
+          urlSlug,
+          uniqueKey: profileId,
+        },
+        {
+          analyticName: `${seedConfig.name.toLowerCase()}Watered`,
           profileId,
           urlSlug,
           uniqueKey: profileId,
@@ -81,7 +87,7 @@ export const handleWaterCrop = async (req: Request, res: Response) => {
     await cropAsset.updateDataObject({ ...cropAssetData, ...cropData });
 
     // Update the crop asset image to reflect new growth level
-    const layer1 = getSeedImageVariation(seeds, seedConfig.name, crop.growLevel + 1);
+    const layer1 = getSeedImageVariation(seedConfig.name, crop.growLevel + 1);
     await cropAsset.updateWebImageLayers("", layer1).catch((error) => {
       console.error(`Failed to update crop asset ${assetId}:`, error);
     });

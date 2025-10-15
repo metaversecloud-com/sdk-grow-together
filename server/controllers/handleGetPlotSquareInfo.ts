@@ -14,20 +14,36 @@ import { CropDataObjectType } from "../types/SharedTypes.js";
 export const handleGetPlotSquareInfo = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { assetId, urlSlug } = credentials;
+    const { assetId, profileId, urlSlug } = credentials;
 
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
 
-    const { visitorData, visitorInventory } = initializeVisitorDataResponse;
+    const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
 
     const droppedAsset = await DroppedAsset.create(assetId, urlSlug, { credentials });
     const squareData = (await droppedAsset.fetchDataObject()) as CropDataObjectType;
+
+    const { seedId, ownerId } = squareData;
 
     const getInventoryItemsResponse = await getInventoryItems(credentials);
     if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
 
     const { decorations, seeds } = getInventoryItemsResponse;
+
+    await visitor.updateDataObject(
+      {},
+      {
+        analytics: [
+          {
+            analyticName: `${seedId ? "cropDrawerViews" : "decorationDrawerViews"}-${ownerId === profileId ? "self" : "non-self"}`,
+            profileId,
+            urlSlug,
+            uniqueKey: profileId,
+          },
+        ],
+      },
+    );
 
     return res.json({
       success: true,

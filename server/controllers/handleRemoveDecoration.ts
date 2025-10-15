@@ -60,7 +60,7 @@ export const handleRemoveDecoration = async (req: Request, res: Response) => {
     await visitor.updateDataObject(visitorData, {
       analytics: [
         {
-          analyticName: "decorationRemoved",
+          analyticName: "decorationsRemoved",
           profileId,
           urlSlug,
           uniqueKey: profileId,

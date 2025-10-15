@@ -79,7 +79,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
 
     // Drop a new decoration asset at the calculated position
     const baseUrl = getBaseUrl(req.hostname);
-    const layer1 = getDecorationImageVariation(decorations, decoration.name);
+    const layer1 = getDecorationImageVariation(decoration.name);
     const decorationAsset = await DroppedAsset.drop(asset, {
       clickType: DroppedAssetClickType.LINK,
       clickableLink: `${baseUrl}/decoration?ownerName=${encodeURIComponent(displayName)}&ownerProfileId=${profileId}`,
@@ -124,7 +124,13 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     await visitor.updateDataObject(visitorData, {
       analytics: [
         {
-          analyticName: "decorationPlaced",
+          analyticName: "decorationsAdded",
+          profileId,
+          urlSlug,
+          uniqueKey: profileId,
+        },
+        {
+          analyticName: `${decoration.name.toLowerCase()}Added`,
           profileId,
           urlSlug,
           uniqueKey: profileId,

@@ -127,7 +127,7 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly, vi
               {crop.growLevel >= (seeds[crop.seedId]?.harvestLevel || 10) && <p className="p4 text-success">Ready!</p>}
             </div>
           ) : decoration ? (
-            <img className="m-auto" src={decorations[decoration.decorationId]?.imageSrc} />
+            <img className="m-auto" src={decorations[decoration.decorationId]?.icon} />
           ) : (
             <div>{emptySquareContent}</div>
           )}
@@ -156,7 +156,7 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly, vi
     } else if (decoration) {
       name = decorations[decoration.decorationId]?.name;
       title = `${name} in Slot ${selectedSquare!}`;
-      icon = decorations[decoration.decorationId]?.imageSrc;
+      icon = decorations[decoration.decorationId]?.icon;
       type = "decoration";
     }
 

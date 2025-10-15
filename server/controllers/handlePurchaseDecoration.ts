@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { AxiosError } from "axios";
 import {
   errorHandler,
   getCredentials,
@@ -6,7 +7,6 @@ import {
   initializeVisitorData,
   modifyInventoryItem,
 } from "../utils/index.js";
-import { AxiosError } from "axios";
 
 /**
  * Handle decoration purchase - allows visitor to purchase decorations with coins
@@ -14,7 +14,7 @@ import { AxiosError } from "axios";
 export const handlePurchaseDecoration = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { profileId } = credentials;
+    const { profileId, urlSlug } = credentials;
     const { decorationId } = req.body;
 
     if (!decorationId) throw "Valid decorationId is required";
@@ -66,8 +66,14 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
       {
         analytics: [
           {
-            analyticName: "decorationPurchased",
+            analyticName: "decorationsUnlocked",
             profileId,
+            uniqueKey: profileId,
+          },
+          {
+            analyticName: `${decorationConfig.name.toLowerCase()}Unlocked`,
+            profileId,
+            urlSlug,
             uniqueKey: profileId,
           },
         ],

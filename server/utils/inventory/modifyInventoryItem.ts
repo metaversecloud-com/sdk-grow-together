@@ -1,6 +1,6 @@
 import { VisitorInterface } from "@rtsdk/topia";
-import { Credentials } from "../../types";
-import { getInventoryItem } from "./getInventoryItem";
+import { Credentials } from "../../types/index.js";
+import { getInventoryItem } from "./getInventoryItem.js";
 
 export const modifyInventoryItem = async ({
   credentials,

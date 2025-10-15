@@ -57,7 +57,7 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     // Get the plot asset to determine position
     const plotAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
     const position = calculateSquarePosition(plotAsset.position, squareId);
-    const layer1 = getSeedImageVariation(seeds, seedConfig.name, 0); // Start at growth level 0
+    const layer1 = getSeedImageVariation(seedConfig.name, 0); // Start at growth level 0
 
     // Trigger planting particle effect
     const world = World.create(urlSlug, { credentials });
@@ -110,7 +110,13 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     await visitor.updateDataObject(visitorData, {
       analytics: [
         {
-          analyticName: "seedPlanted",
+          analyticName: "cropsPlanted",
+          profileId,
+          urlSlug,
+          uniqueKey: profileId,
+        },
+        {
+          analyticName: `${seedConfig.name.toLowerCase()}Planted`,
           profileId,
           urlSlug,
           uniqueKey: profileId,

@@ -14,6 +14,8 @@ import {
   handleRemoveCrop,
   handlePurchaseDecoration,
   handleOpenPlotSquareIframe,
+  handleClearPlot,
+  handleClearAllPlots,
 } from "./controllers/index.js";
 import { getVersion } from "./utils/getVersion.js";
 
@@ -39,6 +41,10 @@ router.get("/system/health", (req, res) => {
 });
 
 router.get("/game-state", handleGetGameState);
+
+// admin routes
+router.post("/admin/clear-plot", handleClearPlot);
+router.post("/admin/clear-all-plots", handleClearAllPlots);
 
 // plot routes
 router.post("/plot/claim", handleClaimPlot);

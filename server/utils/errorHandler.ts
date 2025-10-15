@@ -12,7 +12,11 @@ export const errorHandler = ({
   res?: any;
 }) => {
   try {
-    if (process.env.NODE_ENV === "development") console.error("❌ Error:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("❌ Error:", error);
+      console.error("❌ functionName:", functionName);
+      console.error("❌ message:", message);
+    }
 
     const reqQueryParams = req?.query;
     if (reqQueryParams?.interactiveNonce) delete reqQueryParams.interactiveNonce;

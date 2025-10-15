@@ -25,23 +25,6 @@ export type VisitorInventoryType = {
   };
 };
 
-// export type VisitorInventoryType = {
-//   coinsAvailable: number; // Current spendable coins
-//   decorationsOwned: {
-//     [decorationId: string]: {
-//       id: string;
-//       quantity: number; // total owned
-//       // available: number; // available to place (owned - already placed)
-//     };
-//   };
-//   seedsPurchased: {
-//     [seedId: string]: {
-//       id: string;
-//       quantity: number;
-//     };
-//   };
-// };
-
 export type VisitorDataObjectType = {
   lastDateCoinsEarned: string; // ISO date string when the plot was claimed
   totalCoinsEarned: number; // Lifetime coins earned (for unlocks)

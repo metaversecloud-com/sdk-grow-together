@@ -1,7 +1,7 @@
 interface PurchaseItemProps {
   coinsAvailable: number;
   id: string;
-  imageSrc: string;
+  icon: string;
   name: string;
   description: string;
   rarity: string;
@@ -15,7 +15,7 @@ interface PurchaseItemProps {
 export const PurchaseItem = ({
   coinsAvailable,
   id,
-  imageSrc,
+  icon,
   name,
   description,
   rarity,
@@ -28,7 +28,7 @@ export const PurchaseItem = ({
   const affordable = coinsAvailable >= cost;
   return (
     <div key={id} className={`card ${!affordable ? "opacity-50" : ""}`}>
-      <img className="mx-auto" src={imageSrc} style={{ maxHeight: "100px" }} />
+      <img className="mx-auto" src={icon} style={{ maxHeight: "100px" }} />
       <div className="card-details">
         <h4 className="card-title">{name}</h4>
 

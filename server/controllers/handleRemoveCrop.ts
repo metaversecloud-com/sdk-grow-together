@@ -26,7 +26,7 @@ export const handleRemoveCrop = async (req: Request, res: Response) => {
     await visitor.updateDataObject(visitorData, {
       analytics: [
         {
-          analyticName: "cropRemoved",
+          analyticName: "cropsRemoved",
           profileId,
           urlSlug,
           uniqueKey: profileId,

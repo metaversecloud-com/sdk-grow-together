@@ -49,14 +49,14 @@ export const DecorationMenu = ({ onClose }: { onClose: () => void }) => {
         <div className="grid grid-cols-2 gap-2">
           {decorations &&
             Object.values(decorations).map((decoration) => {
-              const { id, name, description, rarity, cost, imageSrc } = decoration;
+              const { id, name, description, rarity, cost, icon } = decoration;
 
               return (
                 <PurchaseItem
                   key={id}
                   coinsAvailable={visitorInventory["Coins"]?.quantity || 0}
                   id={id}
-                  imageSrc={imageSrc}
+                  icon={icon}
                   name={name}
                   description={description}
                   rarity={rarity}

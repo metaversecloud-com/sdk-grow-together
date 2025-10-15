@@ -19,9 +19,8 @@ export const Plot = () => {
     visitorInventory = {},
     visitorPlotData,
   } = useContext(GlobalStateContext);
-  const { ownerId, ownerName } = plotAssetData || {};
+  const { claimedDate, ownerId, ownerName } = plotAssetData || {};
   const { plotAssetId, plotSquares, crops, decorations } = visitorPlotData || { plotSquares: {} };
-
   const [searchParams] = useSearchParams();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -33,6 +32,15 @@ export const Plot = () => {
 
   const isOwnedByCurrentUser = profileId === ownerId;
   const isOwnedByOtherUser = ownerId && ownerId !== profileId;
+
+  let headerText = "Your Garden";
+  if (isOwnedByOtherUser) {
+    headerText = `${ownerName}'s Garden`;
+  } else if (!isOwnedByOtherUser && !plotAssetId) {
+    headerText = "Open Garden";
+  } else if (!isOwnedByOtherUser && plotAssetId && !isOwnedByCurrentUser) {
+    headerText = "Available Garden";
+  }
 
   useEffect(() => {
     if (hasInteractiveParams) {
@@ -50,9 +58,6 @@ export const Plot = () => {
     setIsClaiming(true);
     await backendAPI
       .post("/plot/claim")
-      .then((response) => {
-        setGameState(dispatch, response.data);
-      })
       .catch((error) => setErrorMessage(dispatch, error as ErrorType))
       .finally(() => setIsClaiming(false));
   };
@@ -66,40 +71,8 @@ export const Plot = () => {
   };
 
   return (
-    <PageContainer
-      isLoading={isLoading}
-      headerText={`${isOwnedByOtherUser ? `${ownerName}'s` : !isOwnedByOtherUser && !plotAssetId ? "Open" : "Your"} Garden`}
-    >
+    <PageContainer isLoading={isLoading} headerText={headerText}>
       <div className="container">
-        {/* Plot owned by another user */}
-        {isOwnedByOtherUser && (
-          <div className="grid gap-2">
-            <p>This garden belongs to another player. You can view their garden but cannot make changes.</p>
-          </div>
-        )}
-
-        {/* Current user doesn't own any plot - show claim option */}
-        {!isOwnedByOtherUser && !plotAssetId && (
-          <div className="grid gap-2">
-            <button className="btn" onClick={handleClaimPlot} disabled={isClaiming}>
-              {isClaiming ? "Claiming..." : "Start Your Garden"}
-            </button>
-            <h3 className="pt-4">About Grow Together</h3>
-            <p>
-              Grow plants and add decorations to your very own garden. Water and harvest plants to earn coins and
-              purchase rare seeds and decorations in the Garden Store.
-            </p>
-          </div>
-        )}
-
-        {/* Current user already owns a different plot */}
-        {!isOwnedByOtherUser && plotAssetId && !isOwnedByCurrentUser && (
-          <div className="grid gap-2">
-            <h3>Cannot Claim Plot</h3>
-            <p>You already own a plot! Each player can only claim one plot.</p>
-          </div>
-        )}
-
         {/* Current user's plot */}
         {isOwnedByCurrentUser && plotAssetId && (
           <div className="grid gap-2">
@@ -125,12 +98,54 @@ export const Plot = () => {
           </div>
         )}
 
+        {/* Plot owned by another user */}
+        {isOwnedByOtherUser && (
+          <div className="grid gap-2 mb-10">
+            {claimedDate && <p>Claimed Date: {new Date(claimedDate).toLocaleDateString()}</p>}
+            {!plotAssetId && (
+              <div className="grid gap-2 mt-6">
+                <h4>Ready to start your own garden?</h4>
+                <p>
+                  Look for a garden with a sign that says "Open Garden." Click the sign to start your very own garden.
+                  You might need to explore this world a bit to find one.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Current user doesn't own any plot - show claim option */}
+        {!isOwnedByOtherUser && !plotAssetId && (
+          <div className="grid gap-2 mb-10">
+            <button className="btn" onClick={handleClaimPlot} disabled={isClaiming}>
+              {isClaiming ? "Claiming..." : "Start Your Garden"}
+            </button>
+            <h3 className="pt-4">About Grow Together</h3>
+            <p>
+              Grow plants and add decorations to your very own garden. Water and harvest plants to earn coins and
+              purchase rare seeds and decorations in the Garden Store.
+            </p>
+          </div>
+        )}
+
         {/* Current user already owns a different plot */}
         {plotAssetId && !isOwnedByCurrentUser && (
-          <button className="btn btn-outline mt-4" onClick={() => handleTeleportToPlot()}>
-            <img alt="Teleport" className="mr-1" src="https://sdk-style.s3.amazonaws.com/icons/walk.svg" />
-            Teleport to my plot
-          </button>
+          <div className="grid gap-2 mb-10">
+            <h4>Are you looking for your garden?</h4>
+            <p>Click the button below to teleport to it.</p>
+            <button className="btn mt-4" onClick={() => handleTeleportToPlot()}>
+              <img alt="Teleport" className="mr-1" src="https://sdk-style.s3.amazonaws.com/icons/walk.svg" />
+              Teleport to My Garden
+            </button>
+          </div>
+        )}
+
+        {/* Plot available and current user already owns a different plot */}
+        {!isOwnedByOtherUser && plotAssetId && !isOwnedByCurrentUser && (
+          <div className="grid gap-2">
+            <h4>Do you know someone who needs a garden?</h4>
+            <p>Let them know about this place! You can send them a direct message if you're already friends.</p>
+          </div>
         )}
       </div>
       {showSeedMenu && <SeedMenu onClose={() => setShowSeedMenu(false)} />}

@@ -20,7 +20,7 @@ export const getInventoryItems = async (credentials: Credentials) => {
           id: item.id,
           name: item.name || "Unknown",
           cost: item.metadata?.cost || 0,
-          imageSrc: item.image_path || "",
+          icon: item.image_path || "",
           rarity,
           description: item.description || "",
         };

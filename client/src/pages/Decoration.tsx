@@ -21,7 +21,7 @@ export const Decoration = () => {
     decorations = {},
   } = useContext(GlobalStateContext);
   const { ownerId, ownerName } = decorationData || {};
-  const { imageSrc, name, rarity, description, cost } = decorationData?.decorationId
+  const { icon, name, rarity, description, cost } = decorationData?.decorationId
     ? decorations[decorationData.decorationId]
     : {};
 
@@ -65,7 +65,7 @@ export const Decoration = () => {
 
         <div className="card small">
           <div className="card-details" style={{ maxWidth: "100%" }}>
-            <img className="m-auto" src={imageSrc} />
+            <img className="m-auto" src={icon} />
             <div className="text-center grid gap-1">
               <h3 className="card-title">{name}</h3>
               <p className={`${rarity}`}></p>

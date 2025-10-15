@@ -1,4 +1,6 @@
 export * from "./handleClaimPlot.js";
+export * from "./handleClearAllPlots.js";
+export * from "./handleClearPlot.js";
 export * from "./handleGetGameState.js";
 export * from "./handleGetPlotSquareInfo.js";
 export * from "./handleHarvestCrop.js";

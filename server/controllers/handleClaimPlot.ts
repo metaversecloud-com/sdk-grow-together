@@ -6,9 +6,12 @@ import {
   DroppedAsset,
   World,
   modifyInventoryItem,
+  getBaseUrl,
+  Asset,
 } from "../utils/index.js";
 import { PlotAssetDataObjectType, WorldDataObjectType } from "../types/index.js";
 import { calculateNumberOfSquares } from "../../shared/index.js";
+import { DroppedAssetClickType } from "@rtsdk/topia";
 
 /**
  * Handle plot claiming - allows visitor to claim ownership of a plot
@@ -17,7 +20,9 @@ import { calculateNumberOfSquares } from "../../shared/index.js";
 export const handleClaimPlot = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { assetId, urlSlug, profileId, displayName } = credentials;
+    const { assetId, displayName, interactiveNonce, interactivePublicKey, profileId, urlSlug, visitorId } = credentials;
+
+    const promises = [];
 
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
@@ -38,6 +43,25 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       throw `This plot is already owned by ${plotAssetData.ownerName || "another player"}.`;
     }
 
+    const title = `${displayName}'s Plot`;
+
+    const asset = Asset.create("textAsset", { credentials });
+    const baseUrl = getBaseUrl(req.hostname);
+    const clickableLink = `${baseUrl}/plot?ownerName=${encodeURIComponent(displayName)}&ownerProfileId=${profileId}`;
+    const droppedTextAsset = await DroppedAsset.drop(asset, {
+      clickType: DroppedAssetClickType.LINK,
+      clickableLink,
+      clickableLinkTitle: title,
+      isInteractive: true,
+      interactivePublicKey: credentials.interactivePublicKey,
+      isOpenLinkInDrawer: true,
+      position: plotAsset.position,
+      isTextTopLayer: true,
+      text: title,
+      uniqueName: `BountyBuilders_plot`,
+      urlSlug,
+    });
+
     // Claim the plot
     const claimedDate = new Date().toISOString();
 
@@ -50,30 +74,34 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
 
     // Update visitor's data object
     const visitorPlotData = {
-      plotAssetId: assetId,
+      plotAssetId: droppedTextAsset.id,
       claimedDate,
       plotSquares,
       crops: {},
       decorations: {},
     };
 
-    await visitor.updateDataObject(
-      { [`worlds.${urlSlug}`]: visitorPlotData },
-      {
-        analytics: [{ analyticName: "plotClaimed", profileId, urlSlug, uniqueKey: profileId }],
-      },
+    promises.push(
+      visitor.updateDataObject(
+        { [`worlds.${urlSlug}`]: visitorPlotData },
+        {
+          analytics: [{ analyticName: "plotsClaimed", profileId, urlSlug, uniqueKey: profileId }],
+        },
+      ),
     );
 
-    // Add free seed to visitor's inventory
+    // Add free seed to visitor's inventory if they don't already have it
     const name = "Carrots";
-    const modifyInventoryItemResponse = await modifyInventoryItem({
-      credentials,
-      visitor,
-      name,
-      quantity: 1,
-    });
-    if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
-    visitorInventory[name] = { id: name, quantity: modifyInventoryItemResponse };
+    if (!visitorInventory[name]) {
+      const modifyInventoryItemResponse = await modifyInventoryItem({
+        credentials,
+        visitor,
+        name,
+        quantity: 1,
+      });
+      if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
+      visitorInventory[name] = { id: name, quantity: modifyInventoryItemResponse };
+    }
 
     // Update plot asset's data object to mark ownership
     plotAssetData = {
@@ -81,19 +109,21 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       ownerName: displayName,
       claimedDate,
     };
-    await Promise.all([
-      plotAsset.setDataObject(plotAssetData),
-      plotAsset.updateCustomTextAsset({}, `${displayName}'s Plot`),
-    ]);
+    promises.push(droppedTextAsset.setDataObject(plotAssetData));
 
+    // Update world data to add this plot to claimed plots and remove original assetId
     const world = await World.create(urlSlug, { credentials });
     const worldDataObject = (await world.fetchDataObject()) as WorldDataObjectType;
-    await world.updateDataObject({
-      claimedPlots: {
-        ...worldDataObject.claimedPlots,
-        [assetId]: profileId,
-      },
-    });
+    delete worldDataObject.claimedPlots[assetId];
+
+    promises.push(
+      world.updateDataObject({
+        claimedPlots: {
+          ...worldDataObject.claimedPlots,
+          [droppedTextAsset.id!]: profileId,
+        },
+      }),
+    );
 
     const updatedVisitorData = {
       ...visitorData,
@@ -102,6 +132,33 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
         [urlSlug]: visitorPlotData,
       },
     };
+
+    await Promise.all(promises);
+
+    await visitor
+      .openIframe({
+        droppedAssetId: droppedTextAsset.id!,
+        link: `${clickableLink}&assetId=${droppedTextAsset.id!}`,
+        shouldOpenInDrawer: true,
+        title,
+      })
+      .catch(async (error: any) => {
+        errorHandler({
+          error,
+          functionName: "handleClaimPlot",
+          message: "Error opening iframe",
+        });
+        // if open fails, close the original iframe as it'll no longer work once the origalinal asset is deleted
+        await visitor.closeIframe(assetId).catch((error: any) => {
+          return errorHandler({
+            error,
+            functionName: "handleClaimPlot",
+            message: "Error closing iframe",
+          });
+        });
+      });
+
+    await plotAsset.deleteDroppedAsset();
 
     return res.json({
       success: true,
