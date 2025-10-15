@@ -2,6 +2,7 @@ import { Ecosystem } from "../index.js";
 import { DecorationType, getRarity, SeedType } from "../../../shared/index.js";
 import { Credentials } from "../../types/Credentials.js";
 import { EcosystemItems } from "../../types/Types.js";
+import { standardizedError } from "../standardizedError.js";
 
 export const getInventoryItems = async (credentials: Credentials) => {
   try {
@@ -44,6 +45,6 @@ export const getInventoryItems = async (credentials: Credentials) => {
       seeds,
     };
   } catch (error: any) {
-    return new Error(error);
+    return standardizedError(error);
   }
 };

@@ -46,7 +46,7 @@ export const handleClearPlot = async (req: Request, res: Response) => {
       isOpenLinkInDrawer: true,
       layer1: `${s3URL}/Open-Plot-Sign.png`,
       position,
-      uniqueName: `BountyBuilders_plot`,
+      uniqueName: `GrowTogether_plot`,
       urlSlug,
     });
 

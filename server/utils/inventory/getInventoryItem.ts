@@ -1,5 +1,6 @@
 import { Credentials } from "../../types/index.js";
 import { Ecosystem } from "../topiaInit.js";
+import { standardizedError } from "../standardizedError.js";
 
 export const getInventoryItem = async (credentials: Credentials, itemName: string) => {
   try {
@@ -9,6 +10,6 @@ export const getInventoryItem = async (credentials: Credentials, itemName: strin
     if (!inventoryItem) throw new Error(`Inventory item ${itemName} not found in ecosystem`);
     return inventoryItem;
   } catch (error: any) {
-    return new Error(error);
+    return standardizedError(error);
   }
 };

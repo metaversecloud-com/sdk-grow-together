@@ -23,7 +23,7 @@ _We use data objects to store information about each implementation of the app p
 
 #### World
 
-The data object attached to the world will store ownership information about all plots in the world. This is populated on first app load by searching the world for plots with a unique name of "BountyBuilder_plot".
+The data object attached to the world will store ownership information about all plots in the world. This is populated on first app load by searching the world for plots with a unique name of "GrowTogether_plot".
 
 ```ts
 {

@@ -1,5 +1,5 @@
 import { DroppedAssetInterface } from "@rtsdk/topia";
-import { DroppedAsset, World } from "./index.js";
+import { DroppedAsset, World, standardizedError } from "./index.js";
 import { Credentials } from "../types/Credentials.js";
 import { PlotAssetDataObjectType, WorldDataObjectType } from "../types/index.js";
 
@@ -17,7 +17,7 @@ export const getPlotAssets = async (
 
     if (shouldReset || !worldDataObject?.claimedPlots || Object.keys(worldDataObject?.claimedPlots).length === 0) {
       const plotAssets: DroppedAssetInterface[] = await world.fetchDroppedAssetsWithUniqueName({
-        uniqueName: "BountyBuilder_plot",
+        uniqueName: "GrowTogether_plot",
       });
 
       if (plotAssets.length === 0) throw "No plot assets found.";
@@ -59,6 +59,6 @@ export const getPlotAssets = async (
 
     return { claimedPlots };
   } catch (error: any) {
-    return new Error(error);
+    return standardizedError(error);
   }
 };

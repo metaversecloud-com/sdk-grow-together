@@ -2,6 +2,7 @@ export * from "../constants.js";
 export * from "./inventory/index.js";
 export * from "./calculateSquarePosition.js";
 export * from "./cleanReturnPayload.js";
+export * from "./standardizedError.js";
 export * from "./errorHandler.js";
 export * from "./getBaseUrl.js";
 export * from "./getCredentials.js";

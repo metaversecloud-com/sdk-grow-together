@@ -58,7 +58,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       position: plotAsset.position,
       isTextTopLayer: true,
       text: title,
-      uniqueName: `BountyBuilders_plot`,
+      uniqueName: `GrowTogether_plot`,
       urlSlug,
     });
 

@@ -1,6 +1,7 @@
 import { VisitorInterface } from "@rtsdk/topia";
 import { Credentials } from "../../types/index.js";
 import { getInventoryItem } from "./getInventoryItem.js";
+import { standardizedError } from "../standardizedError.js";
 
 export const modifyInventoryItem = async ({
   credentials,
@@ -32,6 +33,6 @@ export const modifyInventoryItem = async ({
 
     return updatedQuantity;
   } catch (error: any) {
-    return new Error(error);
+    return standardizedError(error);
   }
 };

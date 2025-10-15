@@ -84,7 +84,7 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
       isOpenLinkInDrawer: true,
       layer1,
       position,
-      uniqueName: `BountyBuilders_crop_${profileId}`,
+      uniqueName: `GrowTogether_crop_${profileId}`,
       urlSlug,
     });
 

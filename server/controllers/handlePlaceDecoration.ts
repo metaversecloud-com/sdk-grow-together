@@ -89,7 +89,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
       isOpenLinkInDrawer: true,
       layer1,
       position,
-      uniqueName: `BountyBuilders_decoration_${profileId}`,
+      uniqueName: `GrowTogether_decoration_${profileId}`,
       urlSlug,
     });
 
