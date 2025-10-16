@@ -10,4 +10,5 @@ export type SeedType = {
   harvestLevel: number; // level when crop is ready for harvest
   rarity: string; // rarity of the seed
   icon: string;
+  sortOrder?: number;
 };

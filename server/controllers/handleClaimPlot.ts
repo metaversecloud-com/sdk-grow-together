@@ -72,6 +72,28 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       plotSquares[i] = null;
     }
 
+    // Add free seed to visitor's inventory if they don't already have it
+    const name = "Carrots";
+    if (!visitorInventory[name]) {
+      const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
+        credentials,
+        visitor,
+        name,
+        quantity: 1,
+      });
+      // Throw error if Carrots doesn't exist in inventory for Public Key - user will not be able to do anything with their garden if they don't have any seeds to start with
+      if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
+      visitorInventory[name] = { id: name, quantity: modifyInventoryItemResponse };
+    }
+
+    // Update plot asset's data object to mark ownership
+    plotAssetData = {
+      ownerId: profileId,
+      ownerName: displayName,
+      claimedDate,
+    };
+    promises.push(droppedTextAsset.setDataObject(plotAssetData));
+
     // Update visitor's data object
     const visitorPlotData = {
       plotAssetId: droppedTextAsset.id,
@@ -89,27 +111,6 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
         },
       ),
     );
-
-    // Add free seed to visitor's inventory if they don't already have it
-    const name = "Carrots";
-    if (!visitorInventory[name]) {
-      const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
-        credentials,
-        visitor,
-        name,
-        quantity: 1,
-      });
-      if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
-      visitorInventory[name] = { id: name, quantity: modifyInventoryItemResponse };
-    }
-
-    // Update plot asset's data object to mark ownership
-    plotAssetData = {
-      ownerId: profileId,
-      ownerName: displayName,
-      claimedDate,
-    };
-    promises.push(droppedTextAsset.setDataObject(plotAssetData));
 
     // Update world data to add this plot to claimed plots and remove original assetId
     const world = await World.create(urlSlug, { credentials });

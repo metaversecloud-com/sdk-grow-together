@@ -8,6 +8,7 @@ export type DecorationType = {
   icon: string;
   rarity: string;
   description: string;
+  sortOrder?: number;
 };
 
 export type PlacedDecorationDataObjectType = {

@@ -1,6 +1,6 @@
 import { Visitor } from "./topiaInit.js";
 import { Credentials } from "../types/Credentials.js";
-import { EcosystemItems, VisitorDataObjectType } from "../types/index.js";
+import { EcosystemItems, VisitorDataObjectType, VisitorInventoryType } from "../types/index.js";
 import { DEFAULT_VISITOR_DATA, DEFAULT_VISITOR_WORLD_DATA } from "../constants.js";
 import { VisitorInterface } from "@rtsdk/topia";
 import { standardizedError } from "./standardizedError.js";
@@ -41,7 +41,7 @@ export const initializeVisitorData = async (credentials: Credentials) => {
 
     await visitor.fetchInventoryItems();
     const allItems = visitor.inventoryItems as EcosystemItems[];
-    let visitorInventory = {} as { [key: string]: { id: string; quantity: number } };
+    let visitorInventory = {} as VisitorInventoryType;
     for (const item of allItems || []) {
       visitorInventory[item.name!] = {
         id: item.name!,

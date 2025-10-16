@@ -54,12 +54,14 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
       name: decorationConfig.name,
       quantity: 1,
     });
-    if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
-
-    visitorInventory[decorationConfig.name] = {
-      id: decorationConfig.name,
-      quantity: modifyInventoryItemResponse,
-    };
+    if (typeof modifyInventoryItemResponse === "number") {
+      visitorInventory[decorationConfig.name] = {
+        id: decorationConfig.name,
+        quantity: modifyInventoryItemResponse,
+      };
+    } else {
+      console.log("Error while modifying inventory item:", modifyInventoryItemResponse);
+    }
 
     await visitor.updateDataObject(
       {},

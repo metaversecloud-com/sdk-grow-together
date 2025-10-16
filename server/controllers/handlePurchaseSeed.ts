@@ -57,12 +57,14 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
       name: seedConfig.name,
       quantity: 1,
     });
-    if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
-
-    visitorInventory[seedConfig.name] = {
-      id: seedConfig.name,
-      quantity: modifyInventoryItemResponse,
-    };
+    if (typeof modifyInventoryItemResponse === "number") {
+      visitorInventory[seedConfig.name] = {
+        id: seedConfig.name,
+        quantity: modifyInventoryItemResponse,
+      };
+    } else {
+      console.log("Error while modifying inventory item:", modifyInventoryItemResponse);
+    }
 
     await visitor.updateDataObject(
       {},

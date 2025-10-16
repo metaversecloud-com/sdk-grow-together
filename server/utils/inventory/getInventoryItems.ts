@@ -24,6 +24,7 @@ export const getInventoryItems = async (credentials: Credentials) => {
           icon: item.image_path || "",
           rarity,
           description: item.description || "",
+          sortOrder: item.metadata?.sortOrder || 0,
         };
       }
       if (item.metadata?.type === "seed") {
@@ -36,13 +37,32 @@ export const getInventoryItems = async (credentials: Credentials) => {
           growthTime: item.metadata?.growthTime || 0,
           harvestLevel: item.metadata?.harvestLevel || 0,
           icon: item.image_path || "",
+          sortOrder: item.metadata?.sortOrder || 0,
         };
       }
     }
 
+    // Sort items by sortOrder while keeping them as objects
+    const sortedDecorations: { [key: string]: DecorationType } = {};
+    const sortedSeeds: { [key: string]: SeedType } = {};
+
+    // Sort decorations
+    Object.values(decorations)
+      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+      .forEach((decoration) => {
+        sortedDecorations[decoration.id] = decoration;
+      });
+
+    // Sort seeds
+    Object.values(seeds)
+      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+      .forEach((seed) => {
+        sortedSeeds[seed.id] = seed;
+      });
+
     return {
-      decorations,
-      seeds,
+      decorations: sortedDecorations,
+      seeds: sortedSeeds,
     };
   } catch (error: any) {
     return standardizedError(error);

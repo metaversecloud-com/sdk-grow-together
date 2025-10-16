@@ -11,7 +11,6 @@ export const handleOpenPlotIframe = async (req: Request, res: Response) => {
 
     const visitor = await Visitor.create(visitorId, urlSlug, { credentials: { ...credentials, assetId: plotAssetId } });
 
-    // This will only work with ngrok, http://localhost is not permitted by Public API endpoint as valid link
     const baseUrl = getBaseUrl(req.hostname);
     const query = `?assetId=${plotAssetId}&displayName=${displayName}&profileId=${profileId}&urlSlug=${urlSlug}&interactiveKey=${interactivePublicKey}&interactiveNonce=${interactiveNonce}&visitorId=${visitorId}`;
     await visitor

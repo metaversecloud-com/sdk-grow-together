@@ -70,7 +70,6 @@ export const SeedMenu = ({ onClose }: { onClose: () => void }) => {
                   rarity={rarity}
                   cost={cost}
                   value={`Profit: +${reward} coins`}
-                  canPurchaseAdditional={false}
                   isPurchasing={purchasingSeeds.has(id)}
                   handlePurchase={() => handlePurchaseSeed(id)}
                 />

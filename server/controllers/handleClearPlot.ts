@@ -10,6 +10,7 @@ import {
   Asset,
   getBaseUrl,
   modifyUserInventoryItem,
+  dropKeyAsset,
 } from "../utils/index.js";
 import { PlotAssetDataObjectType, VisitorDataObjectType, WorldDataObjectType } from "../types/index.js";
 import { DroppedAssetClickType, VisitorInterface } from "@rtsdk/topia";
@@ -35,20 +36,13 @@ export const handleClearPlot = async (req: Request, res: Response) => {
     let plotAssetData = plotAsset.dataObject as PlotAssetDataObjectType;
     if (!plotAssetData.ownerId) throw `This plot is not owned by anyone.`;
 
-    const asset = Asset.create("webImageAsset", { credentials });
-    const baseUrl = getBaseUrl(req.hostname);
-    const droppedSignAsset = await DroppedAsset.drop(asset, {
-      clickType: DroppedAssetClickType.LINK,
-      clickableLink: `${baseUrl}/plot`,
-      clickableLinkTitle: "Open Plot",
-      isInteractive: true,
-      interactivePublicKey: credentials.interactivePublicKey,
-      isOpenLinkInDrawer: true,
-      layer1: `${s3URL}/Open-Plot-Sign.png`,
+    const dropKeyAssetResponse = await dropKeyAsset({
+      credentials,
+      hostname: req.hostname,
       position: plotAsset.position,
-      uniqueName: `GrowTogether_plot`,
-      urlSlug,
     });
+    if (dropKeyAssetResponse instanceof Error) throw dropKeyAssetResponse;
+    const { droppedSignAsset } = dropKeyAssetResponse;
 
     const plotOwner = await User.create({ credentials, profileId: plotAssetData.ownerId });
     const ownerData = (await plotOwner.fetchDataObject()) as VisitorDataObjectType;

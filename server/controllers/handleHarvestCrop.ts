@@ -86,7 +86,7 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
     const world = World.create(urlSlug, { credentials });
     await world
       .triggerParticle({
-        name: "coin_drop_together",
+        name: "coin_grow_together",
         duration: 2,
         position: cropAsset.position,
       })

@@ -74,7 +74,7 @@ export const handleWaterCrop = async (req: Request, res: Response) => {
         duration: 1,
         position: {
           x: cropAsset.position.x - plotConfig.squareSpacing / 2,
-          y: cropAsset.position.y - 100,
+          y: cropAsset.position.y - 200,
         },
       })
       .catch((error) => {

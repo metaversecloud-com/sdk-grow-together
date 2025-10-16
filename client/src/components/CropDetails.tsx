@@ -31,28 +31,13 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
   const [isHarvesting, setIsHarvesting] = useState(false);
   const [wasHarvested, setWasHarvested] = useState(false);
 
-  const [audioQueue, setAudioQueue] = useState<HTMLAudioElement[]>([]);
-  const waterAudioRef = useRef<HTMLAudioElement | null>(null);
-  const harvestAudioRef = useRef<HTMLAudioElement | null>(null);
+  // Initialize audio with references to reuse them
+  const waterAudio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/water_plant.mp3");
+  const harvestAudio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/harvest_coins.mp3");
 
-  useEffect(() => {
-    waterAudioRef.current = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/water_plant.mp3");
-    harvestAudioRef.current = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/harvest_coins.mp3");
-  }, []);
-
-  const playAudioQueue = () => {
-    if (audioQueue.length > 0) {
-      const audio = audioQueue[0];
-      audio.play();
-      audio.onended = () => {
-        setAudioQueue((prevQueue) => prevQueue.slice(1));
-      };
-    }
-  };
-
-  useEffect(() => {
-    playAudioQueue();
-  }, [audioQueue]);
+  // Set default volume for both audio elements (0.0 to 1.0)
+  waterAudio.volume = 0.7; // 70% volume
+  harvestAudio.volume = 0.9; // 90% volume
 
   // Update timeRemaining every second until ready for harvest or harvested
   useEffect(() => {
@@ -106,11 +91,12 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
       .then((response) => {
         const { success, cropData } = response.data;
         if (success) {
+          waterAudio.play();
+
           dispatch!({
             type: SET_CROP_DATA,
             payload: { cropData, error: "" },
           });
-          setAudioQueue((prevQueue) => (waterAudioRef.current ? [...prevQueue, waterAudioRef.current] : prevQueue));
         }
       })
       .catch((error) => {
@@ -127,8 +113,8 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
     await backendAPI
       .post("/crop/harvest")
       .then((response) => {
+        harvestAudio.play();
         setGameState(dispatch, response.data);
-        setAudioQueue((prevQueue) => (harvestAudioRef.current ? [...prevQueue, harvestAudioRef.current] : prevQueue));
       })
       .catch((error) => {
         setErrorMessage(dispatch, error as ErrorType);
@@ -169,7 +155,9 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
           <img className="m-auto" src={seeds[seedId].icon} style={{ width: "40px" }} />
           <div className="text-center">
             <h3 className="card-title">{name}</h3>
-            <p className="text-muted">({rarity})</p>
+            <p className="text-muted">
+              <i>{rarity}</i>
+            </p>
             <p>
               <i>
                 Lvl {growLevel}/{harvestLevel}

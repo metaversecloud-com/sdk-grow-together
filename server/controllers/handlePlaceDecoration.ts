@@ -114,9 +114,11 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
       name: decoration.name,
       quantity: -1,
     });
-    if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
-
-    visitorInventory[decoration.name].quantity = modifyInventoryItemResponse;
+    if (typeof modifyInventoryItemResponse === "number") {
+      visitorInventory[decoration.name].quantity = modifyInventoryItemResponse;
+    } else {
+      console.log("Error while modifying inventory item:", modifyInventoryItemResponse);
+    }
 
     // Update visitor's data object
     visitorData.worlds[urlSlug].plotSquares[squareId] = decorationAsset.id!;

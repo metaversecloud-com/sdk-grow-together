@@ -11,6 +11,7 @@ import {
   Asset,
   getBaseUrl,
   modifyUserInventoryItem,
+  dropKeyAsset,
 } from "../utils/index.js";
 import { PlotAssetDataObjectType, VisitorDataObjectType } from "../types/index.js";
 import { DroppedAssetClickType, VisitorInterface } from "@rtsdk/topia";
@@ -34,65 +35,86 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
     const getPlotAssetsResult = await getPlotAssets(credentials, true);
     if (getPlotAssetsResult instanceof Error) throw getPlotAssetsResult;
 
-    // Extract all plot asset ids (filter out nulls)
-    const plotAssetIds = Object.keys(getPlotAssetsResult.claimedPlots).filter((plotId): plotId is string => !!plotId);
+    // Extract all plot asset ids (filter only keys with non-null values)
+    const plotAssetIds = Object.entries(getPlotAssetsResult.claimedPlots)
+      .filter(([_, value]) => value !== null)
+      .map(([key, _]) => key);
 
     const asset = Asset.create("webImageAsset", { credentials });
     const baseUrl = getBaseUrl(req.hostname);
 
-    // Collect all data from plot assets
+    // Collect all data from plot assets in batches for better performance
     const ownerIds: string[] = [];
     const newPlotAssetIds: string[] = [];
-    const plotDataPromises = plotAssetIds.map(async (plotId) => {
-      const plotAsset = await DroppedAsset.get(plotId, urlSlug, {
-        credentials: { ...credentials, assetId: plotId },
-      });
-      await plotAsset.fetchDataObject();
 
-      const plotAssetData = plotAsset.dataObject as PlotAssetDataObjectType;
-      if (plotAssetData.ownerId) {
-        ownerIds.push(plotAssetData.ownerId);
+    // Process plots in batches of 10 for better performance
+    const batchSize = 10;
+    const plotAssetBatches = [];
 
-        const newPlotAsset = await DroppedAsset.drop(asset, {
-          clickType: DroppedAssetClickType.LINK,
-          clickableLink: `${baseUrl}/plot`,
-          clickableLinkTitle: "Open Plot",
-          isInteractive: true,
-          interactivePublicKey: credentials.interactivePublicKey,
-          isOpenLinkInDrawer: true,
-          layer1: `${s3URL}/Open-Plot-Sign.png`,
-          position: plotAsset.position,
-          uniqueName: `GrowTogether_plot`,
-          urlSlug,
+    for (let i = 0; i < plotAssetIds.length; i += batchSize) {
+      plotAssetBatches.push(plotAssetIds.slice(i, i + batchSize));
+    }
+
+    for (const batch of plotAssetBatches) {
+      const batchPromises = batch.map(async (plotId) => {
+        const plotAsset = await DroppedAsset.get(plotId, urlSlug, {
+          credentials: { ...credentials, assetId: plotId },
         });
-        newPlotAssetIds.push(newPlotAsset.id!);
-      }
+        await plotAsset.fetchDataObject();
 
-      return { plotId, plotAssetData };
-    });
+        const plotAssetData = plotAsset.dataObject as PlotAssetDataObjectType;
+        if (plotAssetData.ownerId) {
+          ownerIds.push(plotAssetData.ownerId);
 
-    // Wait for all plot data to be collected
-    await Promise.all(plotDataPromises);
+          const dropKeyAssetResponse = await dropKeyAsset({
+            credentials,
+            hostname: req.hostname,
+            position: plotAsset.position,
+          });
+          if (dropKeyAssetResponse instanceof Error) {
+            console.log("Error dropping key asset while clearing all plots:", dropKeyAssetResponse);
+          } else {
+            newPlotAssetIds.push(dropKeyAssetResponse.droppedSignAsset.id!);
+          }
+        }
+
+        return { plotId, plotAssetData };
+      });
+
+      // Process each batch sequentially to avoid overwhelming the server
+      await Promise.all(batchPromises);
+    }
 
     // Collect all dropped assets from all owners
     const allDroppedAssetIds: string[] = [];
     const uniqueOwnerIds = [...new Set(ownerIds)]; // Remove duplicates
 
-    const ownerDataPromises = uniqueOwnerIds.map(async (ownerId) => {
-      const plotOwner = await User.create({ credentials, profileId: ownerId });
-      const ownerData = (await plotOwner.fetchDataObject()) as VisitorDataObjectType;
-      const ownerWorldData = ownerData.worlds?.[urlSlug];
+    // Process owners in batches for better performance
+    const ownerBatchSize = 5;
+    const ownerBatches = [];
 
-      // Collect dropped assets from this owner's plot squares
-      const ownerDroppedAssetIds = Object.values(ownerWorldData?.plotSquares || {}).filter(
-        (droppedAssetId): droppedAssetId is string => !!droppedAssetId,
-      );
+    for (let i = 0; i < uniqueOwnerIds.length; i += ownerBatchSize) {
+      ownerBatches.push(uniqueOwnerIds.slice(i, i + ownerBatchSize));
+    }
 
-      allDroppedAssetIds.push(...ownerDroppedAssetIds);
+    for (const batch of ownerBatches) {
+      const batchPromises = batch.map(async (ownerId) => {
+        const plotOwner = await User.create({ credentials, profileId: ownerId });
+        const ownerData = (await plotOwner.fetchDataObject()) as VisitorDataObjectType;
+        const ownerWorldData = ownerData.worlds?.[urlSlug];
 
-      if (Object.keys(ownerWorldData.decorations).length > 0) {
-        for (const decoration of Object.values(ownerWorldData.decorations)) {
-          promises.push(
+        if (!ownerWorldData) {
+          return { ownerId, ownerData };
+        }
+
+        // Collect dropped assets from this owner's plot squares - more efficiently
+        const ownerDroppedAssetIds = Object.values(ownerWorldData.plotSquares || {}).filter(Boolean) as string[];
+        allDroppedAssetIds.push(...ownerDroppedAssetIds);
+
+        // Handle decorations and inventory updates
+        if (ownerWorldData.decorations && Object.keys(ownerWorldData.decorations).length > 0) {
+          // Create a batch promise for inventory modifications
+          const inventoryUpdates = Object.values(ownerWorldData.decorations).map((decoration) =>
             modifyUserInventoryItem({
               credentials,
               user: plotOwner,
@@ -100,45 +122,59 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
               quantity: 1,
             }),
           );
+
+          // Add all inventory updates as a single batch promise
+          promises.push(Promise.all(inventoryUpdates));
         }
-      }
 
-      // Reset visitor data for this world to defaults
-      promises.push(
-        plotOwner.updateDataObject(
-          { [`worlds.${urlSlug}`]: DEFAULT_VISITOR_WORLD_DATA },
-          {
-            analytics: [{ analyticName: "plotsCleared" }],
-          },
-        ),
-      );
+        // Reset visitor data for this world to defaults
+        promises.push(
+          plotOwner.updateDataObject(
+            { [`worlds.${urlSlug}`]: DEFAULT_VISITOR_WORLD_DATA },
+            {
+              analytics: [{ analyticName: "plotsCleared" }],
+            },
+          ),
+        );
 
-      return { ownerId, ownerData };
-    });
+        return { ownerId, ownerData };
+      });
 
-    // Wait for all owner data to be collected
-    await Promise.all(ownerDataPromises);
+      // Process each batch sequentially to avoid overwhelming the server
+      await Promise.all(batchPromises);
+    }
 
-    // Delete all collected dropped assets from all plot squares
+    // Delete all collected dropped assets from all plot squares in batches
     if (allDroppedAssetIds.length > 0) {
-      promises.push(
-        World.deleteDroppedAssets(urlSlug, allDroppedAssetIds, process.env.INTERACTIVE_SECRET!, credentials),
-      );
+      // Split large arrays of asset IDs into smaller chunks to avoid API limits
+      const deleteChunkSize = 50;
+      for (let i = 0; i < allDroppedAssetIds.length; i += deleteChunkSize) {
+        const chunk = allDroppedAssetIds.slice(i, i + deleteChunkSize);
+        promises.push(World.deleteDroppedAssets(urlSlug, chunk, process.env.INTERACTIVE_SECRET!, credentials));
+      }
     }
 
     // Update world data to remove ownership from all claimed plots
     const world = await World.create(urlSlug, { credentials });
 
     // Create an update object with all plot assets set to null
-    const updateObj: Record<string, null> = {};
-    newPlotAssetIds.forEach((plotId) => {
-      updateObj[`claimedPlots.${plotId}`] = null;
-    });
+    // Process in batches to avoid large object updates
+    const batchUpdateSize = 25;
+    for (let i = 0; i < newPlotAssetIds.length; i += batchUpdateSize) {
+      const updateObj: Record<string, null> = {};
+      const chunk = newPlotAssetIds.slice(i, i + batchUpdateSize);
 
-    promises.push(world.updateDataObject(updateObj));
+      chunk.forEach((plotId) => {
+        updateObj[`claimedPlots.${plotId}`] = null;
+      });
 
+      promises.push(world.setDataObject(updateObj));
+    }
+
+    // Run all the promises in parallel but catch errors
     await Promise.allSettled(promises);
 
+    // Close iframe and then delete old plot assets
     await admin.closeIframe(assetId).catch((error: any) => {
       return errorHandler({
         error,

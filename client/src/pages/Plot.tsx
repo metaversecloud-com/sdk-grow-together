@@ -101,7 +101,7 @@ export const Plot = () => {
         {/* Plot owned by another user */}
         {isOwnedByOtherUser && (
           <div className="grid gap-2 mb-10">
-            {claimedDate && <p>Claimed Date: {new Date(claimedDate).toLocaleDateString()}</p>}
+            {claimedDate && <p>Garden Started: {new Date(claimedDate).toLocaleDateString()}</p>}
             {!plotAssetId && (
               <div className="grid gap-2 mt-6">
                 <h4>Ready to start your own garden?</h4>

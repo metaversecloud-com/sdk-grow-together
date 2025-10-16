@@ -1,7 +1,7 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 // components
-import { ModalHeader } from "@/components";
+import { Loading, ModalHeader } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
@@ -33,26 +33,7 @@ export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot
     setHasSeeds(hasAvailableSeeds);
   }, [visitorInventory, seeds]);
 
-  const [audioQueue, setAudioQueue] = useState<HTMLAudioElement[]>([]);
-  const plantAudioRef = useRef<HTMLAudioElement | null>(null);
-
-  useEffect(() => {
-    plantAudioRef.current = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/crop_planted.mp3");
-  }, []);
-
-  const playAudioQueue = () => {
-    if (audioQueue.length > 0) {
-      const audio = audioQueue[0];
-      audio.play();
-      audio.onended = () => {
-        setAudioQueue((prevQueue) => prevQueue.slice(1));
-      };
-    }
-  };
-
-  useEffect(() => {
-    playAudioQueue();
-  }, [audioQueue]);
+  const plantAudio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/crop_planted.mp3");
 
   const handlePlantSeed = async (seedId: string) => {
     if (!seedId || selectedSquare === null) return;
@@ -66,6 +47,8 @@ export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot
         squareId: selectedSquare,
       })
       .then((response) => {
+        plantAudio.play();
+
         const { visitorData, visitorPlotData } = response.data;
         dispatch!({
           type: SET_VISITOR_DATA,
@@ -76,7 +59,6 @@ export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot
           payload: { visitorPlotData, error: "" },
         });
         setSelectedSquare(null);
-        setAudioQueue((prevQueue) => (plantAudioRef.current ? [...prevQueue, plantAudioRef.current] : prevQueue));
       })
       .catch((error) => {
         setErrorMessage(dispatch, error as ErrorType);
@@ -105,6 +87,8 @@ export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot
             {Object.values(seeds).map((seed) => {
               const growthTimeInMinutes = (seed.growthTime * seed.harvestLevel) / 60;
               const isAvailable = seed.cost === 0 || visitorInventory[seed.name]?.quantity > 0;
+              if (!isAvailable) return null;
+
               let buttonClass = "card card-horizontal";
               if (isAvailable && !isPlanting) buttonClass += " cursor-pointer available";
 

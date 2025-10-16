@@ -35,21 +35,25 @@ export const handleGetGameState = async (req: Request, res: Response) => {
 
     const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
 
+    const updatedVisitorData = visitorData;
+    const visitorPlotData = visitorData.worlds[urlSlug];
+    if (visitorPlotData?.plotAssetId !== assetId) {
+      // their plot is gone - clear from visitor data object for this world only so they can claim a new one
+      delete updatedVisitorData.worlds[urlSlug];
+    }
+
     await visitor.fetchVisitor();
 
-    await visitor.updateDataObject(
-      {},
-      {
-        analytics: [
-          {
-            analyticName: `plotDrawerViews-${plotAssetData.ownerId === profileId ? "self" : "non-self"}`,
-            profileId,
-            urlSlug,
-            uniqueKey: profileId,
-          },
-        ],
-      },
-    );
+    await visitor.updateDataObject(updatedVisitorData, {
+      analytics: [
+        {
+          analyticName: `plotDrawerViews-${plotAssetData.ownerId === profileId ? "self" : "non-self"}`,
+          profileId,
+          urlSlug,
+          uniqueKey: profileId,
+        },
+      ],
+    });
 
     const getInventoryItemsResponse = await getInventoryItems(credentials);
     if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;

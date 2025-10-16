@@ -17,7 +17,6 @@ export const handleOpenPlotSquareIframe = async (req: Request, res: Response) =>
 
     if (!assetId) throw new Error("Nothing found on the specified square");
 
-    // This will only work with ngrok, http://localhost is not permitted by Public API endpoint as valid link
     const baseUrl = getBaseUrl(req.hostname);
     const query = `?assetId=${assetId}&displayName=${displayName}&profileId=${profileId}&urlSlug=${urlSlug}&interactiveKey=${interactivePublicKey}&interactiveNonce=${interactiveNonce}&visitorId=${visitorId}`;
     await visitor

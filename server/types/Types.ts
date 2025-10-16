@@ -15,5 +15,6 @@ export interface EcosystemItems extends InventoryItemInterface {
     reward?: number;
     growthTime?: number;
     harvestLevel?: number;
+    sortOrder?: number;
   };
 }
