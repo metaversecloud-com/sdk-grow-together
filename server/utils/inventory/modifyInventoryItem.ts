@@ -1,9 +1,9 @@
-import { VisitorInterface } from "@rtsdk/topia";
+import { UserInterface, VisitorInterface } from "@rtsdk/topia";
 import { Credentials } from "../../types/index.js";
 import { getInventoryItem } from "./getInventoryItem.js";
 import { standardizedError } from "../standardizedError.js";
 
-export const modifyInventoryItem = async ({
+export const modifyVisitorInventoryItem = async ({
   credentials,
   visitor,
   name,
@@ -32,6 +32,38 @@ export const modifyInventoryItem = async ({
     }
 
     return updatedQuantity;
+  } catch (error: any) {
+    return standardizedError(error);
+  }
+};
+
+export const modifyUserInventoryItem = async ({
+  credentials,
+  user,
+  name,
+  quantity,
+}: {
+  credentials: Credentials;
+  user: UserInterface;
+  name: string;
+  quantity: number;
+}) => {
+  try {
+    await user.fetchDataObject();
+
+    await user.fetchInventoryItems();
+    const userInventoryItem = user.inventoryItems?.find((item) => item.name === name);
+
+    if (userInventoryItem) {
+      await user.modifyInventoryItemQuantity(userInventoryItem, quantity);
+    } else {
+      const inventoryItem = await getInventoryItem(credentials, name);
+      if (inventoryItem instanceof Error) throw inventoryItem;
+
+      await user.grantInventoryItem(inventoryItem, quantity);
+    }
+
+    return { success: true };
   } catch (error: any) {
     return standardizedError(error);
   }

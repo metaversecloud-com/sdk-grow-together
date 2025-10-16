@@ -5,7 +5,7 @@ import {
   initializeVisitorData,
   DroppedAsset,
   World,
-  modifyInventoryItem,
+  modifyVisitorInventoryItem,
   getInventoryItems,
 } from "../utils/index.js";
 
@@ -40,7 +40,7 @@ export const handleRemoveDecoration = async (req: Request, res: Response) => {
     if (!decorationConfig) throw "Invalid decoration type";
 
     // Return the decoration to visitor's inventory
-    const modifyInventoryItemResponse = await modifyInventoryItem({
+    const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
       credentials,
       visitor,
       name: decorationConfig.name,

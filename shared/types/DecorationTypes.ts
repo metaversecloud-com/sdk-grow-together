@@ -12,6 +12,7 @@ export type DecorationType = {
 
 export type PlacedDecorationDataObjectType = {
   decorationId: string;
+  decorationName: string;
   ownerId?: string;
   ownerName?: string;
   dateDropped: string;

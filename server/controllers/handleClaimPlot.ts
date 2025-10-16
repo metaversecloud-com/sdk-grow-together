@@ -5,7 +5,7 @@ import {
   initializeVisitorData,
   DroppedAsset,
   World,
-  modifyInventoryItem,
+  modifyVisitorInventoryItem,
   getBaseUrl,
   Asset,
 } from "../utils/index.js";
@@ -93,7 +93,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
     // Add free seed to visitor's inventory if they don't already have it
     const name = "Carrots";
     if (!visitorInventory[name]) {
-      const modifyInventoryItemResponse = await modifyInventoryItem({
+      const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
         credentials,
         visitor,
         name,
@@ -148,7 +148,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
           functionName: "handleClaimPlot",
           message: "Error opening iframe",
         });
-        // if open fails, close the original iframe as it'll no longer work once the origalinal asset is deleted
+        // if open fails, close the original iframe as it'll no longer work once the original asset is deleted
         await visitor.closeIframe(assetId).catch((error: any) => {
           return errorHandler({
             error,

@@ -9,6 +9,7 @@ import {
   User,
   Asset,
   getBaseUrl,
+  modifyUserInventoryItem,
 } from "../utils/index.js";
 import { PlotAssetDataObjectType, VisitorDataObjectType, WorldDataObjectType } from "../types/index.js";
 import { DroppedAssetClickType, VisitorInterface } from "@rtsdk/topia";
@@ -28,7 +29,7 @@ export const handleClearPlot = async (req: Request, res: Response) => {
     const admin = (await Visitor.get(visitorId, urlSlug, { credentials })) as VisitorInterface;
     if (!admin.isAdmin) throw "Only admins can clear plots";
 
-    const plotAsset = await DroppedAsset.create(assetId, urlSlug, { credentials });
+    const plotAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
     await plotAsset.fetchDataObject();
 
     let plotAssetData = plotAsset.dataObject as PlotAssetDataObjectType;
@@ -36,7 +37,6 @@ export const handleClearPlot = async (req: Request, res: Response) => {
 
     const asset = Asset.create("webImageAsset", { credentials });
     const baseUrl = getBaseUrl(req.hostname);
-    const position = { x: plotAsset.position.x + 199, y: plotAsset.position.y - 217 };
     const droppedSignAsset = await DroppedAsset.drop(asset, {
       clickType: DroppedAssetClickType.LINK,
       clickableLink: `${baseUrl}/plot`,
@@ -45,7 +45,7 @@ export const handleClearPlot = async (req: Request, res: Response) => {
       interactivePublicKey: credentials.interactivePublicKey,
       isOpenLinkInDrawer: true,
       layer1: `${s3URL}/Open-Plot-Sign.png`,
-      position,
+      position: plotAsset.position,
       uniqueName: `GrowTogether_plot`,
       urlSlug,
     });
@@ -55,7 +55,16 @@ export const handleClearPlot = async (req: Request, res: Response) => {
     const ownerWorldData = ownerData.worlds?.[urlSlug];
 
     if (Object.keys(ownerWorldData.decorations).length > 0) {
-      // TODO: Add logic to return decorations to owner's inventory
+      for (const decoration of Object.values(ownerWorldData.decorations)) {
+        promises.push(
+          modifyUserInventoryItem({
+            credentials,
+            user: plotOwner,
+            name: decoration.decorationName,
+            quantity: 1,
+          }),
+        );
+      }
     }
 
     // Delete all dropped assets in this plot

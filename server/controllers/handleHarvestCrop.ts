@@ -5,7 +5,7 @@ import {
   initializeVisitorData,
   DroppedAsset,
   World,
-  modifyInventoryItem,
+  modifyVisitorInventoryItem,
   getInventoryItems,
 } from "../utils/index.js";
 
@@ -44,7 +44,7 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
 
     // Grant coins to visitor (modify quantity or add to inventory)
     const name = "Coins";
-    const modifyInventoryItemResponse = await modifyInventoryItem({
+    const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
       credentials,
       visitor,
       name,

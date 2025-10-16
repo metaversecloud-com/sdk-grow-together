@@ -9,7 +9,7 @@ import {
   World,
   getBaseUrl,
   getInventoryItems,
-  modifyInventoryItem,
+  modifyVisitorInventoryItem,
 } from "../utils/index.js";
 import { calculateNumberOfSquares, getDecorationImageVariation } from "../../shared/index.js";
 import { DroppedAssetClickType } from "@rtsdk/topia";
@@ -97,6 +97,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     const decorationData = {
       dateDropped: now,
       decorationId: decorationId,
+      decorationName: decoration.name,
       squareId,
     };
 
@@ -107,7 +108,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     });
 
     // Deduct the decoration from visitor's inventory
-    const modifyInventoryItemResponse = await modifyInventoryItem({
+    const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
       credentials,
       visitor,
       name: decoration.name,

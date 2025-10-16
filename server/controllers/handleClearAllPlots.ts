@@ -10,6 +10,7 @@ import {
   getPlotAssets,
   Asset,
   getBaseUrl,
+  modifyUserInventoryItem,
 } from "../utils/index.js";
 import { PlotAssetDataObjectType, VisitorDataObjectType } from "../types/index.js";
 import { DroppedAssetClickType, VisitorInterface } from "@rtsdk/topia";
@@ -43,7 +44,7 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
     const ownerIds: string[] = [];
     const newPlotAssetIds: string[] = [];
     const plotDataPromises = plotAssetIds.map(async (plotId) => {
-      const plotAsset = await DroppedAsset.create(plotId, urlSlug, {
+      const plotAsset = await DroppedAsset.get(plotId, urlSlug, {
         credentials: { ...credentials, assetId: plotId },
       });
       await plotAsset.fetchDataObject();
@@ -89,7 +90,18 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
 
       allDroppedAssetIds.push(...ownerDroppedAssetIds);
 
-      // TODO: Add logic to return decorations to owners' inventory
+      if (Object.keys(ownerWorldData.decorations).length > 0) {
+        for (const decoration of Object.values(ownerWorldData.decorations)) {
+          promises.push(
+            modifyUserInventoryItem({
+              credentials,
+              user: plotOwner,
+              name: decoration.decorationName,
+              quantity: 1,
+            }),
+          );
+        }
+      }
 
       // Reset visitor data for this world to defaults
       promises.push(

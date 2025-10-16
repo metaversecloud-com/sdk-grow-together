@@ -5,7 +5,7 @@ import {
   getCredentials,
   getInventoryItems,
   initializeVisitorData,
-  modifyInventoryItem,
+  modifyVisitorInventoryItem,
 } from "../utils/index.js";
 
 /**
@@ -39,7 +39,7 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
     }
 
     // Purchase the decoration (modify quantity in inventory)
-    const modifyCoinsResponse = await modifyInventoryItem({
+    const modifyCoinsResponse = await modifyVisitorInventoryItem({
       credentials,
       visitor,
       name: "Coins",
@@ -48,7 +48,7 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
     if (modifyCoinsResponse instanceof Error) throw modifyCoinsResponse;
     visitorInventory["Coins"].quantity = modifyCoinsResponse;
 
-    const modifyInventoryItemResponse = await modifyInventoryItem({
+    const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
       credentials,
       visitor,
       name: decorationConfig.name,
