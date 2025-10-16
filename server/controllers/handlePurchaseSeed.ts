@@ -1,0 +1,115 @@
+import { Request, Response } from "express";
+import { AxiosError } from "axios";
+import {
+  errorHandler,
+  getCredentials,
+  getInventoryItems,
+  initializeVisitorData,
+  modifyVisitorInventoryItem,
+} from "../utils/index.js";
+
+/**
+ * Handle seed purchase - allows visitor to purchase seeds with coins
+ */
+export const handlePurchaseSeed = async (req: Request, res: Response) => {
+  try {
+    const credentials = getCredentials(req.query);
+    const { profileId, urlSlug } = credentials;
+    const { seedId } = req.body;
+
+    if (!seedId) throw "Valid seedId is required";
+
+    // Get seed configuration
+    const getInventoryItemsResponse = await getInventoryItems(credentials);
+    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
+
+    const { seeds } = getInventoryItemsResponse;
+
+    const seedConfig = seeds[seedId];
+    if (!seedConfig) throw "Invalid seed type";
+
+    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
+    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
+
+    const { visitor, visitorInventory } = initializeVisitorDataResponse;
+
+    // Check if seed is already purchased (for paid seeds)
+    if (seedConfig.cost > 0 && visitorInventory[seedId]) throw "Seed already purchased";
+
+    // Check if visitor has enough coins
+    if (visitorInventory["Coins"].quantity < seedConfig.cost) {
+      throw `Not enough coins. Need ${seedConfig.cost}, have ${visitorInventory["Coins"].quantity}`;
+    }
+
+    // Purchase the seed (modify quantity in inventory)
+    const modifyCoinsResponse = await modifyVisitorInventoryItem({
+      credentials,
+      visitor,
+      name: "Coins",
+      quantity: -seedConfig.cost,
+    });
+    if (modifyCoinsResponse instanceof Error) throw modifyCoinsResponse;
+    visitorInventory["Coins"].quantity = modifyCoinsResponse;
+
+    const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
+      credentials,
+      visitor,
+      name: seedConfig.name,
+      quantity: 1,
+    });
+    if (typeof modifyInventoryItemResponse === "number") {
+      visitorInventory[seedConfig.name] = {
+        id: seedConfig.name,
+        quantity: modifyInventoryItemResponse,
+      };
+    } else {
+      console.log("Error while modifying inventory item:", modifyInventoryItemResponse);
+    }
+
+    await visitor.updateDataObject(
+      {},
+      {
+        analytics: [
+          {
+            analyticName: "seedsUnlocked",
+            profileId,
+            uniqueKey: profileId,
+          },
+          {
+            analyticName: `${seedConfig.name.toLowerCase()}Unlocked`,
+            profileId,
+            urlSlug,
+            uniqueKey: profileId,
+          },
+        ],
+      },
+    );
+
+    await visitor
+      .fireToast({
+        groupId: "handlePurchaseSeed",
+        title: "You purchased a new seed!",
+        text: `You can now plant ${seedConfig.name} seeds in your garden.`,
+      })
+      .catch((error: AxiosError) => {
+        return errorHandler({
+          error,
+          functionName: "handlePurchaseSeed",
+          message: "Error firing toast",
+        });
+      });
+
+    return res.json({
+      success: true,
+      visitorInventory,
+    });
+  } catch (error) {
+    return errorHandler({
+      error,
+      functionName: "handlePurchaseSeed",
+      message: "Error purchasing seed",
+      req,
+      res,
+    });
+  }
+};

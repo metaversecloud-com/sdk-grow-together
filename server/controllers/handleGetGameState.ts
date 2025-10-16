@@ -1,53 +1,131 @@
 import { Request, Response } from "express";
-import { errorHandler, getCredentials, getDroppedAsset, Visitor, World } from "../utils/index.js";
-import { VisitorInterface } from "@rtsdk/topia";
-import axios from "axios";
+import {
+  errorHandler,
+  getCredentials,
+  initializeVisitorData,
+  DroppedAsset,
+  getPlotAssets,
+  getInventoryItems,
+  User,
+} from "../utils/index.js";
+import { PlotAssetDataObjectType } from "../types/index.js";
+import { InventoryItemInterface } from "@rtsdk/topia";
 
+interface Items extends InventoryItemInterface {
+  metadata: { type?: string; cost?: number; rarity?: string };
+}
+
+/**
+ * Get the current game state for a visitor including their plot, crops, and coin balance
+ */
 export const handleGetGameState = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { assetId, displayName, interactiveNonce, interactivePublicKey, profileId, urlSlug, visitorId } = credentials;
+    const { assetId, profileId, urlSlug } = credentials;
 
-    const droppedAsset = await getDroppedAsset(credentials);
-    if (droppedAsset instanceof Error) throw droppedAsset;
+    const getPlotAssetsResult = await getPlotAssets(credentials);
+    if (getPlotAssetsResult instanceof Error) throw getPlotAssetsResult;
 
-    const world = World.create(urlSlug, { credentials });
-    world.triggerParticle({ name: "Sparkle", duration: 3, position: droppedAsset.position }).catch((error: any) =>
-      errorHandler({
-        error,
-        functionName: "handleGetGameState",
-        message: "Error triggering particle effects",
-      }),
-    );
+    const plotAsset = await DroppedAsset.create(assetId, urlSlug, { credentials });
+    const plotAssetData = (await plotAsset.fetchDataObject()) as PlotAssetDataObjectType;
 
-    const visitor: VisitorInterface = await Visitor.get(visitorId, urlSlug, { credentials });
-    const { isAdmin } = visitor;
+    // Initialize visitor data with defaults if needed
+    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
+    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
 
-    try {
-      await axios.post(
-        `${process.env.LEADERBOARD_BASE_URL || "http://v2lboard0-prod-topia.topia-rtsdk.com"}/api/dropped-asset/increment-player-stats?assetId=${assetId}&displayName=${displayName}&interactiveNonce=${interactiveNonce}&interactivePublicKey=${interactivePublicKey}&profileId=${profileId}&urlSlug=${urlSlug}&visitorId=${visitorId}`,
-        {
-          publicKey: interactivePublicKey,
-          secret: process.env.INTERACTIVE_SECRET,
-          profileId,
-          displayName,
-          incrementBy: 1,
-        },
-      );
-    } catch (error) {
-      errorHandler({
-        error,
-        functionName: "handleGetGameState",
-        message: "Error posting player stats to Leaderboard",
+    const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
+
+    const updatedVisitorData = visitorData;
+    const visitorPlotData = visitorData.worlds[urlSlug];
+    if (visitorPlotData?.plotAssetId !== assetId) {
+      await DroppedAsset.get(assetId, urlSlug, { credentials }).catch(() => {
+        console.error("Visitor plot asset no longer in world");
+        // their plot is gone - clear from visitor data object for this world only so they can claim a new one
+        delete updatedVisitorData.worlds[urlSlug];
       });
     }
 
-    return res.json({ droppedAsset, isAdmin, success: true });
+    await visitor.fetchVisitor();
+
+    await visitor.updateDataObject(updatedVisitorData, {
+      analytics: [
+        {
+          analyticName: `plotDrawerViews-${plotAssetData.ownerId === profileId ? "self" : "non-self"}`,
+          profileId,
+          urlSlug,
+          uniqueKey: profileId,
+        },
+      ],
+    });
+
+    const getInventoryItemsResponse = await getInventoryItems(credentials);
+    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
+
+    const { decorations, seeds } = getInventoryItemsResponse;
+
+    /* Commenting out for now but may be used for wilting and losing crops in future
+    // Update crop growth levels for all crops
+    const updatedCrops = { ...visitorData.crops };
+    let hasUpdates = false;
+
+    for (const [cropAssetId, crop] of Object.entries(visitorData.crops)) {
+      const seedConfig = seeds[crop.seedId];
+      if (seedConfig) {
+        const currentGrowthLevel = calculateGrowthLevel(
+          crop.dateDropped,
+          seedConfig.growthTime,
+          seedConfig.harvestLevel,
+        );
+
+        if (currentGrowthLevel !== crop.growLevel) {
+          // Update growth level in memory
+          updatedCrops[cropAssetId] = {
+            ...crop,
+            growLevel: currentGrowthLevel,
+          };
+          hasUpdates = true;
+
+          try {
+            const droppedAsset = await DroppedAsset.create(cropAssetId, urlSlug, { credentials });
+            if (droppedAsset) {
+              const layer1 = getImageVariation(crop.seedId, currentGrowthLevel)
+              await droppedAsset.updateWebImageLayers("", layer1);
+            }
+          } catch (error) {
+            console.error("Failed to update dropped asset:", error);
+          }
+        }
+      }
+    }
+
+    // Save updated crop data if there were changes
+    if (hasUpdates) {
+      const visitor = await Visitor.get(visitorId, urlSlug, { credentials });
+      visitorData = { ...visitorData, crops: updatedCrops };
+      await visitor.updateDataObject(
+        { [urlSlug]: visitorData },
+        {
+          analytics: [{ analyticName: "cropGrowthUpdated" }],
+        },
+      );
+    }
+      */
+
+    return res.json({
+      success: true,
+      isAdmin: visitor.isAdmin,
+      plotAssetData,
+      visitorData,
+      visitorPlotData: visitorData.worlds[urlSlug],
+      visitorInventory,
+      decorations,
+      seeds,
+    });
   } catch (error) {
     return errorHandler({
       error,
-      functionName: "getDroppedAssetDetails",
-      message: "Error getting dropped asset instance and data object",
+      functionName: "handleGetGameState",
+      message: "Error getting game state",
       req,
       res,
     });

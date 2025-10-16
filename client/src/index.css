@@ -1,3 +1,50 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.available {
+  border-color: #999 !important;
+}
+
+.crop {
+  background: #d7c493 !important;
+  border-color: #af7e06 !important;
+}
+.crop:hover {
+  background: #af7e06 !important;
+  border-color: #d7c493 !important;
+}
+
+.decoration {
+  background: #fff6b6 !important;
+  border-color: #ffdc4b !important;
+}
+.decoration:hover {
+  background: #ffdc4b !important;
+  border-color: #fff6b6 !important;
+}
+
+.common {
+  color: #6c7c8c !important; /* text-muted */
+}
+.uncommon {
+  color: #00875a !important; /* text-success */
+}
+.rare {
+  color: #305bab !important;
+}
+.epic {
+  color: #6631d7 !important;
+}
+.legendary {
+  color: #fe9f4d !important;
+}
+
+.chip-muted {
+  background-color: #f5f5f5 !important;
+}
+
+.ellipsis {
+  text-overflow: ellipsis;
+  overflow: hidden;
+}

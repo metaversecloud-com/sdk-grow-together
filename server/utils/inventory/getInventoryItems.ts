@@ -1,0 +1,70 @@
+import { Ecosystem } from "../index.js";
+import { DecorationType, getRarity, SeedType } from "../../../shared/index.js";
+import { Credentials } from "../../types/Credentials.js";
+import { EcosystemItems } from "../../types/Types.js";
+import { standardizedError } from "../standardizedError.js";
+
+export const getInventoryItems = async (credentials: Credentials) => {
+  try {
+    const ecosystem = await Ecosystem.create({ credentials });
+    await ecosystem.fetchInventoryItems();
+
+    const allItems = ecosystem.inventoryItems as EcosystemItems[];
+
+    let decorations: { [key: string]: DecorationType } = {};
+    let seeds: { [key: string]: SeedType } = {};
+
+    for (const item of allItems) {
+      const rarity = getRarity(item.metadata?.rarity || 0);
+      if (item.metadata?.type === "decoration") {
+        decorations[item.id] = {
+          id: item.id,
+          name: item.name || "Unknown",
+          cost: item.metadata?.cost || 0,
+          icon: item.image_path || "",
+          rarity,
+          description: item.description || "",
+          sortOrder: item.metadata?.sortOrder || 0,
+        };
+      }
+      if (item.metadata?.type === "seed") {
+        seeds[item.id] = {
+          id: item.id,
+          name: item.name || "Unknown",
+          cost: item.metadata?.cost || 0,
+          rarity,
+          reward: item.metadata?.reward || 0,
+          growthTime: item.metadata?.growthTime || 0,
+          harvestLevel: item.metadata?.harvestLevel || 0,
+          icon: item.image_path || "",
+          sortOrder: item.metadata?.sortOrder || 0,
+        };
+      }
+    }
+
+    // Sort items by sortOrder while keeping them as objects
+    const sortedDecorations: { [key: string]: DecorationType } = {};
+    const sortedSeeds: { [key: string]: SeedType } = {};
+
+    // Sort decorations
+    Object.values(decorations)
+      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+      .forEach((decoration) => {
+        sortedDecorations[decoration.id] = decoration;
+      });
+
+    // Sort seeds
+    Object.values(seeds)
+      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+      .forEach((seed) => {
+        sortedSeeds[seed.id] = seed;
+      });
+
+    return {
+      decorations: sortedDecorations,
+      seeds: sortedSeeds,
+    };
+  } catch (error: any) {
+    return standardizedError(error);
+  }
+};

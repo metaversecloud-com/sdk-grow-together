@@ -1,9 +1,21 @@
 import express from "express";
 import {
-  handleDropAsset,
+  handleClaimPlot,
   handleGetGameState,
-  handleRemoveDroppedAssetsByUniqueName,
-  handleFireToast,
+  handleGetPlotSquareInfo,
+  handlePurchaseSeed,
+  handlePlantSeed,
+  handleHarvestCrop,
+  handleTeleportToPlot,
+  handleWaterCrop,
+  handlePlaceDecoration,
+  handleRemoveDecoration,
+  handleOpenPlotIframe,
+  handleRemoveCrop,
+  handlePurchaseDecoration,
+  handleOpenPlotSquareIframe,
+  handleClearPlot,
+  handleClearAllPlots,
 } from "./controllers/index.js";
 import { getVersion } from "./utils/getVersion.js";
 
@@ -28,12 +40,29 @@ router.get("/system/health", (req, res) => {
   });
 });
 
-// Dropped Assets
 router.get("/game-state", handleGetGameState);
-router.post("/dropped-asset", handleDropAsset);
-router.post("/remove-dropped-assets", handleRemoveDroppedAssetsByUniqueName);
 
-// World
-router.put("/world/fire-toast", handleFireToast);
+// admin routes
+router.post("/admin/clear-plot", handleClearPlot);
+router.post("/admin/clear-all-plots", handleClearAllPlots);
+
+// plot routes
+router.post("/plot/claim", handleClaimPlot);
+router.post("/plot/teleport", handleTeleportToPlot);
+router.post("/plot/view", handleOpenPlotIframe);
+router.post("/square/view", handleOpenPlotSquareIframe);
+router.get("/square", handleGetPlotSquareInfo);
+
+// crop routes
+router.post("/seed/purchase", handlePurchaseSeed);
+router.post("/crop/drop", handlePlantSeed);
+router.post("/crop/water", handleWaterCrop);
+router.post("/crop/harvest", handleHarvestCrop);
+router.post("/crop/remove", handleRemoveCrop);
+
+// decoration routes
+router.post("/decoration/purchase", handlePurchaseDecoration);
+router.post("/decoration/drop", handlePlaceDecoration);
+router.post("/decoration/remove", handleRemoveDecoration);
 
 export default router;

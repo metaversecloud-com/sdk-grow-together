@@ -1,51 +1,158 @@
-# README Template
-
-Please update the following in each of your SDK application.
+# Grow Together
 
 ## Introduction / Summary
 
-This boilerplate is meant to give you a simple starting point to build new features in Topia using our Javascript SDK. Please reference the [documentation](https://metaversecloud-com.github.io/mc-sdk-js/index.html) for a more detailed breakdown of what the SDK is capable of and how to use it!
+A relaxing, loop-based gardening game where players claim plots, plant seeds, grow crops, and harvest them to earn rewards. This interactive social experience allows players to visit each other's gardens, decorate their plots, and create a thriving community of gardeners.
 
 ## Key Features
 
-### Canvas elements & interactions
+### Core Gameplay
 
-- Key Asset: When clicked this asset will open the drawer and allow users and admins to start interacting with the app.
+- **Plot Management**: Claim and manage your own 4x4 garden plot in the world.
+- **Seed Variety**: Access a diverse collection of seeds with different growth times, rewards, and rarity levels.
+- **Real-time Growth**: Plants grow in real-time with multiple visual growth stages.
+- **Watering System**: Water your plants to keep them healthy and growing.
+- **Harvest Rewards**: Harvest mature crops to earn coins based on plant type and rarity.
+- **In-game Economy**: Use earned coins to purchase new seeds and decorative items.
 
-### Drawer content
+### Social Features
 
-- How to play instructions
-- Leaderboard
-- Admin features (see below)
+- **Garden Visiting**: Visit other players' gardens to see their designs and progress.
+- **Plot Teleportation**: Quickly teleport to your plot from anywhere in the world.
+- **Owner Recognition**: Each plot and plant shows the owner's name for recognition.
 
-### Admin features
+### Decoration System
 
-_Does your app have special admin functionality? If so your key features may looks something like this:_
+- **Decorative Items**: Purchase and place a variety of decorative items to personalize your garden.
+- **Item Categories**: Various decoration types including animals, garden accessories, and more.
+- **Rarity Levels**: Common, Uncommon, and Rare items with corresponding coin costs.
 
-- Access: Click on the key asset to open the drawer and then select the Admin tab. Any changes you make here will only affect this instance of the application and will not impact other instances dropped in this or other worlds.
-- Theme selection: Use the dropdown to select a theme.
-- Reset: Click on the Reset button to clear the active game state and rebuild the game board in it's default state.
+### Admin Tools
 
-### Themes description
+- **Plot Management**: Admins can clear individual plots or all plots in a world.
 
-- Winter (default): A snowy theme that when selected will drop snowflakes throughout the scene
-- Spring: A garden theme that when selected will drop flowers throughout the scene
+## Technical Architecture
 
-### Data objects
+The app uses a combination of data objects, dropped assets, and interactive elements to create a persistent garden experience.
+
+### Data Objects
 
 _We use data objects to store information about each implementation of the app per world._
 
-- Key Asset: the data object attached to the dropped key asset will store information related to this specific implementation of the app and would be deleted if the key asset is removed from world. Example data:
-  - isResetInProgress
-  - lastInteraction
-  - lastPlayerTurn
-  - playerCount
-  - resetCount
-  - turnCount
-- World: the data object attached to the world will store information for every instance of the app in a given world by keyAssetId or sceneDropId and will persist even if a specific instance is removed from world. Example data:
-  - config (`${sceneDropId}.config`)
+### World
 
-## Developers:
+The data object attached to the world stores ownership information about all plots in the world.
+
+```ts
+{
+  claimedPlots: {
+    [plotAssetId: string]: string | null; // profileId of owner or null if unclaimed
+  };
+};
+```
+
+### Plot Assets
+
+The data objects attached to the dropped plot assets store information related to each specific plot.
+
+```ts
+{
+  ownerId?: string; // profileId of the owner
+  ownerName?: string; // displayName of the owner
+  claimedDate?: string; // ISO date string when the plot was claimed
+};
+```
+
+### Crop Assets
+
+The data objects attached to the dropped crop assets store information related to each specific crop.
+
+```ts
+{
+  ownerId: string; // profileId of the owner
+  ownerName: string; // displayName of the owner
+  dateDropped: string; // When the crop was planted
+  lastWatered: string; // When the crop was last watered
+  seedId: string; // ID of the seed that was planted
+  growLevel: number; // Current growth level (0-10)
+  squareId: number; // Which square in the plot (0-15)
+}
+```
+
+### Decoration Assets
+
+The data objects attached to the dropped decoration assets.
+
+```ts
+{
+  decorationId: string; // ID of the decoration
+  ownerId?: string; // profileId of the owner
+  ownerName?: string; // displayName of the owner
+  dateDropped: string; // When the decoration was placed
+  squareId: number; // Which square in the plot (0-15)
+}
+```
+
+### Visitors
+
+The data object attached to the visitor stores ecosystem information for each visitor as well as plot ownership information per world keyed by `urlSlug`.
+
+```ts
+{
+  lastDateCoinsEarned: string; // ISO date string when coins were last earned
+  totalCoinsEarned: number; // Lifetime coins earned (for unlocks)
+  worlds: {
+    plotAssetId: string | null;
+    claimedDate: string;
+    plotSquares: {
+      [squareId: number]: string | null; // droppedAssetId of crop or null if empty
+    };
+    crops: {
+      [droppedAssetId: string]: CropDataObjectType;
+    };
+    decorations: {
+      [droppedAssetId: string]: PlacedDecorationDataObjectType;
+    };
+  };
+};
+```
+
+## API Endpoints
+
+The application exposes the following API endpoints:
+
+### Game State
+
+- `GET /game-state` - Get the current game state for a visitor
+
+### Admin Routes
+
+- `POST /admin/clear-plot` - Clear a specific plot (admin only)
+- `POST /admin/clear-all-plots` - Clear all plots in the world (admin only)
+
+### Plot Management
+
+- `POST /plot/claim` - Claim ownership of a plot
+- `POST /plot/teleport` - Teleport to a plot
+- `POST /plot/view` - Open plot iframe view
+- `POST /square/view` - Open plot square iframe view
+- `GET /square` - Get information about a specific plot square
+
+### Crop Management
+
+- `POST /seed/purchase` - Purchase a seed
+- `POST /crop/drop` - Plant a seed in a plot square
+- `POST /crop/water` - Water a growing crop
+- `POST /crop/harvest` - Harvest a fully grown crop
+- `POST /crop/remove` - Remove a crop from a plot
+
+### Decoration Management
+
+- `POST /decoration/purchase` - Purchase a decoration
+- `POST /decoration/drop` - Place a decoration in a plot square
+- `POST /decoration/remove` - Remove a decoration from a plot
+
+## For Developers
 
 ### Built With
 
@@ -54,7 +161,6 @@ _We use data objects to store information about each implementation of the app p
 ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
 ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
-![SDK Styles](https://sdk-style.s3.amazonaws.com/example.html)
 ![Tailwind CSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
 
 #### Server
@@ -64,15 +170,34 @@ _We use data objects to store information about each implementation of the app p
 
 ### Getting Started
 
-- Clone this repository
-- Run `npm i` in server
-- `cd client`
-- Run `npm i` in client
-- `cd ..` back to server
+1. **Clone the repository and install dependencies**
 
-### Add your .env environmental variables
+```bash
+git clone https://github.com/metaversecloud-com/sdk-grow-together.git
+cd sdk-bounty-builder
+npm install
+```
 
-```json
+2. **Install server dependencies**
+
+```bash
+cd server
+npm install
+cd ..
+```
+
+3. **Install client dependencies**
+
+```bash
+cd client
+npm install
+cd ..
+```
+
+4. **Configure environment variables**
+   Create a `.env` file in the root directory with the following:
+
+```
 API_KEY=xxxxxxxxxxxxx
 INSTANCE_DOMAIN=api.topia.io
 INSTANCE_PROTOCOL=https
@@ -86,32 +211,7 @@ INTERACTIVE_SECRET=xxxxxxxxxxxxxx
 
 [Topia Production Account Dashboard](https://topia.io/t/dashboard/integrations)
 
-### Helpful links
+### Resources
 
-- [SDK Developer docs](https://metaversecloud-com.github.io/mc-sdk-js/index.html)
-- [View it in action!](topia.io/appname-prod)
-- To see an example of an on canvas turn based game check out TicTacToe:
-  - (github))[https://github.com/metaversecloud-com/sdk-tictactoe]
-  - (demo))[https://topia.io/tictactoe-prod]
-
-## New for June 2025: Multiplayer Experience Engine
-
-Topia has developed a powerful new Experience Engine that enables extremely low-latency, interactive in-canvas multiplayer experiences. This engine is purpose-built for real-time interaction and supports a wide range of dynamic behaviors, making it ideal for collaborative activities, games, and social experiences within Topia worlds.
-
-### Key Features
-
-- Ultra Low Latency: Real-time feedback for seamless multi-user interaction and state synchronization.
-- Physics & Collision: Includes a robust physics and collision system to support realistic and responsive behaviors.
-- Real-Time Interactivity: Supports dynamic responses to user input and environmental changes inside the canvas.
-- Optimized for the Web: Engineered to perform smoothly across browser-based environments with minimal resource impact.
-
-### SDK Integration: Leverage the SDK inside the Experience Engine to:
-
-- Trigger visual/audio effects based on real-time interactions
-- Save and persist spatial data, such as object positions or interaction states
-
-This engine unlocks a whole new layer of interactivity, paving the way for creative, immersive experiences including educational tools, multiplayer games, or collaborative activities.
-
-### Get In Touch
-
-To sign up for the experience engine private beta, visit https://topia.io/p/game-engine.
+- [SDK Developer Documentation](https://metaversecloud-com.github.io/mc-sdk-js/index.html)
+- [Topia Interactive Apps Overview](https://topia.io/developers)
