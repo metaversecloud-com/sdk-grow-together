@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect, useRef } from "react";
+import { useContext, useState, useEffect } from "react";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
@@ -36,8 +36,8 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
   const harvestAudio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/harvest_coins.mp3");
 
   // Set default volume for both audio elements (0.0 to 1.0)
-  waterAudio.volume = 0.7; // 70% volume
-  harvestAudio.volume = 0.9; // 90% volume
+  waterAudio.volume = 0.5; // 50% volume
+  harvestAudio.volume = 0.7; // 70% volume
 
   // Update timeRemaining every second until ready for harvest or harvested
   useEffect(() => {

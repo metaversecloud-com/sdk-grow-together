@@ -25,7 +25,7 @@ export const PurchaseItem = ({
 }: PurchaseItemProps) => {
   const affordable = coinsAvailable >= cost;
   return (
-    <div key={id} className="card">
+    <div key={id} className="card menu-card">
       <img className="mx-auto" src={icon} style={{ maxHeight: "100px" }} />
       <div className="card-details">
         <div className="tooltip" style={{ maxWidth: "100%" }}>
@@ -41,7 +41,7 @@ export const PurchaseItem = ({
           <p className="p3 text-success">{value}</p>
         </div>
         <p className="p3 text-muted">
-          <i>Price: {cost} Coins</i>
+          <i>Price: {cost}</i>
         </p>
 
         <div className="card-actions">

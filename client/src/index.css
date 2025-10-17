@@ -48,3 +48,7 @@
   text-overflow: ellipsis;
   overflow: hidden;
 }
+
+.menu-card {
+  padding: 10px !important;
+}
