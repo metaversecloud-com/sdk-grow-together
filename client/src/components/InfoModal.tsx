@@ -7,14 +7,34 @@ export const InfoModal = ({ setShowInfoModal }: { setShowInfoModal: () => void }
         <ModalHeader text="How to Play" disabled={false} handleOnClick={setShowInfoModal} />
 
         <div className="grid gap-4">
-          <p className="p2">Welcome to the relaxing garden game! Here's how to get started:</p>
+          <p className="p2">Congratulations on starting your garden!</p>
 
           <div className="card small">
             <div className="card-details">
-              <h4 className="card-title">1. Claim a Plot</h4>
+              <h4 className="card-title">Get Seeds</h4>
               <p className="card-description p3">
-                Find an empty plot in the world and click on it. Then click "Claim This Plot" to make it yours. You can
-                only own one plot per account.
+                Some seeds are free while others cost coins. You start with 0 coins, so plant free seeds first and start
+                harvesting to earn coins!
+              </p>
+            </div>
+          </div>
+
+          <div className="card small">
+            <div className="card-details">
+              <h4 className="card-title">Plant & Water</h4>
+              <p className="card-description p3">
+                Plant seeds in your plot grid and see them added to your garden. Click on a plant to view it's details
+                and water it.
+              </p>
+            </div>
+          </div>
+
+          <div className="card small">
+            <div className="card-details">
+              <h4 className="card-title">Harvest & Earn</h4>
+              <p className="card-description p3">
+                When crops are fully grown, click on them and harvest for coins! Use your earnings to unlock more
+                expensive seeds or buy decorations to beautify your garden.
               </p>
             </div>
           </div>
