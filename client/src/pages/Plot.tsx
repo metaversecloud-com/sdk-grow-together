@@ -71,7 +71,7 @@ export const Plot = () => {
   };
 
   return (
-    <PageContainer isLoading={isLoading} headerText={headerText}>
+    <PageContainer isLoading={isLoading} headerText={headerText} showInfoIcon={isOwnedByCurrentUser}>
       <div className="container">
         {/* Current user's plot */}
         {isOwnedByCurrentUser && plotAssetId && (
