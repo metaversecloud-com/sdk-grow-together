@@ -14,6 +14,8 @@ export const SeedMenu = ({ onClose }: { onClose: () => void }) => {
   const dispatch = useContext(GlobalDispatchContext);
   const { visitorInventory = {}, seeds } = useContext(GlobalStateContext);
 
+  const availableSeeds = seeds && Object.values(seeds).filter((seed) => !visitorInventory?.[seed.name]);
+
   const [purchasingSeeds, setPurchasingSeeds] = useState<Set<string>>(new Set());
   const [isPurchasing, setIsPurchasing] = useState(false);
 
@@ -52,12 +54,10 @@ export const SeedMenu = ({ onClose }: { onClose: () => void }) => {
 
         <YourMoney coinsAvailable={visitorInventory["Coins"]?.quantity || 0} />
 
-        <div className="grid grid-cols-2 gap-2">
-          {seeds &&
-            Object.values(seeds).map((seed) => {
+        {availableSeeds && availableSeeds.length > 0 ? (
+          <div className="grid grid-cols-2 gap-2">
+            {availableSeeds.map((seed) => {
               const { id, name, rarity, cost, growthTime, reward } = seed;
-
-              if (visitorInventory?.[name]) return null;
 
               return (
                 <PurchaseItem
@@ -69,13 +69,19 @@ export const SeedMenu = ({ onClose }: { onClose: () => void }) => {
                   description={formatTime(growthTime)}
                   rarity={rarity}
                   cost={cost}
-                  value={`Profit: +${reward} coins`}
+                  value={`Profit: +${reward}`}
                   isPurchasing={purchasingSeeds.has(id)}
                   handlePurchase={() => handlePurchaseSeed(id)}
                 />
               );
             })}
-        </div>
+          </div>
+        ) : (
+          <p className="p2">
+            Nice work, you've already purchased all currently available seeds! Check back again later to see if new
+            seeds have been added to the store.
+          </p>
+        )}
       </div>
     </div>
   );

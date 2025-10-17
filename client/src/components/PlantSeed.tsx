@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 
 // components
-import { Loading, ModalHeader } from "@/components";
+import { ModalHeader } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
@@ -34,6 +34,7 @@ export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot
   }, [visitorInventory, seeds]);
 
   const plantAudio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/crop_planted.mp3");
+  plantAudio.volume = 0.8; // 70% volume
 
   const handlePlantSeed = async (seedId: string) => {
     if (!seedId || selectedSquare === null) return;
@@ -89,7 +90,7 @@ export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot
               const isAvailable = seed.cost === 0 || visitorInventory[seed.name]?.quantity > 0;
               if (!isAvailable) return null;
 
-              let buttonClass = "card card-horizontal";
+              let buttonClass = "card card-horizontal menu-card";
               if (isAvailable && !isPlanting) buttonClass += " cursor-pointer available";
 
               return (
