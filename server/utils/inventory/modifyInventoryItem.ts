@@ -25,7 +25,6 @@ export const modifyVisitorInventoryItem = async ({
       updatedQuantity = updatedItem.quantity;
     } else {
       const inventoryItem = await getInventoryItem(credentials, name);
-      console.log("🚀 ~ modifyInventoryItem.ts:28 ~ inventoryItem:", inventoryItem);
       if (inventoryItem instanceof Error) throw inventoryItem;
 
       const newItem = await visitor.grantInventoryItem(inventoryItem, quantity);

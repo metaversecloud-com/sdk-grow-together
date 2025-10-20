@@ -47,9 +47,7 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
       const lastWateredTime = new Date(lastWatered).getTime();
       const currentTime = new Date().getTime();
       const elapsedSeconds = (currentTime - lastWateredTime) / 1000;
-      const timePerLevel = growthTime / harvestLevel;
-      const timeForNextLevel = (growLevel + 1) * timePerLevel;
-      const remainingSeconds = Math.max(0, timeForNextLevel - elapsedSeconds);
+      const remainingSeconds = Math.max(0, growthTime - elapsedSeconds);
 
       if (!wasHarvested) {
         if (growLevel >= harvestLevel) setReadyForHarvest(true);
@@ -60,6 +58,7 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
     };
 
     const updateCountdown = () => {
+      if (readyForWater) return;
       const remainingSeconds = getSecondsRemaining();
 
       if (remainingSeconds <= 0) return setTimeRemaining(null);

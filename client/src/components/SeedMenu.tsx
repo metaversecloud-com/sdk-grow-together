@@ -57,7 +57,7 @@ export const SeedMenu = ({ onClose }: { onClose: () => void }) => {
         {availableSeeds && availableSeeds.length > 0 ? (
           <div className="grid grid-cols-2 gap-2">
             {availableSeeds.map((seed) => {
-              const { id, name, rarity, cost, growthTime, reward } = seed;
+              const { id, name, rarity, cost, growthTime, harvestLevel, reward } = seed;
 
               return (
                 <PurchaseItem
@@ -66,10 +66,11 @@ export const SeedMenu = ({ onClose }: { onClose: () => void }) => {
                   id={id}
                   icon={seeds[id].icon}
                   name={name}
-                  description={formatTime(growthTime)}
+                  description={formatTime(growthTime * harvestLevel)}
                   rarity={rarity}
                   cost={cost}
-                  value={`Profit: +${reward}`}
+                  value={reward}
+                  valueText="Profit:"
                   isPurchasing={purchasingSeeds.has(id)}
                   handlePurchase={() => handlePurchaseSeed(id)}
                 />

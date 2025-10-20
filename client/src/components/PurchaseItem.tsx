@@ -6,7 +6,8 @@ interface PurchaseItemProps {
   description?: string;
   rarity: string;
   cost: number;
-  value: string;
+  value: number;
+  valueText: string;
   isPurchasing: boolean;
   handlePurchase: (id: string) => void;
 }
@@ -20,6 +21,7 @@ export const PurchaseItem = ({
   rarity,
   cost,
   value,
+  valueText,
   isPurchasing,
   handlePurchase,
 }: PurchaseItemProps) => {
@@ -38,7 +40,9 @@ export const PurchaseItem = ({
             <i>{rarity}</i>
           </p>
           {description && <p className="p3">{description}</p>}
-          <p className="p3 text-success">{value}</p>
+          <p className="p3">
+            {valueText}: <span className="text-success">{value}</span>
+          </p>
         </div>
         <p className="p3 text-muted">
           <i>Price: {cost}</i>
