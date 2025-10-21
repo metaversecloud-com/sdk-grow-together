@@ -36,8 +36,10 @@ export const handleGetGameState = async (req: Request, res: Response) => {
 
     const updatedVisitorData = visitorData;
     const visitorPlotData = visitorData.worlds[urlSlug];
-    if (visitorPlotData?.plotAssetId !== assetId) {
-      await DroppedAsset.get(assetId, urlSlug, { credentials }).catch(() => {
+    if (visitorPlotData.plotAssetId && visitorPlotData.plotAssetId !== assetId) {
+      await DroppedAsset.get(visitorPlotData.plotAssetId, urlSlug, {
+        credentials: { ...credentials, assetId: visitorPlotData.plotAssetId },
+      }).catch(() => {
         console.error("Visitor plot asset no longer in world");
         // their plot is gone - clear from visitor data object for this world only so they can claim a new one
         delete updatedVisitorData.worlds[urlSlug];
