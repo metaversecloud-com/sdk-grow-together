@@ -73,6 +73,7 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
             }),
           );
           promises.push(plotAsset.updateWebImageLayers("", `${s3URL}/OpenGardenSign.png`));
+          promises.push(plotAsset.setDataObject({}));
 
           newPlotAssetIds.push(plotAsset.id!);
         }

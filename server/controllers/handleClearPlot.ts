@@ -82,6 +82,7 @@ export const handleClearPlot = async (req: Request, res: Response) => {
       }),
     );
     promises.push(plotAsset.updateWebImageLayers("", `${s3URL}/OpenGardenSign.png`));
+    promises.push(plotAsset.setDataObject({}));
 
     // Update world data to add this plot to claimed plots and remove original assetId
     const world = await World.create(urlSlug, { credentials });
