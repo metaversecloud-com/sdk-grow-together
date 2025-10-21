@@ -53,7 +53,7 @@ export const Home = () => {
           <Accordion title="Looking for your garden?">
             <p className="p2">Howdy, gardener! You already have a garden. Click the button below to teleport to it.</p>
 
-            <button className="btn mt-4" onClick={() => handleTeleportToPlot()}>
+            <button className="btn" onClick={() => handleTeleportToPlot()}>
               Teleport to My Garden
             </button>
           </Accordion>
@@ -61,8 +61,7 @@ export const Home = () => {
 
         <Accordion title="Need a garden? Start here.">
           <p className="p2">
-            <b>Find a garden with an "Open Garden" sign.</b>
-            Click it and then click "Start Your Garden" to get started.
+            <b>Find a garden with an "Open Garden" sign.</b> Click it and then click "Start Your Garden" to get started.
           </p>
         </Accordion>
 
