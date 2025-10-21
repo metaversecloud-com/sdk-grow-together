@@ -47,11 +47,11 @@ export const Home = () => {
   return (
     <PageContainer isLoading={isLoading}>
       <div className="container grid gap-2">
-        <img src={`${s3URL}/GrowTogetherLogo.png`} alt="Grow Together Logo" style={{ height: "220px" }} />
+        <img src={`${s3URL}/Logo.png`} alt="Grow Together Logo" style={{ height: "220px" }} />
 
         {plotAssetId && !isOwnedByCurrentUser && (
           <Accordion title="Looking for your garden?">
-            <p>Howdy, gardener! You already have a garden. Click the button below to teleport to it.</p>
+            <p className="p2">Howdy, gardener! You already have a garden. Click the button below to teleport to it.</p>
 
             <button className="btn mt-4" onClick={() => handleTeleportToPlot()}>
               Teleport to My Garden
@@ -60,7 +60,7 @@ export const Home = () => {
         )}
 
         <Accordion title="Need a garden? Start here.">
-          <p>
+          <p className="p2">
             <b>Find a garden with an "Open Garden" sign.</b>
             Click it and then click "Start Your Garden" to get started.
           </p>

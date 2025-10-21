@@ -93,7 +93,7 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly }: 
     if (!crop || !seedConfig) return false;
 
     if (crop.growLevel >= seedConfig.harvestLevel) {
-      return <p className="p4 text-success">Harvest!</p>;
+      return <p className="p4">Harvest!</p>;
     }
 
     const remainingSeconds = getSecondsRemaining(crop.lastWatered, seedConfig.growthTime);
