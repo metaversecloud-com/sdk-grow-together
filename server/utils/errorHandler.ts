@@ -15,6 +15,8 @@ export const errorHandler = ({
     const reqQueryParams = req?.query;
     if (reqQueryParams?.interactiveNonce) delete reqQueryParams.interactiveNonce;
 
+    let msg = message;
+
     console.error(
       JSON.stringify({
         errorContext: {
@@ -30,7 +32,11 @@ export const errorHandler = ({
       }),
     );
 
-    if (res) return res.status(error.status || 500).send({ error, message, success: false });
+    if (error?.originalError?.message === "Invalid session token") {
+      msg = "You've been gone for awhile! Please refresh the page to keep playing.";
+    }
+
+    if (res) return res.status(error.status || 500).send({ error, message: msg, success: false });
     return { error };
   } catch (e) {
     console.error("❌ Error printing the logs", e);

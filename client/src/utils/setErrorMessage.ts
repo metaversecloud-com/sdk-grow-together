@@ -7,11 +7,9 @@ export const setErrorMessage = (
     | string
     | {
         message?: string;
-        response?: { data?: { error?: { message?: string }; message?: string } };
+        response?: { data?: { error?: { message?: string }; message?: string; status?: number } };
       },
 ) => {
-  console.error(error);
-
   if (!dispatch) return;
 
   let message = error;
@@ -22,6 +20,6 @@ export const setErrorMessage = (
 
   dispatch({
     type: SET_ERROR,
-    payload: { error: error === "" ? error : `Error: ${JSON.stringify(message)}` },
+    payload: { error: error === "" ? error : `Error: ${message}` },
   });
 };
