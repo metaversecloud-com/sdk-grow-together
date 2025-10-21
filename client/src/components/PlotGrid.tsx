@@ -8,10 +8,10 @@ import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalConte
 import { ErrorType, SET_VISITOR_DATA, SET_VISITOR_INVENTORY, SET_VISITOR_PLOT_DATA } from "@/context/types";
 
 // types
-import { plotConfig, VisitorInventoryType, VisitorWorldDataType } from "@shared/index.js";
+import { CropDataObjectType, plotConfig, SeedType, VisitorInventoryType, VisitorWorldDataType } from "@shared/index.js";
 
 // utils
-import { backendAPI, setErrorMessage } from "@/utils";
+import { backendAPI, getSecondsRemaining, setErrorMessage } from "@/utils";
 
 interface PlotGridProps {
   plotSquares: { [key: number]: string | null };
@@ -21,7 +21,7 @@ interface PlotGridProps {
   visitorInventory?: VisitorInventoryType;
 }
 
-export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly, visitorInventory }: PlotGridProps) => {
+export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly }: PlotGridProps) => {
   const dispatch = useContext(GlobalDispatchContext);
   const { decorations = {}, seeds = {} } = useContext(GlobalStateContext);
 
@@ -89,6 +89,19 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly, vi
       });
   };
 
+  const getIsReadyText = (crop: CropDataObjectType, seedConfig: SeedType) => {
+    if (!crop || !seedConfig) return false;
+
+    if (crop.growLevel >= seedConfig.harvestLevel) {
+      return "Harvest!";
+    }
+
+    const remainingSeconds = getSecondsRemaining(crop.lastWatered, seedConfig.growthTime);
+    if (remainingSeconds <= 0) return "Water!";
+
+    return null;
+  };
+
   const renderSquare = (squareId: number) => {
     const squareAssetId = plotSquares[squareId];
     const crop = squareAssetId ? crops[squareAssetId] : null;
@@ -120,11 +133,11 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly, vi
         <div className="card-details text-center">
           {crop ? (
             <div>
-              <img className="m-auto" src={seeds[crop.seedId].icon} />
+              <img className="m-auto" src={seeds[crop.seedId].icon} style={{ maxHeight: "35px" }} />
               <p className="p3">
-                lvl {crop.growLevel}/{seeds[crop.seedId]?.harvestLevel || 10}
+                lvl {crop.growLevel}/{seeds[crop.seedId]?.harvestLevel}
               </p>
-              {crop.growLevel >= (seeds[crop.seedId]?.harvestLevel || 10) && <p className="p4 text-success">Ready!</p>}
+              <p className="p4 text-success">{getIsReadyText(crop, seeds[crop.seedId])}</p>
             </div>
           ) : decoration ? (
             <img className="m-auto" src={decorations[decoration.decorationId]?.icon} />
@@ -151,7 +164,7 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly, vi
       name = seeds[crop.seedId].name;
       title = `${name} in Slot ${selectedSquare!}`;
       icon = seeds[crop.seedId].icon;
-      harvestLevel = seeds[crop.seedId]?.harvestLevel || 10;
+      harvestLevel = seeds[crop.seedId].harvestLevel || 10;
       type = "crop";
     } else if (decoration) {
       name = decorations[decoration.decorationId]?.name;
@@ -170,14 +183,14 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly, vi
               handleCancelRemove();
             }}
           />
-          <div className="card m-auto" style={{ width: "auto" }}>
+          <div className="card menu-card m-auto" style={{ height: "95px", width: "95px" }}>
             {crop ? (
               <div>
                 <img className="m-auto" src={icon} />
                 <p className="p3">
                   lvl {crop.growLevel}/{harvestLevel || 10}
                 </p>
-                {crop.growLevel >= (harvestLevel || 10) && <p className="p4 text-success">Ready!</p>}
+                <p className="p4 text-success">{getIsReadyText(crop, seeds[crop.seedId])}</p>
               </div>
             ) : decoration ? (
               <img className="m-auto" src={icon} />
@@ -207,8 +220,23 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly, vi
 
   return (
     <div>
-      <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
-        {Array.from({ length: plotConfig.gridCols * plotConfig.gridRows }, (_, i) => renderSquare(i + 1))}
+      {/* Decorations Grid */}
+      <div className="mb-4">
+        <h5 className="mb-2">Decorations</h5>
+        <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
+          {plotConfig.reservedSquares.map((squareId) => renderSquare(squareId))}
+        </div>
+      </div>
+
+      {/* Crops Grid */}
+      <div className="mb-4">
+        <h5 className="mb-2">Crops</h5>
+        <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
+          {Array.from(
+            { length: plotConfig.gridCols * plotConfig.gridRows - plotConfig.reservedSquares.length },
+            (_, i) => renderSquare(i + 1 + plotConfig.reservedSquares.length),
+          )}
+        </div>
       </div>
 
       {!isReadOnly && selectedSquare !== null && !plotSquares[selectedSquare] && (

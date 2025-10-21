@@ -15,6 +15,6 @@ export const calculateSquarePosition = (plotPosition: { x: number; y: number }, 
 
   return {
     x: plotPosition.x + offsetX,
-    y: plotPosition.y + offsetY,
+    y: plotPosition.y + offsetY + 330,
   };
 };

@@ -6,6 +6,7 @@ import {
   DroppedAsset,
   World,
   getInventoryItems,
+  getAnalyticName,
 } from "../utils/index.js";
 import { getSeedImageVariation } from "../../shared/index.js";
 import { plotConfig } from "../../shared/constants/plotConfig.js";
@@ -56,7 +57,7 @@ export const handleWaterCrop = async (req: Request, res: Response) => {
           uniqueKey: profileId,
         },
         {
-          analyticName: `${seedConfig.name.toLowerCase()}Watered`,
+          analyticName: `${getAnalyticName(seedConfig)}Watered`,
           profileId,
           urlSlug,
           uniqueKey: profileId,

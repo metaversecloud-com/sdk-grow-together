@@ -7,12 +7,10 @@ import {
   Visitor,
   DEFAULT_VISITOR_WORLD_DATA,
   User,
-  Asset,
   getBaseUrl,
   modifyUserInventoryItem,
-  dropKeyAsset,
 } from "../utils/index.js";
-import { PlotAssetDataObjectType, VisitorDataObjectType, WorldDataObjectType } from "../types/index.js";
+import { PlotAssetDataObjectType, VisitorDataObjectType } from "../types/index.js";
 import { DroppedAssetClickType, VisitorInterface } from "@rtsdk/topia";
 import { s3URL } from "../../shared/index.js";
 
@@ -36,14 +34,6 @@ export const handleClearPlot = async (req: Request, res: Response) => {
     let plotAssetData = plotAsset.dataObject as PlotAssetDataObjectType;
     if (!plotAssetData.ownerId) throw `This plot is not owned by anyone.`;
 
-    const dropKeyAssetResponse = await dropKeyAsset({
-      credentials,
-      hostname: req.hostname,
-      position: plotAsset.position,
-    });
-    if (dropKeyAssetResponse instanceof Error) throw dropKeyAssetResponse;
-    const { droppedSignAsset } = dropKeyAssetResponse;
-
     const plotOwner = await User.create({ credentials, profileId: plotAssetData.ownerId });
     const ownerData = (await plotOwner.fetchDataObject()) as VisitorDataObjectType;
     const ownerWorldData = ownerData.worlds?.[urlSlug];
@@ -66,31 +56,39 @@ export const handleClearPlot = async (req: Request, res: Response) => {
       (droppedAssetId): droppedAssetId is string => !!droppedAssetId,
     );
 
+    if (ownerWorldData.plotSignAssetId) droppedAssetIds.push(ownerWorldData.plotSignAssetId);
+
     if (droppedAssetIds.length > 0) {
       promises.push(World.deleteDroppedAssets(urlSlug, droppedAssetIds, process.env.INTERACTIVE_SECRET!, credentials));
     }
 
     // Reset visitor data for this world to defaults
+    ownerData.worlds[urlSlug] = DEFAULT_VISITOR_WORLD_DATA;
     promises.push(
-      plotOwner.updateDataObject(
-        { [`worlds.${urlSlug}`]: DEFAULT_VISITOR_WORLD_DATA },
-        {
-          analytics: [{ analyticName: "plotsCleared" }],
-        },
-      ),
+      plotOwner.updateDataObject(ownerData, {
+        analytics: [{ analyticName: "plotsCleared" }],
+      }),
     );
+
+    // Update dropped sign asset image and link
+    const baseUrl = getBaseUrl(req.hostname);
+    const clickableLink = `${baseUrl}/plot`;
+    promises.push(
+      plotAsset.updateClickType({
+        clickType: DroppedAssetClickType.LINK,
+        clickableLink,
+        clickableLinkTitle: "Available Garden",
+        isOpenLinkInDrawer: true,
+      }),
+    );
+    promises.push(plotAsset.updateWebImageLayers("", `${s3URL}/OpenGardenSign.png`));
 
     // Update world data to add this plot to claimed plots and remove original assetId
     const world = await World.create(urlSlug, { credentials });
-    const worldDataObject = (await world.fetchDataObject()) as WorldDataObjectType;
-    delete worldDataObject.claimedPlots[assetId];
 
     promises.push(
       world.updateDataObject({
-        claimedPlots: {
-          ...worldDataObject.claimedPlots,
-          [droppedSignAsset.id!]: null,
-        },
+        [`claimedPlots.${assetId}`]: null,
       }),
     );
 
@@ -103,8 +101,6 @@ export const handleClearPlot = async (req: Request, res: Response) => {
         message: "Error closing iframe",
       });
     });
-
-    await plotAsset.deleteDroppedAsset();
 
     return res.json({
       success: true,

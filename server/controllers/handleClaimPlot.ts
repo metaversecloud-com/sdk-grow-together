@@ -10,7 +10,7 @@ import {
   Asset,
 } from "../utils/index.js";
 import { PlotAssetDataObjectType, WorldDataObjectType } from "../types/index.js";
-import { calculateNumberOfSquares } from "../../shared/index.js";
+import { calculateNumberOfSquares, s3URL } from "../../shared/index.js";
 import { DroppedAssetClickType } from "@rtsdk/topia";
 
 /**
@@ -45,20 +45,13 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
 
     const title = `${displayName}'s Plot`;
 
+    // Add owner text asset below the plot
     const asset = Asset.create("textAsset", { credentials });
-    const baseUrl = getBaseUrl(req.hostname);
-    const clickableLink = `${baseUrl}/plot?ownerName=${encodeURIComponent(displayName)}&ownerProfileId=${profileId}`;
     const droppedTextAsset = await DroppedAsset.drop(asset, {
-      clickType: DroppedAssetClickType.LINK,
-      clickableLink,
-      clickableLinkTitle: title,
-      isInteractive: true,
-      interactivePublicKey: credentials.interactivePublicKey,
-      isOpenLinkInDrawer: true,
-      position: plotAsset.position,
+      position: { x: plotAsset.position.x, y: plotAsset.position.y + 580 },
       isTextTopLayer: true,
       text: title,
-      uniqueName: `GrowTogether_plot`,
+      uniqueName: `GrowTogether_ownerText`,
       urlSlug,
     });
 
@@ -92,24 +85,30 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       ownerName: displayName,
       claimedDate,
     };
-    promises.push(droppedTextAsset.setDataObject(plotAssetData));
+    promises.push(plotAsset.setDataObject(plotAssetData));
 
     // Update visitor's data object
     const visitorPlotData = {
-      plotAssetId: droppedTextAsset.id,
+      plotAssetId: plotAsset.id,
+      plotSignAssetId: droppedTextAsset.id,
       claimedDate,
       plotSquares,
       crops: {},
       decorations: {},
     };
 
+    const updatedVisitorData = {
+      ...visitorData,
+      worlds: {
+        ...visitorData.worlds,
+        [urlSlug]: visitorPlotData,
+      },
+    };
+
     promises.push(
-      visitor.updateDataObject(
-        { [`worlds.${urlSlug}`]: visitorPlotData },
-        {
-          analytics: [{ analyticName: "plotsClaimed", profileId, urlSlug, uniqueKey: profileId }],
-        },
-      ),
+      visitor.updateDataObject(updatedVisitorData, {
+        analytics: [{ analyticName: "plotsClaimed", profileId, urlSlug, uniqueKey: profileId }],
+      }),
     );
 
     // Update world data to add this plot to claimed plots and remove original assetId
@@ -121,25 +120,29 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       world.updateDataObject({
         claimedPlots: {
           ...worldDataObject.claimedPlots,
-          [droppedTextAsset.id!]: profileId,
+          [plotAsset.id!]: profileId,
         },
       }),
     );
 
-    const updatedVisitorData = {
-      ...visitorData,
-      worlds: {
-        ...visitorData.worlds,
-        [urlSlug]: visitorPlotData,
-      },
-    };
+    const baseUrl = getBaseUrl(req.hostname);
+    const clickableLink = `${baseUrl}/plot?ownerName=${encodeURIComponent(displayName)}&ownerProfileId=${profileId}`;
+    promises.push(
+      plotAsset.updateClickType({
+        clickType: DroppedAssetClickType.LINK,
+        clickableLink,
+        clickableLinkTitle: title,
+        isOpenLinkInDrawer: true,
+      }),
+    );
+    promises.push(plotAsset.updateWebImageLayers("", `${s3URL}/ViewGardenSign.png`));
 
     await Promise.all(promises);
 
     await visitor
       .openIframe({
-        droppedAssetId: droppedTextAsset.id!,
-        link: `${clickableLink}&assetId=${droppedTextAsset.id!}`,
+        droppedAssetId: assetId,
+        link: `${clickableLink}&assetId=${droppedTextAsset.id!}&visitorId=${visitorId}&interactiveNonce=${interactiveNonce}&interactivePublicKey=${interactivePublicKey}&urlSlug=${urlSlug}`,
         shouldOpenInDrawer: true,
         title,
       })
@@ -158,8 +161,6 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
           });
         });
       });
-
-    await plotAsset.deleteDroppedAsset();
 
     return res.json({
       success: true,
