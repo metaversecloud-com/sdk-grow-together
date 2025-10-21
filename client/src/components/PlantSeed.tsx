@@ -101,7 +101,9 @@ export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot
                 >
                   <img className="mb-2 m-auto" src={seed.icon} style={{ opacity: !isAvailable ? 0.5 : 1 }} />
 
-                  <p className="p3">{seed.name}</p>
+                  <p className="p3">
+                    <strong>{seed.name}</strong>
+                  </p>
                   <p className="p4 text-muted">
                     {growthTimeInMinutes} min{growthTimeInMinutes > 1 ? "s" : ""}
                   </p>

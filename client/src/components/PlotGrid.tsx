@@ -93,11 +93,11 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly }: 
     if (!crop || !seedConfig) return false;
 
     if (crop.growLevel >= seedConfig.harvestLevel) {
-      return "Harvest!";
+      return <p className="p4">Harvest!</p>;
     }
 
     const remainingSeconds = getSecondsRemaining(crop.lastWatered, seedConfig.growthTime);
-    if (remainingSeconds <= 0) return "Water!";
+    if (remainingSeconds <= 0) return <p className="p4 water">Water!</p>;
 
     return null;
   };
@@ -127,7 +127,7 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly }: 
       <div
         key={squareId}
         className={squareClass}
-        style={{ height: "75px", width: "75px" }}
+        style={{ height: "75px", width: "75px", border: "1px solid #000" }}
         onClick={() => handleSquareClick(squareId)}
       >
         <div className="card-details text-center">
@@ -190,7 +190,7 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly }: 
                 <p className="p3">
                   lvl {crop.growLevel}/{harvestLevel || 10}
                 </p>
-                <p className="p4 text-success">{getIsReadyText(crop, seeds[crop.seedId])}</p>
+                {getIsReadyText(crop, seeds[crop.seedId])}
               </div>
             ) : decoration ? (
               <img className="m-auto" src={icon} />
@@ -222,7 +222,7 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly }: 
     <div>
       {/* Decorations Grid */}
       <div className="mb-4">
-        <h5 className="mb-2">Decorations</h5>
+        <h6 className="pb-1">Decorations</h6>
         <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
           {plotConfig.reservedSquares.map((squareId) => renderSquare(squareId))}
         </div>
@@ -230,7 +230,7 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly }: 
 
       {/* Crops Grid */}
       <div className="mb-4">
-        <h5 className="mb-2">Crops</h5>
+        <h6 className="pb-1">Crops</h6>
         <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
           {Array.from(
             { length: plotConfig.gridCols * plotConfig.gridRows - plotConfig.reservedSquares.length },

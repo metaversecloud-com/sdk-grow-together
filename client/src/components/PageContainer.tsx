@@ -30,16 +30,18 @@ export const PageContainer = ({
       )}
       {headerText && (
         <div className="flex pb-6">
-          <h2 className="flex-grow">{headerText}</h2>
           {showInfoIcon && (
-            <button className="btn btn-icon" onClick={() => setShowInfoModal(!showInfoModal)}>
+            <button className="btn btn-icon mr-2" onClick={() => setShowInfoModal(!showInfoModal)}>
               <img src={`https://sdk-style.s3.amazonaws.com/icons/info.svg`} />
             </button>
           )}
+          <h2 className="flex-grow">{headerText}</h2>
         </div>
       )}
+
+      {error && <p className="p3 pb-3 text-center text-error">{error}</p>}
+
       {showSettings ? <AdminView /> : children}
-      {error && <p className="p3 pt-10 text-center text-error">{error}</p>}
 
       {showInfoModal && <InfoModal setShowInfoModal={() => setShowInfoModal(!showInfoModal)} />}
     </div>

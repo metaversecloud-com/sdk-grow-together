@@ -6,8 +6,8 @@ interface PurchaseItemProps {
   description?: string;
   rarity: string;
   cost: number;
-  value: number;
-  valueText: string;
+  value?: number;
+  valueText?: string;
   isPurchasing: boolean;
   handlePurchase: (id: string) => void;
 }
@@ -32,7 +32,7 @@ export const PurchaseItem = ({
       <div className="card-details">
         <div className="tooltip" style={{ maxWidth: "100%" }}>
           <span className="tooltip-content">{name}</span>
-          <h4 className="card-title ellipsis">{name}</h4>
+          <h4 className="card-title ellipsis bold">{name}</h4>
         </div>
 
         <div className="grid">
@@ -40,9 +40,11 @@ export const PurchaseItem = ({
             <i>{rarity}</i>
           </p>
           {description && <p className="p3">{description}</p>}
-          <p className="p3">
-            {valueText}: <span className="text-success">{value}</span>
-          </p>
+          {value && valueText && (
+            <p className="p3">
+              {valueText}: <span className="text-success">{value}</span>
+            </p>
+          )}
         </div>
         <p className="p3 text-muted">
           <i>Price: {cost}</i>

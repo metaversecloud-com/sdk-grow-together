@@ -10,6 +10,7 @@ import { ErrorType } from "@/context/types";
 
 // utils
 import { backendAPI, setErrorMessage, setGameState } from "@/utils";
+import { s3URL } from "@shared/constants";
 
 export const Plot = () => {
   const dispatch = useContext(GlobalDispatchContext);
@@ -33,13 +34,11 @@ export const Plot = () => {
   const isOwnedByCurrentUser = profileId === ownerId;
   const isOwnedByOtherUser = ownerId && ownerId !== profileId;
 
-  let headerText = "Your Garden";
+  let headerText = "Open Garden";
   if (isOwnedByOtherUser) {
     headerText = `${ownerName}'s Garden`;
-  } else if (!isOwnedByOtherUser && !plotAssetId) {
-    headerText = "Open Garden";
-  } else if (!isOwnedByOtherUser && plotAssetId && !isOwnedByCurrentUser) {
-    headerText = "Available Garden";
+  } else if (plotAssetId && isOwnedByCurrentUser) {
+    headerText = "Your Garden";
   }
 
   useEffect(() => {
@@ -117,6 +116,12 @@ export const Plot = () => {
         {/* Current user doesn't own any plot - show claim option */}
         {!isOwnedByOtherUser && !plotAssetId && (
           <div className="grid gap-2 mb-10">
+            <img
+              src={`${s3URL}/OpenGarden.png`}
+              alt="Open Garden"
+              className="mx-auto mb-4"
+              style={{ height: "320px" }}
+            />
             <button className="btn" onClick={handleClaimPlot} disabled={isClaiming}>
               {isClaiming ? "Claiming..." : "Start Your Garden"}
             </button>
@@ -134,7 +139,6 @@ export const Plot = () => {
             <h4>Are you looking for your garden?</h4>
             <p>Click the button below to teleport to it.</p>
             <button className="btn mt-4" onClick={() => handleTeleportToPlot()}>
-              <img alt="Teleport" className="mr-1" src="https://sdk-style.s3.amazonaws.com/icons/walk.svg" />
               Teleport to My Garden
             </button>
           </div>

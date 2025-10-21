@@ -1,61 +1,71 @@
+import { useContext, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+
 // components
-import { PageContainer } from "@/components";
+import { PageContainer, Accordion, Instructions } from "@/components";
+
+// context
+import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
+import { ErrorType } from "@/context/types";
+
+// utils
+import { backendAPI, setErrorMessage, setGameState } from "@/utils";
+import { s3URL } from "@shared/constants";
 
 export const Home = () => {
+  const dispatch = useContext(GlobalDispatchContext);
+  const { hasInteractiveParams, plotAssetData, visitorPlotData } = useContext(GlobalStateContext);
+  const { ownerId } = plotAssetData || {};
+  const { plotAssetId } = visitorPlotData || { plotSquares: {} };
+  const [searchParams] = useSearchParams();
+
+  const [isLoading, setIsLoading] = useState(true);
+
+  const profileId = searchParams.get("profileId");
+
+  const isOwnedByCurrentUser = profileId === ownerId;
+
+  useEffect(() => {
+    if (hasInteractiveParams) {
+      backendAPI
+        .get("/game-state")
+        .then((response) => {
+          setGameState(dispatch, response.data);
+        })
+        .catch((error) => setErrorMessage(dispatch, error as ErrorType))
+        .finally(() => setIsLoading(false));
+    }
+  }, [hasInteractiveParams]);
+
+  const handleTeleportToPlot = async () => {
+    setIsLoading(true);
+    await backendAPI
+      .post("/plot/teleport")
+      .catch((error) => setErrorMessage(dispatch, error as ErrorType))
+      .finally(() => setIsLoading(false));
+  };
   return (
-    <PageContainer isLoading={false} headerText="Welcome to Grow Together">
-      <div className="container grid gap-4">
-        <h3>How to Play</h3>
-        <div className="grid gap-4">
-          <p className="p2">Welcome to the relaxing garden game! Here's how to get started:</p>
+    <PageContainer isLoading={isLoading}>
+      <div className="container grid gap-2">
+        <img src={`${s3URL}/Logo.png`} alt="Grow Together Logo" style={{ height: "220px" }} />
 
-          <div className="card small">
-            <div className="card-details">
-              <h4 className="card-title">1. Claim a Plot</h4>
-              <p className="card-description p3">
-                Find an empty plot in the world and click on it. Then click "Claim This Plot" to make it yours. You can
-                only own one plot per account.
-              </p>
-            </div>
-          </div>
+        {plotAssetId && !isOwnedByCurrentUser && (
+          <Accordion title="Looking for your garden?">
+            <p className="p2">Howdy, gardener! You already have a garden. Click the button below to teleport to it.</p>
 
-          <div className="card small">
-            <div className="card-details">
-              <h4 className="card-title">2. Get Seeds</h4>
-              <p className="card-description p3">
-                Some seeds are free while others cost coins. You start with 0 coins, so plant free seeds first and start
-                harvesting to earn coins!
-              </p>
-            </div>
-          </div>
+            <button className="btn" onClick={() => handleTeleportToPlot()}>
+              Teleport to My Garden
+            </button>
+          </Accordion>
+        )}
 
-          <div className="card small">
-            <div className="card-details">
-              <h4 className="card-title">3. Plant & Wait</h4>
-              <p className="card-description p3">Plant seeds in your plot grid. Crops grow automatically over time.</p>
-            </div>
-          </div>
+        <Accordion title="Need a garden? Start here.">
+          <p className="p2">
+            <b>Find a garden with an "Open Garden" sign.</b> Click it and then click "Start Your Garden" to get started.
+          </p>
+        </Accordion>
 
-          <div className="card small">
-            <div className="card-details">
-              <h4 className="card-title">4. Harvest & Earn</h4>
-              <p className="card-description p3">
-                When crops are fully grown, click on them and harvest for coins! Use your earnings to unlock more
-                expensive seeds.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="card success">
-          <div className="card-details">
-            <h4 className="card-title">Ready to Start?</h4>
-            <p className="card-description p2">
-              Look for plot assets in the world - they look like empty garden plots. Click on one to claim it and start
-              your gardening journey!
-            </p>
-          </div>
-        </div>
+        <Instructions />
       </div>
     </PageContainer>
   );
