@@ -67,7 +67,7 @@ export const Decoration = () => {
           <div className="card-details" style={{ maxWidth: "100%" }}>
             <img className="m-auto" src={icon} style={{ width: "40px", height: "40px" }} />
             <div className="text-center grid gap-1">
-              <h3 className="card-title">{name}</h3>
+              <h3 className="card-title bold">{name}</h3>
               <p className="text-muted">
                 <i>{rarity}</i>
               </p>

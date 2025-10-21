@@ -4,6 +4,7 @@ export * from "./AdminIconButton.js";
 export * from "./ConfirmationModal.js";
 export * from "./DecorationMenu.js";
 export * from "./InfoModal.js";
+export * from "./Instructions.js";
 export * from "./Loading.js";
 export * from "./ModalHeader.js";
 export * from "./PageContainer.js";

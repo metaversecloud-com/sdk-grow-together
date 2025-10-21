@@ -113,12 +113,14 @@ export const PlaceDecoration = ({ selectedSquare, setSelectedSquare, setIsUpdati
                 return (
                   <div
                     key={decoration.id}
-                    className={`card menu-cardtext-center ${isPlacing ? "opacity-50" : "cursor-pointer"}`}
+                    className={`card menu-card text-center ${isPlacing ? "opacity-50" : "cursor-pointer"}`}
                     onClick={() => !isPlacing && handlePlaceDecoration(decoration.id)}
                   >
                     <img className="mr-2" src={decoration.icon} />
                     <div>
-                      <p className="p2 p-0">{decoration.name}</p>
+                      <p className="p2 p-0">
+                        <strong>{decoration.name}</strong>
+                      </p>
                       <p className="p3 p-0 text-muted">{available} available</p>
                     </div>
                   </div>

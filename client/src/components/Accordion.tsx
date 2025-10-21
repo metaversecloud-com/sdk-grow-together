@@ -13,7 +13,7 @@ export const Accordion = ({ children, title }: { children: ReactNode; title: str
               src="https://sdk-style.s3.amazonaws.com/icons/chevronDown.svg"
             />
           </summary>
-          <div className="accordion-content mt-4">{children}</div>
+          <div className="accordion-content mt-4 grid gap-4">{children}</div>
         </details>
       </div>
     </section>

@@ -32,7 +32,7 @@ export const PurchaseItem = ({
       <div className="card-details">
         <div className="tooltip" style={{ maxWidth: "100%" }}>
           <span className="tooltip-content">{name}</span>
-          <h4 className="card-title ellipsis">{name}</h4>
+          <h4 className="card-title ellipsis bold">{name}</h4>
         </div>
 
         <div className="grid">

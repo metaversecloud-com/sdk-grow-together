@@ -7,21 +7,17 @@
 }
 
 .crop {
-  background: #d7c493 !important;
-  border-color: #af7e06 !important;
+  background: #b4edc4 !important;
 }
 .crop:hover {
-  background: #af7e06 !important;
-  border-color: #d7c493 !important;
+  background: #5bc193 !important;
 }
 
 .decoration {
   background: #fff6b6 !important;
-  border-color: #ffdc4b !important;
 }
 .decoration:hover {
   background: #ffdc4b !important;
-  border-color: #fff6b6 !important;
 }
 
 .common {
@@ -38,6 +34,10 @@
 }
 .legendary {
   color: #fe9f4d !important;
+}
+
+.water {
+  color: #305bab !important;
 }
 
 .chip-muted {
