@@ -60,8 +60,6 @@ export const DecorationMenu = ({ onClose }: { onClose: () => void }) => {
                   name={name}
                   rarity={rarity}
                   cost={cost}
-                  value={visitorInventory[name]?.quantity || 0}
-                  valueText="Owned"
                   isPurchasing={purchasingDecorations.has(id)}
                   handlePurchase={() => handlePurchaseDecoration(id)}
                 />

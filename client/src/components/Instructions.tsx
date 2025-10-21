@@ -30,8 +30,8 @@ export const Instructions = () => {
           a new seed, you own it forever and can plant it in your garden by clicking the plus (+) button on a Crop slot.
         </p>
         <p className="p2">
-          <b>Step 2b: Click "Buy Decorations" button Click the "Buy" button once you have enough gold.</b> After you get
-          a new decoration, you can click the plus (+) button to place it in a Decoration slot.
+          <b>Step 2b: Click "Buy Decorations" button.</b> Click the "Buy" button once you have enough gold. After you
+          get a new decoration, you can click the plus (+) button to place it in a Decoration slot.
         </p>
       </Accordion>
 
@@ -43,8 +43,7 @@ export const Instructions = () => {
           <b>Step 2: Click a slot in your garden where a decoration or crop has been added. </b>
         </p>
         <p className="p2">
-          <b>Step 2b: Click the "Remove" button.</b> This will free up the slot so that you can add something else
-          there.
+          <b>Step 3: Click the "Remove" button.</b> This will free up the slot so that you can add something else there.
         </p>
       </Accordion>
     </>
