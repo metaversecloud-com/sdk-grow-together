@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { AxiosError } from "axios";
 import {
   errorHandler,
+  getAnalyticName,
   getCredentials,
   getInventoryItems,
   initializeVisitorData,
@@ -76,7 +77,7 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
             uniqueKey: profileId,
           },
           {
-            analyticName: `${seedConfig.name.toLowerCase()}Unlocked`,
+            analyticName: `${getAnalyticName(seedConfig)}Unlocked`,
             profileId,
             urlSlug,
             uniqueKey: profileId,

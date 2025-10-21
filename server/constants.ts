@@ -2,19 +2,14 @@ import { CropDataObjectType, VisitorDataObjectType, VisitorWorldDataType } from 
 
 export const DEFAULT_VISITOR_DATA: VisitorDataObjectType = {
   lastDateCoinsEarned: "",
+  placedAssetCount: 0,
   totalCoinsEarned: 0,
-  // decorationsOwned: {},
-  // seedsPurchased: {
-  //   carrots: {
-  //     id: "carrots",
-  //     datePurchased: new Date().toISOString(),
-  //   },
-  // },
   worlds: {},
 };
 
 export const DEFAULT_VISITOR_WORLD_DATA: VisitorWorldDataType = {
   plotAssetId: null,
+  plotSignAssetId: null,
   claimedDate: "",
   plotSquares: {},
   crops: {},

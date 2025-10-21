@@ -6,7 +6,6 @@ import {
   DroppedAsset,
   getPlotAssets,
   getInventoryItems,
-  User,
 } from "../utils/index.js";
 import { PlotAssetDataObjectType } from "../types/index.js";
 import { InventoryItemInterface } from "@rtsdk/topia";

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { AxiosError } from "axios";
 import {
   errorHandler,
+  getAnalyticName,
   getCredentials,
   getInventoryItems,
   initializeVisitorData,
@@ -73,7 +74,7 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
             uniqueKey: profileId,
           },
           {
-            analyticName: `${decorationConfig.name.toLowerCase()}Unlocked`,
+            analyticName: `${getAnalyticName(decorationConfig)}Unlocked`,
             profileId,
             urlSlug,
             uniqueKey: profileId,

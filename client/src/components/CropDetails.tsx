@@ -5,7 +5,7 @@ import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalConte
 import { ErrorType, SET_CROP_DATA } from "@/context/types";
 
 // utils
-import { backendAPI, setErrorMessage, setGameState } from "@/utils";
+import { backendAPI, getSecondsRemaining, setErrorMessage, setGameState } from "@/utils";
 
 // types
 import { CropDataObjectType } from "@shared/index.js";
@@ -31,36 +31,18 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
   const [isHarvesting, setIsHarvesting] = useState(false);
   const [wasHarvested, setWasHarvested] = useState(false);
 
-  // Initialize audio with references to reuse them
-  const waterAudio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/water_plant.mp3");
-  const harvestAudio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/harvest_coins.mp3");
-
-  // Set default volume for both audio elements (0.0 to 1.0)
-  waterAudio.volume = 0.5; // 50% volume
-  harvestAudio.volume = 0.7; // 70% volume
-
   // Update timeRemaining every second until ready for harvest or harvested
   useEffect(() => {
     if (!seedConfig || wasHarvested) return setTimeRemaining(null);
 
-    const getSecondsRemaining = () => {
-      const lastWateredTime = new Date(lastWatered).getTime();
-      const currentTime = new Date().getTime();
-      const elapsedSeconds = (currentTime - lastWateredTime) / 1000;
-      const timePerLevel = growthTime / harvestLevel;
-      const timeForNextLevel = (growLevel + 1) * timePerLevel;
-      const remainingSeconds = Math.max(0, timeForNextLevel - elapsedSeconds);
+    const updateCountdown = () => {
+      if (readyForWater) return;
+      const remainingSeconds = getSecondsRemaining(lastWatered, growthTime);
 
       if (!wasHarvested) {
         if (growLevel >= harvestLevel) setReadyForHarvest(true);
         else if (remainingSeconds <= 0) setReadyForWater(true);
       }
-
-      return remainingSeconds <= 0 ? 0 : remainingSeconds;
-    };
-
-    const updateCountdown = () => {
-      const remainingSeconds = getSecondsRemaining();
 
       if (remainingSeconds <= 0) return setTimeRemaining(null);
 
@@ -91,6 +73,8 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
       .then((response) => {
         const { success, cropData } = response.data;
         if (success) {
+          const waterAudio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/water_plant.mp3");
+          waterAudio.volume = 0.5; // 50% volume
           waterAudio.play();
 
           dispatch!({
@@ -113,6 +97,8 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
     await backendAPI
       .post("/crop/harvest")
       .then((response) => {
+        const harvestAudio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/harvest_coins.mp3");
+        harvestAudio.volume = 0.7; // 70% volume
         harvestAudio.play();
         setGameState(dispatch, response.data);
       })
@@ -152,7 +138,7 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
     <div className="grid gap-2">
       <div className="card small">
         <div className="card-details" style={{ maxWidth: "100%" }}>
-          <img className="m-auto" src={seeds[seedId].icon} style={{ width: "40px" }} />
+          <img className="m-auto" src={seeds[seedId].icon} style={{ width: "40px", height: "40px" }} />
           <div className="text-center">
             <h3 className="card-title">{name}</h3>
             <p className="text-muted">
@@ -178,7 +164,7 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
 
       {/* Harvest */}
       {!isReadOnly && readyForHarvest && (
-        <button className="btn" onClick={handleHarvest} disabled={isHarvesting}>
+        <button className="btn btn-success" onClick={handleHarvest} disabled={isHarvesting}>
           {isHarvesting ? "Harvesting..." : `Harvest (+${reward} coins)`}
         </button>
       )}

@@ -33,9 +33,6 @@ export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot
     setHasSeeds(hasAvailableSeeds);
   }, [visitorInventory, seeds]);
 
-  const plantAudio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/crop_planted.mp3");
-  plantAudio.volume = 0.8; // 70% volume
-
   const handlePlantSeed = async (seedId: string) => {
     if (!seedId || selectedSquare === null) return;
 
@@ -48,6 +45,8 @@ export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot
         squareId: selectedSquare,
       })
       .then((response) => {
+        const plantAudio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/crop_planted.mp3");
+        plantAudio.volume = 0.8; // 80% volume
         plantAudio.play();
 
         const { visitorData, visitorPlotData } = response.data;

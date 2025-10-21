@@ -7,6 +7,7 @@ import {
   World,
   modifyVisitorInventoryItem,
   getInventoryItems,
+  getAnalyticName,
 } from "../utils/index.js";
 
 /**
@@ -72,7 +73,7 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
           uniqueKey: profileId,
         },
         {
-          analyticName: `${seedConfig.name.toLowerCase()}Harvested`,
+          analyticName: `${getAnalyticName(seedConfig)}Harvested`,
           profileId,
           urlSlug,
           uniqueKey: profileId,
