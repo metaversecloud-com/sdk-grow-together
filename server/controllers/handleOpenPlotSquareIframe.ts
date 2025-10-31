@@ -22,7 +22,7 @@ export const handleOpenPlotSquareIframe = async (req: Request, res: Response) =>
     await visitor
       .openIframe({
         droppedAssetId: assetId,
-        link: `${baseUrl}/${type}?${query}`,
+        link: `${baseUrl}/${type}?${encodeURIComponent(query)}`,
         shouldOpenInDrawer: true,
         title: "Garden Plot Square",
       })
