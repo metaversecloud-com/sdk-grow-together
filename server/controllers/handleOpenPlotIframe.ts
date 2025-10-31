@@ -13,6 +13,7 @@ export const handleOpenPlotIframe = async (req: Request, res: Response) => {
 
     const baseUrl = getBaseUrl(req.hostname);
     const query = `?assetId=${plotAssetId}&displayName=${displayName}&profileId=${profileId}&urlSlug=${urlSlug}&interactiveKey=${interactivePublicKey}&interactiveNonce=${interactiveNonce}&visitorId=${visitorId}`;
+    console.log("Opening plot iframe with link:", `${baseUrl}/plot${query}`);
     await visitor
       .openIframe({
         droppedAssetId: plotAssetId,
