@@ -96,7 +96,7 @@ export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot
                 <div
                   key={seed.id}
                   className={buttonClass}
-                  onClick={() => isAvailable && handlePlantSeed(seed.id)}
+                  onClick={() => isAvailable && !isPlanting && handlePlantSeed(seed.id)}
                   style={{ gap: "0px" }}
                 >
                   <img className="mb-2 m-auto" src={seed.icon} style={{ opacity: !isAvailable ? 0.5 : 1 }} />

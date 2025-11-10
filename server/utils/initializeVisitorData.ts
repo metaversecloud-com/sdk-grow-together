@@ -18,7 +18,7 @@ export const initializeVisitorData = async (credentials: Credentials) => {
     if (!visitorData?.worlds?.[urlSlug]) {
       const lockId = `visitor_data_init_${Math.floor(Date.now() / 60000) * 60000}`;
 
-      if (!visitorData || !visitorData.placedAssetCount) {
+      if (!visitorData || visitorData.totalCoinsEarned === undefined) {
         // Set the initialized data object
         await visitor.setDataObject(
           { ...DEFAULT_VISITOR_DATA, worlds: { [urlSlug]: DEFAULT_VISITOR_WORLD_DATA } },
