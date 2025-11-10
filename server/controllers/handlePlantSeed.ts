@@ -36,7 +36,7 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
         {},
         {
           lock: {
-            lockId: `planting_${assetId}_${squareId}_${visitorId}_${Math.floor(Date.now() / 10000) * 10000}`,
+            lockId: `planting_${assetId}_${squareId}_${visitorId}_${Math.round(Date.now() / 5000) * 5000}`,
           },
         },
       );

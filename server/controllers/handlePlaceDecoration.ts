@@ -37,7 +37,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
         {},
         {
           lock: {
-            lockId: `placing_${assetId}_${squareId}_${visitorId}_${Math.floor(Date.now() / 10000) * 10000}`,
+            lockId: `placing_${assetId}_${squareId}_${visitorId}_${Math.round(Date.now() / 5000) * 5000}`,
           },
         },
       );
