@@ -79,7 +79,11 @@ export const handleWaterCrop = async (req: Request, res: Response) => {
         },
       })
       .catch((error) => {
-        console.error(`Failed to trigger water particle effect:`, error);
+        errorHandler({
+          error,
+          functionName: "handleWaterCrop",
+          message: `Failed to trigger water particle effect: ${error}`,
+        });
       });
 
     const cropAssetData = await cropAsset.fetchDataObject();
@@ -90,7 +94,11 @@ export const handleWaterCrop = async (req: Request, res: Response) => {
     // Update the crop asset image to reflect new growth level
     const layer1 = getSeedImageVariation(seedConfig.name, crop.growLevel + 1);
     await cropAsset.updateWebImageLayers("", layer1).catch((error) => {
-      console.error(`Failed to update crop asset ${assetId}:`, error);
+      errorHandler({
+        error,
+        functionName: "handleWaterCrop",
+        message: `Failed to update crop asset ${assetId}: ${error}`,
+      });
     });
 
     return res.json({

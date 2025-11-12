@@ -84,7 +84,11 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
         position,
       })
       .catch((error) => {
-        console.error("Failed to trigger planting particle effect:", error);
+        errorHandler({
+          error,
+          functionName: "handlePlantSeed",
+          message: `Failed to trigger planting particle effect: ${error}`,
+        });
       });
 
     const asset = Asset.create("webImageAsset", { credentials });

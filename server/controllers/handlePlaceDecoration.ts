@@ -88,7 +88,11 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
         position,
       })
       .catch((error) => {
-        console.error("Failed to trigger placing particle effect:", error);
+        errorHandler({
+          error,
+          functionName: "handlePlaceDecoration",
+          message: `Failed to trigger placing particle effect: ${error}`,
+        });
       });
 
     const asset = Asset.create("webImageAsset", { credentials });
