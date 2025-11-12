@@ -7,7 +7,7 @@ export const getVersion = () => {
     const version = packageJson.version;
     return version;
   } catch (error) {
-    console.error("Error reading or parsing package.json:", error);
+    console.error("Error reading or parsing package.json:", JSON.stringify(error));
     return error;
   }
 };

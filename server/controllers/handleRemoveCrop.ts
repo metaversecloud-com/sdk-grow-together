@@ -45,12 +45,20 @@ export const handleRemoveCrop = async (req: Request, res: Response) => {
           position: droppedAsset.position,
         })
         .catch((error) => {
-          console.error(`Failed to trigger particle effect:`, error);
+          errorHandler({
+            error,
+            functionName: "handleRemoveCrop",
+            message: `Failed to trigger remove particle effect: ${error}`,
+          });
         });
 
       await droppedAsset.deleteDroppedAsset();
     } catch (error) {
-      console.error(`Failed to remove crop asset ${assetId} from world:`, error);
+      errorHandler({
+        error,
+        functionName: "handleRemoveCrop",
+        message: `Failed to trigger remove crop asset ${assetId} from world: ${error}`,
+      });
       // Continue with removal even if asset deletion fails (it might have been manually removed from world)
     }
 

@@ -92,12 +92,20 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
         position: cropAsset.position,
       })
       .catch((error) => {
-        console.error(`Failed to trigger harvest particle effect:`, error);
+        errorHandler({
+          error,
+          functionName: "handleHarvestCrop",
+          message: `Failed to trigger harvest particle effect: ${error}`,
+        });
       });
 
     // Remove the crop asset from the world
     await cropAsset.deleteDroppedAsset().catch((error) => {
-      console.error(`Failed to delete crop asset ${assetId}:`, error);
+      errorHandler({
+        error,
+        functionName: "handleHarvestCrop",
+        message: `Failed to delete crop asset ${assetId}: ${error}`,
+      });
       // Continue with harvest even if asset deletion fails (it might have been manually deleted)
     });
 
