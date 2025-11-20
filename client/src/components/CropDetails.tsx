@@ -1,11 +1,14 @@
 import { useContext, useState, useEffect } from "react";
 
+// components
+import { HarvestButton, WaterButton } from "@/components";
+
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
-import { ErrorType, SET_CROP_DATA } from "@/context/types";
+import { ErrorType } from "@/context/types";
 
 // utils
-import { backendAPI, getSecondsRemaining, setErrorMessage, setGameState } from "@/utils";
+import { backendAPI, getSecondsRemaining, setErrorMessage } from "@/utils";
 
 // types
 import { CropDataObjectType } from "@shared/index.js";
@@ -27,8 +30,6 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
   const [timeRemaining, setTimeRemaining] = useState<string | null>(null);
   const [readyForWater, setReadyForWater] = useState(false);
   const [readyForHarvest, setReadyForHarvest] = useState(false);
-  const [isWatering, setIsWatering] = useState(false);
-  const [isHarvesting, setIsHarvesting] = useState(false);
   const [wasHarvested, setWasHarvested] = useState(false);
 
   // Update timeRemaining every second until ready for harvest or harvested
@@ -66,50 +67,9 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
     );
   }
 
-  const handleWater = async () => {
-    setIsWatering(true);
-    await backendAPI
-      .post("/crop/water")
-      .then((response) => {
-        const { success, cropData } = response.data;
-        if (success) {
-          const waterAudio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/water_plant.mp3");
-          waterAudio.volume = 0.5; // 50% volume
-          waterAudio.play();
-
-          dispatch!({
-            type: SET_CROP_DATA,
-            payload: { cropData, error: "" },
-          });
-        }
-      })
-      .catch((error) => {
-        setErrorMessage(dispatch, error as ErrorType);
-      })
-      .finally(() => {
-        setReadyForWater(false);
-        setIsWatering(false);
-      });
-  };
-
-  const handleHarvest = async () => {
-    setIsHarvesting(true);
-    await backendAPI
-      .post("/crop/harvest")
-      .then((response) => {
-        const harvestAudio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/harvest_coins.mp3");
-        harvestAudio.volume = 0.7; // 70% volume
-        harvestAudio.play();
-        setGameState(dispatch, response.data);
-      })
-      .catch((error) => {
-        setErrorMessage(dispatch, error as ErrorType);
-      })
-      .finally(() => {
-        setReadyForHarvest(false);
-        setIsHarvesting(false);
-        setWasHarvested(true);
-      });
+  const handleAfterHarvest = () => {
+    setWasHarvested(true);
+    setReadyForHarvest(false);
   };
 
   const handleOpenPlotIframe = async () => {
@@ -156,18 +116,10 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
       </div>
 
       {/* Water */}
-      {!isReadOnly && readyForWater && (
-        <button className="btn" onClick={handleWater} disabled={isWatering}>
-          {isWatering ? "Watering..." : `Water (+1 growth level)`}
-        </button>
-      )}
+      {!isReadOnly && readyForWater && <WaterButton handleAfterWater={() => setReadyForWater(false)} />}
 
       {/* Harvest */}
-      {!isReadOnly && readyForHarvest && (
-        <button className="btn btn-success" onClick={handleHarvest} disabled={isHarvesting}>
-          {isHarvesting ? "Harvesting..." : `Harvest (+${reward} coins)`}
-        </button>
-      )}
+      {!isReadOnly && readyForHarvest && <HarvestButton handleAfterHarvest={handleAfterHarvest} reward={reward} />}
 
       {/* Already harvested */}
       {wasHarvested && (

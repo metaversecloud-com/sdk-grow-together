@@ -5,23 +5,22 @@ import { PlotAssetDataObjectType, WorldDataObjectType } from "../types/index.js"
 
 export const getPlotAssets = async (
   credentials: Credentials,
-  shouldReset?: boolean,
-): Promise<WorldDataObjectType | Error> => {
+): Promise<{ availablePlotAssetIds: string[]; claimedPlotAssetIds: string[] } | Error> => {
   try {
     const { urlSlug } = credentials;
 
     const world = await World.create(urlSlug, { credentials });
     const worldDataObject = (await world.fetchDataObject()) as WorldDataObjectType;
 
-    let claimedPlots = worldDataObject?.claimedPlots || {};
+    let plots = worldDataObject?.plots || worldDataObject?.claimedPlots || {};
 
-    if (shouldReset || !worldDataObject?.claimedPlots || Object.keys(worldDataObject?.claimedPlots).length === 0) {
-      const plotAssets: DroppedAssetInterface[] = await world.fetchDroppedAssetsWithUniqueName({
-        uniqueName: "GrowTogether_plot",
-      });
+    const plotAssets: DroppedAssetInterface[] = await world.fetchDroppedAssetsWithUniqueName({
+      uniqueName: "GrowTogether_plot",
+    });
 
-      if (plotAssets.length === 0) throw "No plot assets found.";
+    if (plotAssets.length === 0) throw "No plot assets found.";
 
+    if (plotAssets.length !== Object.keys(plots).length) {
       // Process all plot assets in parallel and wait for all to complete
       const plotDataPromises = plotAssets.map(async (asset) => {
         const plotAsset = await DroppedAsset.create(asset.id!, urlSlug, {
@@ -41,23 +40,31 @@ export const getPlotAssets = async (
       // Wait for all promises to resolve
       const plotDataResults = await Promise.all(plotDataPromises);
 
-      // Build the claimedPlots object from the results
-      claimedPlots = plotDataResults.reduce<{ [key: string]: string | null }>((acc, result) => {
+      // Build the plots object from the results
+      plots = plotDataResults.reduce<{ [key: string]: string | null }>((acc, result) => {
         acc[result.assetId] = result.ownerId;
         return acc;
       }, {});
-
-      await world.setDataObject(
-        {
-          claimedPlots,
-        },
-        {
-          lock: { lockId: `world_plotAssets_${Math.floor(Date.now() / 60000) * 60000}`, releaseLock: true },
-        },
-      );
     }
 
-    return { claimedPlots };
+    world.setDataObject(
+      {
+        plots,
+      },
+      {
+        lock: { lockId: `world_plotAssets_${Math.floor(Date.now() / 60000) * 60000}`, releaseLock: true },
+      },
+    );
+
+    const availablePlotAssetIds = Object.entries(plots)
+      .filter(([_, ownerId]) => ownerId === null)
+      .map(([plotId, _]) => plotId);
+
+    const claimedPlotAssetIds = Object.entries(plots)
+      .filter(([_, ownerId]) => ownerId !== null)
+      .map(([plotId, _]) => plotId);
+
+    return { availablePlotAssetIds, claimedPlotAssetIds };
   } catch (error: any) {
     return standardizedError(error);
   }

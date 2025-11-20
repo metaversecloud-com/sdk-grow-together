@@ -89,7 +89,7 @@ export const handleClearPlot = async (req: Request, res: Response) => {
 
     promises.push(
       world.updateDataObject({
-        [`claimedPlots.${assetId}`]: null,
+        [`plots.${assetId}`]: null,
       }),
     );
 

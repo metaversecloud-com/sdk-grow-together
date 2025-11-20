@@ -16,6 +16,7 @@ import {
   handleOpenPlotSquareIframe,
   handleClearPlot,
   handleClearAllPlots,
+  handleTeleportToOpenPlot,
 } from "./controllers/index.js";
 import { getVersion } from "./utils/getVersion.js";
 
@@ -41,6 +42,7 @@ router.get("/system/health", (req, res) => {
 });
 
 router.get("/game-state", handleGetGameState);
+router.post("/teleport", handleTeleportToOpenPlot);
 
 // admin routes
 router.post("/admin/clear-plot", handleClearPlot);

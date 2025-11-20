@@ -12,6 +12,7 @@ export * from "./handlePurchaseSeed.js";
 export * from "./handlePlantSeed.js";
 export * from "./handleRemoveDecoration.js";
 export * from "./handleRemoveCrop.js";
+export * from "./handleTeleportToOpenPlot.js";
 export * from "./handleTeleportToPlot.js";
 export * from "./handleOpenPlotIframe.js";
 export * from "./handleWaterCrop.js";

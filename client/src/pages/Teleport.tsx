@@ -1,8 +1,7 @@
 import { useContext, useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 
 // components
-import { PageContainer, Accordion, Instructions, NewUserInfo } from "@/components";
+import { NewUserInfo, PageContainer } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
@@ -10,20 +9,13 @@ import { ErrorType } from "@/context/types";
 
 // utils
 import { backendAPI, setErrorMessage, setGameState } from "@/utils";
-import { s3URL } from "@shared/constants";
 
-export const Home = () => {
+export const Teleport = () => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { hasInteractiveParams, noOfAvailablePlots, plotAssetData, visitorPlotData } = useContext(GlobalStateContext);
-  const { ownerId } = plotAssetData || {};
+  const { hasInteractiveParams, noOfAvailablePlots, visitorPlotData } = useContext(GlobalStateContext);
   const { plotAssetId } = visitorPlotData || { plotSquares: {} };
-  const [searchParams] = useSearchParams();
 
   const [isLoading, setIsLoading] = useState(true);
-
-  const profileId = searchParams.get("profileId");
-
-  const isOwnedByCurrentUser = profileId === ownerId;
 
   useEffect(() => {
     if (hasInteractiveParams) {
@@ -48,26 +40,24 @@ export const Home = () => {
   return (
     <PageContainer isLoading={isLoading}>
       <div className="container grid gap-2">
-        <img src={`${s3URL}/Logo.png`} alt="Grow Together Logo" style={{ height: "220px" }} />
+        <div className="chip mb-2" style={{ justifyContent: "center" }}>
+          {noOfAvailablePlots === 1 ? `There is 1 open garden` : `There are ${noOfAvailablePlots} open gardens`}
+        </div>
 
-        {plotAssetId && !isOwnedByCurrentUser && (
-          <Accordion title="Looking for your garden?">
+        <NewUserInfo plotAssetId={plotAssetId} noOfAvailablePlots={noOfAvailablePlots} showHeaders={true} />
+
+        {plotAssetId && (
+          <>
+            <h4>Looking for your garden?</h4>
             <p className="p2">Howdy, gardener! You already have a garden. Click the button below to teleport to it.</p>
-
             <button className="btn" onClick={() => handleTeleportToPlot()}>
               Teleport to My Garden
             </button>
-          </Accordion>
+          </>
         )}
-
-        <Accordion title="Need a garden? Start here.">
-          <NewUserInfo plotAssetId={plotAssetId} noOfAvailablePlots={noOfAvailablePlots} showHeaders={false} />
-        </Accordion>
-
-        <Instructions />
       </div>
     </PageContainer>
   );
 };
 
-export default Home;
+export default Teleport;

@@ -1,221 +1,84 @@
 import { useContext, useState } from "react";
 
 // components
-import { PlaceDecoration, PlantSeed, ModalHeader } from "@/components";
+import { PlaceDecoration, PlantSeed, PlotSquare, PlotSquareModal } from "@/components";
 
 // context
-import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
-import { ErrorType, SET_VISITOR_DATA, SET_VISITOR_INVENTORY, SET_VISITOR_PLOT_DATA } from "@/context/types";
+import { GlobalStateContext } from "@/context/GlobalContext";
+import { SelectedSquareDetails } from "@/context/types";
 
 // types
-import { CropDataObjectType, plotConfig, SeedType, VisitorInventoryType, VisitorWorldDataType } from "@shared/index.js";
+import { plotConfig, VisitorInventoryType, VisitorWorldDataType } from "@shared/index.js";
 
 // utils
-import { backendAPI, getSecondsRemaining, setErrorMessage } from "@/utils";
+import { getSecondsRemaining } from "@/utils";
 
 interface PlotGridProps {
   plotSquares: { [key: number]: string | null };
   crops: VisitorWorldDataType["crops"];
   placedDecorations: VisitorWorldDataType["decorations"];
-  isReadOnly: boolean;
   visitorInventory?: VisitorInventoryType;
+  handlePlotDataChange: () => void;
 }
 
-export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly }: PlotGridProps) => {
-  const dispatch = useContext(GlobalDispatchContext);
+type PlotSquareType = "crop" | "decoration";
+
+export const PlotGrid = ({ plotSquares, crops, placedDecorations, handlePlotDataChange }: PlotGridProps) => {
   const { decorations = {}, seeds = {} } = useContext(GlobalStateContext);
 
-  const [selectedSquare, setSelectedSquare] = useState<number | null>(null);
-  const [isUpdatingPlot, setIsUpdatingPlot] = useState(false);
+  const [selectedSquareId, setSelectedSquareId] = useState<number | null>(null);
+  const [selectedSquareType, setSelectedSquareIdType] = useState<PlotSquareType>("crop");
+
+  const [selectedSquareDetails, setSelectedSquareDetails] = useState<SelectedSquareDetails>({ title: "" });
   const [showSquareModal, setShowSquareModal] = useState(false);
-  const [areButtonsDisabled, setAreButtonsDisabled] = useState(false);
 
-  const handleSquareClick = (squareId: number) => {
-    if (isReadOnly) return;
-
-    setSelectedSquare(selectedSquare === squareId ? null : squareId);
+  const handleSquareClick = (squareId: number, itemType: PlotSquareType) => {
+    setSelectedSquareId(squareId);
+    setSelectedSquareIdType(itemType);
+    setSelectedSquareDetails(getSquareDetails(squareId));
+    handlePlotDataChange();
 
     if (plotSquares[squareId]) setShowSquareModal(true);
   };
 
-  const handleCancelRemove = () => {
-    setShowSquareModal(false);
-    setSelectedSquare(null);
-  };
-
-  const handleViewSquare = async ({ type }: { type: "crop" | "decoration" }) => {
-    setAreButtonsDisabled(true);
-    await backendAPI
-      .post(`/square/view`, {
-        squareId: selectedSquare,
-        type,
-      })
-      .catch((error) => {
-        setErrorMessage(dispatch, error as ErrorType);
-      })
-      .finally(() => {
-        setAreButtonsDisabled(false);
-      });
-  };
-
-  const handleClearSquare = async ({ type }: { type: "crop" | "decoration" }) => {
-    setAreButtonsDisabled(true);
-    await backendAPI
-      .post(`/${type}/remove`, {
-        squareId: selectedSquare,
-      })
-      .then((response) => {
-        const { visitorInventory, visitorData, visitorPlotData } = response.data;
-        dispatch!({
-          type: SET_VISITOR_INVENTORY,
-          payload: { visitorInventory, error: "" },
-        });
-        dispatch!({
-          type: SET_VISITOR_DATA,
-          payload: { visitorData, error: "" },
-        });
-        dispatch!({
-          type: SET_VISITOR_PLOT_DATA,
-          payload: { visitorPlotData, error: "" },
-        });
-        setSelectedSquare(null);
-      })
-      .catch((error) => {
-        setErrorMessage(dispatch, error as ErrorType);
-      })
-      .finally(() => {
-        setShowSquareModal(false);
-        setAreButtonsDisabled(false);
-      });
-  };
-
-  const getIsReadyText = (crop: CropDataObjectType, seedConfig: SeedType) => {
-    if (!crop || !seedConfig) return false;
-
-    if (crop.growLevel >= seedConfig.harvestLevel) {
-      return <p className="p4">Harvest!</p>;
-    }
-
-    const remainingSeconds = getSecondsRemaining(crop.lastWatered, seedConfig.growthTime);
-    if (remainingSeconds <= 0) return <p className="p4 water">Water!</p>;
-
-    return null;
-  };
-
-  const renderSquare = (squareId: number) => {
+  const getSquareDetails = (squareId: number) => {
     const squareAssetId = plotSquares[squareId];
-    const crop = squareAssetId ? crops[squareAssetId] : null;
-    const decoration = squareAssetId ? placedDecorations[squareAssetId] : null;
-    const isSelected = selectedSquare === squareId;
-    const isReserved = plotConfig.reservedSquares?.includes(squareId);
+    if (!squareAssetId) return { isEmpty: true, title: `Slot ${squareId}` };
 
-    let squareClass = "card small flex items-center justify-center";
-    if (!isReadOnly && !isUpdatingPlot) {
-      squareClass += " cursor-pointer";
-      if (isSelected) squareClass += " success";
-    }
-    if (isReserved) squareClass += " decoration";
-    else squareClass += " crop";
-
-    const emptySquareContent = isReadOnly ? (
-      "Empty"
-    ) : (
-      <img className="m-auto" src="https://sdk-style.s3.amazonaws.com/icons/add.svg" />
-    );
-
-    return (
-      <div
-        key={squareId}
-        className={squareClass}
-        style={{ height: "75px", width: "75px", border: "1px solid #000" }}
-        onClick={() => handleSquareClick(squareId)}
-      >
-        <div className="card-details text-center">
-          {crop ? (
-            <div>
-              <img className="m-auto" src={seeds[crop.seedId].icon} style={{ maxHeight: "35px" }} />
-              <p className="p3">
-                lvl {crop.growLevel}/{seeds[crop.seedId]?.harvestLevel}
-              </p>
-              <p className="p4 text-success">{getIsReadyText(crop, seeds[crop.seedId])}</p>
-            </div>
-          ) : decoration ? (
-            <img className="m-auto" src={decorations[decoration.decorationId]?.icon} />
-          ) : (
-            <div>{emptySquareContent}</div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const renderSquareModal = () => {
-    const squareAssetId = plotSquares[selectedSquare!];
     const crop = squareAssetId ? crops[squareAssetId] : null;
     const decoration = squareAssetId ? placedDecorations[squareAssetId] : null;
 
-    let title: string = `Slot ${selectedSquare!}`;
-    let icon: string | undefined;
-    let name: string | undefined;
-    let harvestLevel: number | undefined;
-    let type: "crop" | "decoration";
+    let title, icon, name, growLevel, harvestLevel, reward, isReadyToWater, isReadyToHarvest;
 
     if (crop) {
       name = seeds[crop.seedId].name;
-      title = `${name} in Slot ${selectedSquare!}`;
+      title = `${name} in Slot ${squareId!}`;
       icon = seeds[crop.seedId].icon;
+      growLevel = crop.growLevel;
       harvestLevel = seeds[crop.seedId].harvestLevel || 10;
-      type = "crop";
+      reward = seeds[crop.seedId].reward;
+
+      if (growLevel >= harvestLevel) {
+        isReadyToHarvest = true;
+      } else if (crop.lastWatered && !isReadyToWater) {
+        const remainingSeconds = getSecondsRemaining(crop.lastWatered, seeds[crop.seedId].growthTime);
+        if (remainingSeconds <= 0) {
+          isReadyToWater = true;
+        }
+      }
     } else if (decoration) {
       name = decorations[decoration.decorationId]?.name;
-      title = `${name} in Slot ${selectedSquare!}`;
+      title = `${name} in Slot ${squareId!}`;
       icon = decorations[decoration.decorationId]?.icon;
-      type = "decoration";
     }
 
-    return (
-      <div className="modal-container">
-        <div className="modal">
-          <ModalHeader
-            text={title}
-            disabled={areButtonsDisabled}
-            handleOnClick={() => {
-              handleCancelRemove();
-            }}
-          />
-          <div className="card menu-card m-auto" style={{ height: "95px", width: "95px" }}>
-            {crop ? (
-              <div>
-                <img className="m-auto" src={icon} />
-                <p className="p3">
-                  lvl {crop.growLevel}/{harvestLevel || 10}
-                </p>
-                {getIsReadyText(crop, seeds[crop.seedId])}
-              </div>
-            ) : decoration ? (
-              <img className="m-auto" src={icon} />
-            ) : null}
-          </div>
-          <div className="actions">
-            <button
-              id="viewSquare"
-              className="btn btn-outline"
-              onClick={() => handleViewSquare({ type })}
-              disabled={areButtonsDisabled}
-            >
-              View Slot
-            </button>
-            <button
-              className="btn btn-danger-outline"
-              onClick={() => handleClearSquare({ type })}
-              disabled={areButtonsDisabled}
-            >
-              Remove
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    return { title, icon, name, growLevel, harvestLevel, reward, isReadyToWater, isReadyToHarvest };
+  };
+
+  const closeSquareModal = () => {
+    handlePlotDataChange();
+    setShowSquareModal(false);
+    setSelectedSquareId(null);
   };
 
   return (
@@ -224,7 +87,15 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly }: 
       <div className="mb-4">
         <h6 className="pb-1">Decorations</h6>
         <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
-          {plotConfig.reservedSquares.map((squareId) => renderSquare(squareId))}
+          {plotConfig.reservedSquares.map((squareId) => (
+            <PlotSquare
+              key={squareId}
+              squareId={squareId}
+              itemType="decoration"
+              squareDetails={getSquareDetails(squareId)}
+              handleSquareClick={() => handleSquareClick(squareId, "decoration")}
+            />
+          ))}
         </div>
       </div>
 
@@ -234,30 +105,41 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isReadOnly }: 
         <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
           {Array.from(
             { length: plotConfig.gridCols * plotConfig.gridRows - plotConfig.reservedSquares.length },
-            (_, i) => renderSquare(i + 1 + plotConfig.reservedSquares.length),
+            (_, i) => {
+              const squareId = i + 1 + plotConfig.reservedSquares.length;
+              return (
+                <PlotSquare
+                  key={squareId}
+                  squareId={squareId}
+                  itemType="crop"
+                  squareDetails={getSquareDetails(squareId)}
+                  handleSquareClick={() => handleSquareClick(squareId, "crop")}
+                />
+              );
+            },
           )}
         </div>
       </div>
 
-      {!isReadOnly && selectedSquare !== null && !plotSquares[selectedSquare] && (
+      {selectedSquareId !== null && !plotSquares[selectedSquareId] && (
         <>
-          {plotConfig.reservedSquares?.includes(selectedSquare) ? (
-            <PlaceDecoration
-              selectedSquare={selectedSquare}
-              setSelectedSquare={setSelectedSquare}
-              setIsUpdatingPlot={setIsUpdatingPlot}
-            />
+          {plotConfig.reservedSquares?.includes(selectedSquareId) ? (
+            <PlaceDecoration selectedSquareId={selectedSquareId} setSelectedSquareId={setSelectedSquareId} />
           ) : (
-            <PlantSeed
-              selectedSquare={selectedSquare}
-              setSelectedSquare={setSelectedSquare}
-              setIsUpdatingPlot={setIsUpdatingPlot}
-            />
+            <PlantSeed selectedSquareId={selectedSquareId} setSelectedSquareId={setSelectedSquareId} />
           )}
         </>
       )}
 
-      {showSquareModal && selectedSquare !== null && renderSquareModal()}
+      {showSquareModal && selectedSquareId !== null && plotSquares[selectedSquareId] && (
+        <PlotSquareModal
+          selectedSquareId={selectedSquareId}
+          itemAssetId={plotSquares[selectedSquareId]!}
+          itemType={selectedSquareType}
+          selectedSquareDetails={selectedSquareDetails}
+          closeSquareModal={closeSquareModal}
+        />
+      )}
     </div>
   );
 };

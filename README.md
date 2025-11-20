@@ -45,7 +45,7 @@ The data object attached to the world stores ownership information about all plo
 
 ```ts
 {
-  claimedPlots: {
+  plots: {
     [plotAssetId: string]: string | null; // profileId of owner or null if unclaimed
   };
 };
@@ -215,4 +215,3 @@ INTERACTIVE_SECRET=xxxxxxxxxxxxxx
 
 - [SDK Developer Documentation](https://metaversecloud-com.github.io/mc-sdk-js/index.html)
 - [Topia Interactive Apps Overview](https://topia.io/developers)
-
