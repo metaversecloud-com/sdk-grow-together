@@ -40,8 +40,11 @@ export const Teleport = () => {
   return (
     <PageContainer isLoading={isLoading}>
       <div className="container grid gap-2">
-        <div className="chip mb-2" style={{ justifyContent: "center" }}>
-          {noOfAvailablePlots === 1 ? `There is 1 open garden` : `There are ${noOfAvailablePlots} open gardens`}
+        <div className="flex-grid">
+          <div className="chip mb-2">
+            {noOfAvailablePlots === 1 ? `There is 1 open garden` : `There are ${noOfAvailablePlots} open gardens`}
+          </div>
+          <div className="flex-grow" />
         </div>
 
         <NewUserInfo plotAssetId={plotAssetId} noOfAvailablePlots={noOfAvailablePlots} showHeaders={true} />
