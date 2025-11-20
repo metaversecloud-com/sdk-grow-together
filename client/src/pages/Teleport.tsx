@@ -38,7 +38,7 @@ export const Teleport = () => {
   };
 
   return (
-    <PageContainer isLoading={isLoading}>
+    <PageContainer headerText="Find Your Garden" isLoading={isLoading}>
       <div className="container grid gap-2">
         <div className="flex-grid">
           <div className="chip mb-2">

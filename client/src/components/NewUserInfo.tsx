@@ -33,7 +33,7 @@ export const NewUserInfo = ({
         <>
           {showHeaders && <h4>Ready to start your garden?</h4>}
           <p className="p2">
-            Click the button below to teleport to an open garden and then click the "Open Garden" sign.
+            Click the button below to teleport to an open garden and then click the "Start Your Garden".
           </p>
           <button className="btn" disabled={isLoading} onClick={() => handleTeleportToOpenPlot()}>
             {isLoading ? "Teleporting..." : "Teleport to Open Garden"}
