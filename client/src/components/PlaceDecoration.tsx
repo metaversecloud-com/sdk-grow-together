@@ -11,12 +11,11 @@ import { ErrorType, SET_VISITOR_INVENTORY, SET_VISITOR_PLOT_DATA } from "@/conte
 import { backendAPI, setErrorMessage } from "@/utils";
 
 interface PlaceDecorationProps {
-  selectedSquare: number;
-  setSelectedSquare: (square: number | null) => void;
-  setIsUpdatingPlot: (isUpdatingPlot: boolean) => void;
+  selectedSquareId: number;
+  setSelectedSquareId: (square: number | null) => void;
 }
 
-export const PlaceDecoration = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot }: PlaceDecorationProps) => {
+export const PlaceDecoration = ({ selectedSquareId, setSelectedSquareId }: PlaceDecorationProps) => {
   const dispatch = useContext(GlobalDispatchContext);
   const {
     decorations = {},
@@ -45,15 +44,14 @@ export const PlaceDecoration = ({ selectedSquare, setSelectedSquare, setIsUpdati
   }, [visitorInventory, decorations]);
 
   const handlePlaceDecoration = async (decorationId: string) => {
-    if (!decorationId || selectedSquare === null) return;
+    if (!decorationId || selectedSquareId === null) return;
 
     setIsPlacing(true);
-    setIsUpdatingPlot(true);
 
     await backendAPI
       .post("/decoration/drop", {
         decorationId,
-        squareId: selectedSquare,
+        squareId: selectedSquareId,
       })
       .then((response) => {
         const { visitorInventory, visitorPlotData } = response.data;
@@ -65,14 +63,13 @@ export const PlaceDecoration = ({ selectedSquare, setSelectedSquare, setIsUpdati
           type: SET_VISITOR_PLOT_DATA,
           payload: { visitorPlotData, error: "" },
         });
-        setSelectedSquare(null);
+        setSelectedSquareId(null);
       })
       .catch((error) => {
         setErrorMessage(dispatch, error as ErrorType);
       })
       .finally(() => {
         setIsPlacing(false);
-        setIsUpdatingPlot(false);
       });
   };
 
@@ -82,14 +79,14 @@ export const PlaceDecoration = ({ selectedSquare, setSelectedSquare, setIsUpdati
         <ModalHeader
           text={
             hasDecorations
-              ? `Place Decoration in Slot ${selectedSquare}`
+              ? `Place Decoration in Slot ${selectedSquareId}`
               : hasPlacedDecorations
                 ? "Buy More Decorations"
                 : "No decorations unlocked"
           }
           disabled={isPlacing}
           handleOnClick={() => {
-            setSelectedSquare(null);
+            setSelectedSquareId(null);
           }}
         />
 

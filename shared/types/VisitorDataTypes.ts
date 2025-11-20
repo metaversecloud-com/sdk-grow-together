@@ -8,6 +8,7 @@ export type VisitorWorldDataType = {
   plotAssetId: string | null;
   plotSignAssetId: string | null;
   claimedDate: string;
+  lastInteractionDate: string;
   plotSquares: {
     [squareId: number]: string | null; // droppedAssetId of crop or null if empty
   };

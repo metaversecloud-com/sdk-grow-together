@@ -1,7 +1,8 @@
 import { InventoryItemInterface } from "@rtsdk/topia";
 
 export type WorldDataObjectType = {
-  claimedPlots: {
+  claimedPlots?: object;
+  plots: {
     [plotAssetId: string]: string | null; // profileId of owner
   };
 };

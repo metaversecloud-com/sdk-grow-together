@@ -8,11 +8,6 @@ import {
   getInventoryItems,
 } from "../utils/index.js";
 import { PlotAssetDataObjectType } from "../types/index.js";
-import { InventoryItemInterface } from "@rtsdk/topia";
-
-interface Items extends InventoryItemInterface {
-  metadata: { type?: string; cost?: number; rarity?: string };
-}
 
 /**
  * Get the current game state for a visitor including their plot, crops, and coin balance
@@ -36,22 +31,34 @@ export const handleGetGameState = async (req: Request, res: Response) => {
 
     const updatedVisitorData = visitorData;
     const visitorPlotData = visitorData.worlds[urlSlug];
-    if (visitorPlotData.plotAssetId && visitorPlotData.plotAssetId !== assetId) {
-      await DroppedAsset.get(visitorPlotData.plotAssetId, urlSlug, {
-        credentials: { ...credentials, assetId: visitorPlotData.plotAssetId },
-      }).catch(() => {
-        console.error("Visitor plot asset no longer in world");
-        // their plot is gone - clear from visitor data object for this world only so they can claim a new one
-        delete updatedVisitorData.worlds[urlSlug];
-      });
-    }
 
-    await visitor.fetchVisitor();
+    if (visitorPlotData.plotAssetId) {
+      if (visitorPlotData.plotAssetId === assetId) {
+        updatedVisitorData.worlds[urlSlug].lastInteractionDate = new Date().toISOString();
+
+        const droppedAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
+        droppedAsset.updateDataObject({ lastInteractionDate: new Date().toISOString() }).catch((error) => {
+          errorHandler({
+            error,
+            functionName: "handleGetGameState",
+            message: "Failed to update plot asset's last interaction date",
+          });
+        });
+      } else {
+        await DroppedAsset.get(visitorPlotData.plotAssetId, urlSlug, {
+          credentials: { ...credentials, assetId: visitorPlotData.plotAssetId },
+        }).catch(() => {
+          console.error("Visitor plot asset no longer in world");
+          // their plot is gone - clear from visitor data object for this world only so they can claim a new one
+          delete updatedVisitorData.worlds[urlSlug];
+        });
+      }
+    }
 
     await visitor.updateDataObject(updatedVisitorData, {
       analytics: [
         {
-          analyticName: `plotDrawerViews-${plotAssetData.ownerId === profileId ? "self" : "non-self"}`,
+          analyticName: `plotDrawerViews-${visitorPlotData.plotAssetId === assetId ? "self" : "non-self"}`,
           profileId,
           urlSlug,
           uniqueKey: profileId,
@@ -59,6 +66,7 @@ export const handleGetGameState = async (req: Request, res: Response) => {
       ],
     });
 
+    // Get inventory items
     const getInventoryItemsResponse = await getInventoryItems(credentials);
     if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
 
@@ -112,6 +120,8 @@ export const handleGetGameState = async (req: Request, res: Response) => {
     }
       */
 
+    await visitor.fetchVisitor(); // fetch visitor details to get isAdmin status
+
     return res.json({
       success: true,
       isAdmin: visitor.isAdmin,
@@ -121,6 +131,7 @@ export const handleGetGameState = async (req: Request, res: Response) => {
       visitorInventory,
       decorations,
       seeds,
+      noOfAvailablePlots: getPlotAssetsResult.availablePlotAssetIds.length,
     });
   } catch (error) {
     return errorHandler({

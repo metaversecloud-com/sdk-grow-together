@@ -17,7 +17,9 @@ import { plotConfig } from "../../shared/constants/plotConfig.js";
 export const handleWaterCrop = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { assetId, profileId, urlSlug } = credentials;
+    const { profileId, urlSlug } = credentials;
+    const { cropAssetId } = req.body;
+    const assetId = cropAssetId || credentials.assetId;
 
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;

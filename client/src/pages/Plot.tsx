@@ -2,7 +2,15 @@ import { useContext, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 // components
-import { PlotGrid, SeedMenu, PageContainer, DecorationMenu, YourMoney } from "@/components";
+import {
+  PlotGrid,
+  SeedMenu,
+  PageContainer,
+  DecorationMenu,
+  YourMoney,
+  NewUserInfo,
+  GetStartedModal,
+} from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
@@ -16,6 +24,7 @@ export const Plot = () => {
   const dispatch = useContext(GlobalDispatchContext);
   const {
     hasInteractiveParams,
+    noOfAvailablePlots,
     plotAssetData,
     visitorInventory = {},
     visitorPlotData,
@@ -28,6 +37,7 @@ export const Plot = () => {
   const [isClaiming, setIsClaiming] = useState(false);
   const [showSeedMenu, setShowSeedMenu] = useState(false);
   const [showDecorationMenu, setShowDecorationMenu] = useState(false);
+  const [showGetStartedModal, setShowGetStartedModal] = useState(searchParams.get("isFirstTimeOpen") === "true");
 
   const profileId = searchParams.get("profileId");
 
@@ -52,6 +62,16 @@ export const Plot = () => {
         .finally(() => setIsLoading(false));
     }
   }, [hasInteractiveParams]);
+
+  // Callback to trigger a re-render when crop data changes
+  const handlePlotDataChange = () => {
+    backendAPI
+      .get("/game-state")
+      .then((response) => {
+        setGameState(dispatch, response.data);
+      })
+      .catch((error) => setErrorMessage(dispatch, error as ErrorType));
+  };
 
   const handleClaimPlot = async () => {
     setIsClaiming(true);
@@ -92,7 +112,7 @@ export const Plot = () => {
               plotSquares={plotSquares}
               crops={crops || {}}
               placedDecorations={decorations || {}}
-              isReadOnly={false}
+              handlePlotDataChange={handlePlotDataChange}
             />
           </div>
         )}
@@ -101,15 +121,7 @@ export const Plot = () => {
         {isOwnedByOtherUser && (
           <div className="grid gap-2 mb-10">
             {claimedDate && <p>Garden Started: {new Date(claimedDate).toLocaleDateString()}</p>}
-            {!plotAssetId && (
-              <div className="grid gap-2 mt-6">
-                <h4>Ready to start your own garden?</h4>
-                <p>
-                  Look for a garden with a sign that says "Open Garden." Click the sign to start your very own garden.
-                  You might need to explore this world a bit to find one.
-                </p>
-              </div>
-            )}
+            <NewUserInfo plotAssetId={plotAssetId} noOfAvailablePlots={noOfAvailablePlots} showHeaders={true} />
           </div>
         )}
 
@@ -154,6 +166,9 @@ export const Plot = () => {
       </div>
       {showSeedMenu && <SeedMenu onClose={() => setShowSeedMenu(false)} />}
       {showDecorationMenu && <DecorationMenu onClose={() => setShowDecorationMenu(false)} />}
+      {showGetStartedModal && (
+        <GetStartedModal setShowGetStartedModal={() => setShowGetStartedModal(!showGetStartedModal)} />
+      )}
     </PageContainer>
   );
 };

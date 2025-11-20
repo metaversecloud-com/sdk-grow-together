@@ -38,6 +38,7 @@ export interface InitialState {
   hasInteractiveParams?: boolean;
   cropData?: CropDataObjectType;
   decorationData?: PlacedDecorationDataObjectType;
+  noOfAvailablePlots?: number;
   plotAssetData?: PlotAssetDataObjectType;
   visitorInventory?: VisitorInventoryType;
   visitorData?: VisitorDataObjectType;
@@ -57,3 +58,15 @@ export type ErrorType =
       message?: string;
       response?: { data?: { error?: { message?: string }; message?: string } };
     };
+
+export type SelectedSquareDetails = {
+  isEmpty?: boolean;
+  title?: string;
+  icon?: string;
+  name?: string;
+  growLevel?: number;
+  harvestLevel?: number;
+  reward?: number;
+  isReadyToWater?: boolean;
+  isReadyToHarvest?: boolean;
+};

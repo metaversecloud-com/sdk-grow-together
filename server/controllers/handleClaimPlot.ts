@@ -43,7 +43,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       throw `This plot is already owned by ${plotAssetData.ownerName || "another player"}.`;
     }
 
-    const title = `${displayName}'s Plot`;
+    const title = `${displayName}'s Garden`;
 
     // Add owner text asset below the plot
     const asset = Asset.create("textAsset", { credentials });
@@ -114,12 +114,12 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
     // Update world data to add this plot to claimed plots and remove original assetId
     const world = await World.create(urlSlug, { credentials });
     const worldDataObject = (await world.fetchDataObject()) as WorldDataObjectType;
-    delete worldDataObject.claimedPlots[assetId];
+    delete worldDataObject.plots[assetId];
 
     promises.push(
       world.updateDataObject({
-        claimedPlots: {
-          ...worldDataObject.claimedPlots,
+        plots: {
+          ...worldDataObject.plots,
           [plotAsset.id!]: profileId,
         },
       }),
@@ -142,7 +142,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
     await visitor
       .openIframe({
         droppedAssetId: assetId,
-        link: `${clickableLink}&assetId=${droppedTextAsset.id!}&visitorId=${visitorId}&interactiveNonce=${interactiveNonce}&interactivePublicKey=${interactivePublicKey}&urlSlug=${urlSlug}`,
+        link: `${clickableLink}&assetId=${droppedTextAsset.id!}&visitorId=${visitorId}&interactiveNonce=${interactiveNonce}&interactivePublicKey=${interactivePublicKey}&urlSlug=${urlSlug}&isFirstTimeOpen=true`,
         shouldOpenInDrawer: true,
         title,
       })

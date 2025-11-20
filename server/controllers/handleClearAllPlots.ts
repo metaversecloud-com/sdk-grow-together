@@ -23,6 +23,7 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
     const { assetId, urlSlug, visitorId } = credentials;
+    const { clearInactiveOnly } = req.body;
 
     const promises = [];
 
@@ -30,13 +31,10 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
     if (!admin.isAdmin) throw "Only admins can clear plots";
 
     // Get all plot assets
-    const getPlotAssetsResult = await getPlotAssets(credentials, true);
+    const getPlotAssetsResult = await getPlotAssets(credentials);
     if (getPlotAssetsResult instanceof Error) throw getPlotAssetsResult;
 
-    // Extract all plot asset ids (filter only keys with non-null values)
-    const plotAssetIds = Object.entries(getPlotAssetsResult.claimedPlots)
-      .filter(([_, value]) => value !== null)
-      .map(([key, _]) => key);
+    const { claimedPlotAssetIds } = getPlotAssetsResult;
 
     // Collect all data from plot assets in batches for better performance
     const ownerIds: string[] = [];
@@ -46,8 +44,8 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
     const batchSize = 10;
     const plotAssetBatches = [];
 
-    for (let i = 0; i < plotAssetIds.length; i += batchSize) {
-      plotAssetBatches.push(plotAssetIds.slice(i, i + batchSize));
+    for (let i = 0; i < claimedPlotAssetIds.length; i += batchSize) {
+      plotAssetBatches.push(claimedPlotAssetIds.slice(i, i + batchSize));
     }
 
     for (const batch of plotAssetBatches) {
@@ -58,7 +56,15 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
         await plotAsset.fetchDataObject();
 
         const plotAssetData = plotAsset.dataObject as PlotAssetDataObjectType;
-        if (plotAssetData.ownerId) {
+
+        // only clear plots that are owned and if they have been inactive for more than 2 weeks when clearInactiveOnly is true
+        if (
+          plotAssetData.ownerId &&
+          (!clearInactiveOnly ||
+            (clearInactiveOnly &&
+              plotAssetData.lastInteractionDate &&
+              plotAssetData.lastInteractionDate < new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()))
+        ) {
           ownerIds.push(plotAssetData.ownerId);
 
           // Update dropped sign asset image and link
@@ -142,7 +148,7 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
       await Promise.all(batchPromises);
     }
 
-    // Delete all collected dropped assets from all plot squares in batches
+    // Delete all selected dropped assets from all plot squares in batches
     if (allDroppedAssetIds.length > 0) {
       // Split large arrays of asset IDs into smaller chunks to avoid API limits
       const deleteChunkSize = 50;
@@ -152,10 +158,10 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
       }
     }
 
-    // Update world data to remove ownership from all claimed plots
+    // Update world data to remove ownership from selected claimed plots
     const world = await World.create(urlSlug, { credentials });
 
-    // Create an update object with all plot assets set to null
+    // Create an update object with selected plot assets set to null
     // Process in batches to avoid large object updates
     const batchUpdateSize = 25;
     for (let i = 0; i < newPlotAssetIds.length; i += batchUpdateSize) {
@@ -163,7 +169,7 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
       const chunk = newPlotAssetIds.slice(i, i + batchUpdateSize);
 
       chunk.forEach((plotId) => {
-        updateObj[`claimedPlots.${plotId}`] = null;
+        updateObj[`plots.${plotId}`] = null;
       });
 
       promises.push(world.setDataObject(updateObj));

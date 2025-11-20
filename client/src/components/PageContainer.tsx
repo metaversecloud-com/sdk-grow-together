@@ -30,12 +30,12 @@ export const PageContainer = ({
       )}
       {headerText && (
         <div className="flex pb-6">
+          <h2 className="flex-grow">{headerText}</h2>
           {showInfoIcon && (
             <button className="btn btn-icon mr-2" onClick={() => setShowInfoModal(!showInfoModal)}>
               <img src={`https://sdk-style.s3.amazonaws.com/icons/info.svg`} />
             </button>
           )}
-          <h2 className="flex-grow">{headerText}</h2>
         </div>
       )}
 

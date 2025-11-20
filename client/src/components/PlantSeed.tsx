@@ -11,12 +11,11 @@ import { ErrorType, SET_VISITOR_DATA, SET_VISITOR_PLOT_DATA } from "@/context/ty
 import { backendAPI, setErrorMessage } from "@/utils";
 
 interface PlantSeedProps {
-  selectedSquare: number;
-  setSelectedSquare: (square: number | null) => void;
-  setIsUpdatingPlot: (isUpdatingPlot: boolean) => void;
+  selectedSquareId: number;
+  setSelectedSquareId: (square: number | null) => void;
 }
 
-export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot }: PlantSeedProps) => {
+export const PlantSeed = ({ selectedSquareId, setSelectedSquareId }: PlantSeedProps) => {
   const dispatch = useContext(GlobalDispatchContext);
   const { seeds = {}, visitorInventory = {} } = useContext(GlobalStateContext);
 
@@ -34,15 +33,14 @@ export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot
   }, [visitorInventory, seeds]);
 
   const handlePlantSeed = async (seedId: string) => {
-    if (!seedId || selectedSquare === null) return;
+    if (!seedId || selectedSquareId === null) return;
 
     setIsPlanting(true);
-    setIsUpdatingPlot(true);
 
     await backendAPI
       .post("/crop/drop", {
         seedId: seedId,
-        squareId: selectedSquare,
+        squareId: selectedSquareId,
       })
       .then((response) => {
         const plantAudio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/crop_planted.mp3");
@@ -58,14 +56,13 @@ export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot
           type: SET_VISITOR_PLOT_DATA,
           payload: { visitorPlotData, error: "" },
         });
-        setSelectedSquare(null);
+        setSelectedSquareId(null);
       })
       .catch((error) => {
         setErrorMessage(dispatch, error as ErrorType);
       })
       .finally(() => {
         setIsPlanting(false);
-        setIsUpdatingPlot(false);
       });
   };
 
@@ -73,10 +70,10 @@ export const PlantSeed = ({ selectedSquare, setSelectedSquare, setIsUpdatingPlot
     <div className="modal-container">
       <div className="modal">
         <ModalHeader
-          text={hasSeeds ? `Plant Seed in Slot ${selectedSquare}` : "No seeds unlocked"}
+          text={hasSeeds ? `Plant Seed in Slot ${selectedSquareId}` : "No seeds unlocked"}
           disabled={isPlanting}
           handleOnClick={() => {
-            setSelectedSquare(null);
+            setSelectedSquareId(null);
           }}
         />
 
