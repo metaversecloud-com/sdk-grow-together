@@ -18,12 +18,11 @@ interface PlotGridProps {
   crops: VisitorWorldDataType["crops"];
   placedDecorations: VisitorWorldDataType["decorations"];
   visitorInventory?: VisitorInventoryType;
-  handlePlotDataChange: () => void;
 }
 
 type PlotSquareType = "crop" | "decoration";
 
-export const PlotGrid = ({ plotSquares, crops, placedDecorations, handlePlotDataChange }: PlotGridProps) => {
+export const PlotGrid = ({ plotSquares, crops, placedDecorations }: PlotGridProps) => {
   const { decorations = {}, seeds = {} } = useContext(GlobalStateContext);
 
   const [selectedSquareId, setSelectedSquareId] = useState<number | null>(null);
@@ -36,7 +35,6 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, handlePlotData
     setSelectedSquareId(squareId);
     setSelectedSquareIdType(itemType);
     setSelectedSquareDetails(getSquareDetails(squareId));
-    handlePlotDataChange();
 
     if (plotSquares[squareId]) setShowSquareModal(true);
   };
@@ -76,7 +74,6 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, handlePlotData
   };
 
   const closeSquareModal = () => {
-    handlePlotDataChange();
     setShowSquareModal(false);
     setSelectedSquareId(null);
   };

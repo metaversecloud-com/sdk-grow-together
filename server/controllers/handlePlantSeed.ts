@@ -31,6 +31,7 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     // Get the plot asset and lock to prevent simultaneous plantings
     const plotAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
 
+    // Lock to prevent simultaneous plantings
     try {
       await plotAsset.updateDataObject(
         {},

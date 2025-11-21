@@ -7,6 +7,7 @@ export * from "./getAnalyticName.js";
 export * from "./getBaseUrl.js";
 export * from "./getCredentials.js";
 export * from "./getPlotAssets.js";
+export * from "./getQueryString.js";
 export * from "./getVersion.js";
 export * from "./initializeVisitorData.js";
 export * from "./standardizedError.js";

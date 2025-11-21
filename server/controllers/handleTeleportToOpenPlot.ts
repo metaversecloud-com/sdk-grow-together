@@ -1,10 +1,18 @@
 import { Request, Response } from "express";
-import { DroppedAsset, errorHandler, getBaseUrl, getCredentials, getPlotAssets, Visitor } from "../utils/index.js";
+import {
+  DroppedAsset,
+  errorHandler,
+  getBaseUrl,
+  getCredentials,
+  getPlotAssets,
+  getQueryString,
+  Visitor,
+} from "../utils/index.js";
 
 export const handleTeleportToOpenPlot = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { assetId, interactiveNonce, interactivePublicKey, urlSlug, visitorId } = credentials;
+    const { assetId, profileId, urlSlug, visitorId } = credentials;
 
     const visitor = await Visitor.create(visitorId, urlSlug, { credentials });
 
@@ -30,7 +38,7 @@ export const handleTeleportToOpenPlot = async (req: Request, res: Response) => {
 
     // Open the plot iframe for the visitor
     const baseUrl = getBaseUrl(req.hostname);
-    const link = `${baseUrl}/plot?&assetId=${plotAssetId}&visitorId=${visitorId}&interactiveNonce=${interactiveNonce}&interactivePublicKey=${interactivePublicKey}&urlSlug=${urlSlug}`;
+    const link = `${baseUrl}/plot?&assetId=${plotAssetId}&${getQueryString(credentials)}`;
     await visitor
       .openIframe({
         droppedAssetId: plotAssetId,
@@ -53,6 +61,20 @@ export const handleTeleportToOpenPlot = async (req: Request, res: Response) => {
           });
         });
       });
+
+    visitor.updateDataObject(
+      {},
+      {
+        analytics: [
+          {
+            analyticName: "teleport-openPlot",
+            profileId,
+            urlSlug,
+            uniqueKey: profileId,
+          },
+        ],
+      },
+    );
 
     return res.json({
       success: true,

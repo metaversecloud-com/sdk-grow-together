@@ -32,6 +32,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     // Get the plot asset and lock to prevent simultaneous placements
     const plotAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
 
+    // Lock to prevent simultaneous placements
     try {
       await plotAsset.updateDataObject(
         {},

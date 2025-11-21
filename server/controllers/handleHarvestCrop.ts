@@ -31,6 +31,20 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
     const crop = visitorPlotData.crops[assetId];
     if (!crop) throw "Crop not found";
 
+    // Lock to prevent simultaneous harvests
+    try {
+      await visitor.updateDataObject(
+        {},
+        {
+          lock: {
+            lockId: `planting_${assetId}_${cropAssetId}_${Math.round(Date.now() / 60000) * 60000}`,
+          },
+        },
+      );
+    } catch (error) {
+      return res.status(409).json({ message: "Crop is already being harvest." });
+    }
+
     const getInventoryItemsResponse = await getInventoryItems(credentials);
     if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
 
@@ -45,78 +59,95 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
       throw `Crop is not ready for harvest. Current growth level: ${crop.growLevel}/${seedConfig.harvestLevel}`;
     }
 
-    // Grant coins to visitor (modify quantity or add to inventory)
-    const name = "Coins";
-    const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
-      credentials,
-      visitor,
-      name,
-      quantity: seedConfig.reward,
-    });
-    if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
-    visitorInventory[name] = { id: name, quantity: modifyInventoryItemResponse };
+    try {
+      const cropAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
 
-    // Update visitor's data object
-    const updatedVisitorData = {
-      ...visitorData,
-      totalCoinsEarned: visitorData.totalCoinsEarned + seedConfig.reward,
-      lastDateCoinsEarned: new Date().toISOString(),
-    };
+      // Grant coins to visitor (modify quantity or add to inventory)
+      if (cropAsset) {
+        const name = "Coins";
+        const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
+          credentials,
+          visitor,
+          name,
+          quantity: seedConfig.reward,
+        });
+        if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
+        visitorInventory[name] = { id: name, quantity: modifyInventoryItemResponse };
+      }
 
-    updatedVisitorData.worlds[urlSlug].plotSquares[crop.squareId] = null;
-    delete updatedVisitorData.worlds[urlSlug].crops[assetId];
+      // Update visitor's data object
+      const updatedVisitorData = {
+        ...visitorData,
+        totalCoinsEarned: visitorData.totalCoinsEarned + seedConfig.reward,
+        lastDateCoinsEarned: new Date().toISOString(),
+      };
 
-    await visitor.updateDataObject(updatedVisitorData, {
-      analytics: [
-        {
-          analyticName: "cropsHarvested",
-          profileId,
-          urlSlug,
-          uniqueKey: profileId,
-        },
-        {
-          analyticName: `${getAnalyticName(seedConfig)}Harvested`,
-          profileId,
-          urlSlug,
-          uniqueKey: profileId,
-        },
-      ],
-    });
+      updatedVisitorData.worlds[urlSlug].plotSquares[crop.squareId] = null;
+      delete updatedVisitorData.worlds[urlSlug].crops[assetId];
 
-    const cropAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
+      await visitor.updateDataObject(updatedVisitorData, {
+        analytics: [
+          {
+            analyticName: "cropsHarvested",
+            profileId,
+            urlSlug,
+            uniqueKey: profileId,
+          },
+          {
+            analyticName: `${getAnalyticName(seedConfig)}Harvested`,
+            profileId,
+            urlSlug,
+            uniqueKey: profileId,
+          },
+        ],
+      });
 
-    // Trigger particle effect at crop position (if we can still get the asset)
-    const world = World.create(urlSlug, { credentials });
-    await world
-      .triggerParticle({
-        name: "coin_grow_together",
-        duration: 2,
-        position: cropAsset.position,
-      })
-      .catch((error) => {
+      // Trigger particle effect at crop position (if we can still get the asset)
+      const world = World.create(urlSlug, { credentials });
+      await world
+        .triggerParticle({
+          name: "coin_grow_together",
+          duration: 2,
+          position: cropAsset.position,
+        })
+        .catch((error) => {
+          errorHandler({
+            error,
+            functionName: "handleHarvestCrop",
+            message: `Failed to trigger harvest particle effect: ${error}`,
+          });
+        });
+
+      // Remove the crop asset from the world
+      await cropAsset.deleteDroppedAsset().catch((error) => {
         errorHandler({
           error,
           functionName: "handleHarvestCrop",
-          message: `Failed to trigger harvest particle effect: ${error}`,
+          message: `Failed to delete crop asset ${assetId}: ${error}`,
         });
       });
 
-    // Remove the crop asset from the world
-    await cropAsset.deleteDroppedAsset().catch((error) => {
-      errorHandler({
-        error,
-        functionName: "handleHarvestCrop",
-        message: `Failed to delete crop asset ${assetId}: ${error}`,
+      return res.json({
+        success: true,
+        visitorData: updatedVisitorData,
+        visitorPlotData: updatedVisitorData.worlds[urlSlug],
+        visitorInventory,
       });
-      // Continue with harvest even if asset deletion fails (it might have been manually deleted)
-    });
+    } catch (error) {
+      console.error("Crop asset no longer in world. Continuing with harvest to clean up data object.");
 
-    return res.json({
-      success: true,
-      visitorData: updatedVisitorData,
-      visitorPlotData: updatedVisitorData.worlds[urlSlug],
-      visitorInventory,
-    });
+      visitorData.worlds[urlSlug].plotSquares[crop.squareId] = null;
+      delete visitorData.worlds[urlSlug].crops[assetId];
+
+      await visitor.updateDataObject(visitorData, {});
+
+      return res.json({
+        success: false,
+        visitorData,
+        visitorPlotData: visitorData.worlds[urlSlug],
+        visitorInventory,
+      });
+    }
   } catch (error) {
     return errorHandler({
       error,
