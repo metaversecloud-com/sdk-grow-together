@@ -3,6 +3,7 @@ import { CropDataObjectType, VisitorDataObjectType, VisitorWorldDataType } from 
 export const DEFAULT_VISITOR_DATA: VisitorDataObjectType = {
   lastDateCoinsEarned: "",
   totalCoinsEarned: 0,
+  placedDecorations: {},
   worlds: {},
 };
 

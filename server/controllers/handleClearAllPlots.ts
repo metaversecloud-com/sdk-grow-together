@@ -9,10 +9,9 @@ import {
   User,
   getPlotAssets,
   getBaseUrl,
-  modifyUserInventoryItem,
 } from "../utils/index.js";
 import { PlotAssetDataObjectType, VisitorDataObjectType } from "../types/index.js";
-import { DroppedAssetClickType, VisitorInterface } from "@rtsdk/topia";
+import { DroppedAssetClickType, DroppedAssetInterface, VisitorInterface } from "@rtsdk/topia";
 import { s3URL } from "../../shared/index.js";
 
 /**
@@ -63,7 +62,7 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
           (!clearInactiveOnly ||
             (clearInactiveOnly &&
               plotAssetData.lastInteractionDate &&
-              plotAssetData.lastInteractionDate < new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()))
+              new Date(plotAssetData.lastInteractionDate) < new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)))
         ) {
           ownerIds.push(plotAssetData.ownerId);
 
@@ -88,12 +87,50 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
       });
 
       // Process each batch sequentially to avoid overwhelming the server
-      await Promise.all(batchPromises);
+      await Promise.allSettled(batchPromises);
     }
+    const uniqueOwnerIds = [...new Set(ownerIds)]; // Remove duplicates
 
     // Collect all dropped assets from all owners
     const allDroppedAssetIds: string[] = [];
-    const uniqueOwnerIds = [...new Set(ownerIds)]; // Remove duplicates
+    const textAssetIds: string[] = [];
+
+    const world = await World.create(urlSlug, { credentials });
+
+    const [cropAssets, decorationAssets, textAssets] = await Promise.all([
+      world.fetchDroppedAssetsWithUniqueName({
+        uniqueName: "GrowTogether_crop",
+        isPartial: true,
+      }),
+      world.fetchDroppedAssetsWithUniqueName({
+        uniqueName: "GrowTogether_decoration",
+        isPartial: true,
+      }),
+      world.fetchDroppedAssetsWithUniqueName({
+        uniqueName: "GrowTogether_ownerText",
+        isPartial: true,
+      }),
+    ]);
+
+    const allDroppedAssets: DroppedAssetInterface[] = [];
+    allDroppedAssets.push(...Object.values(cropAssets));
+    allDroppedAssets.push(...Object.values(decorationAssets));
+    allDroppedAssets.push(...Object.values(textAssets));
+
+    // Only push if uniqueName contains an ownerId found in uniqueOwnerIds
+    if (allDroppedAssets.length > 0) {
+      for (const index in allDroppedAssets) {
+        const asset = allDroppedAssets[index];
+        if (
+          !clearInactiveOnly ||
+          uniqueOwnerIds.some((ownerId) => {
+            return asset.uniqueName?.includes(ownerId);
+          })
+        ) {
+          allDroppedAssetIds.push(asset.id!);
+        }
+      }
+    }
 
     // Process owners in batches for better performance
     const ownerBatchSize = 5;
@@ -111,26 +148,19 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
 
         if (!ownerWorldData) return { ownerId, ownerData };
 
-        if (ownerWorldData.plotSignAssetId) allDroppedAssetIds.push(ownerWorldData.plotSignAssetId);
+        if (ownerWorldData.plotSignAssetId) textAssetIds.push(ownerWorldData.plotSignAssetId);
 
-        // Collect dropped assets from this owner's plot squares - more efficiently
-        const ownerDroppedAssetIds = Object.values(ownerWorldData.plotSquares || {}).filter(Boolean) as string[];
-        allDroppedAssetIds.push(...ownerDroppedAssetIds);
-
-        // Handle decorations and inventory updates
-        if (ownerWorldData.decorations && Object.keys(ownerWorldData.decorations).length > 0) {
-          // Create a batch promise for inventory modifications
-          const inventoryUpdates = Object.values(ownerWorldData.decorations).map((decoration) =>
-            modifyUserInventoryItem({
-              credentials,
-              user: plotOwner,
-              name: decoration.decorationName,
-              quantity: 1,
-            }),
-          );
-
-          // Add all inventory updates as a single batch promise
-          promises.push(Promise.all(inventoryUpdates));
+        // Reset placedDecorations for this urlSlug only
+        if (ownerData.placedDecorations) {
+          for (const decorationId of Object.keys(ownerData.placedDecorations)) {
+            if (ownerData.placedDecorations[decorationId][urlSlug]) {
+              delete ownerData.placedDecorations[decorationId][urlSlug];
+              // Clean up empty objects
+              if (Object.keys(ownerData.placedDecorations[decorationId]).length === 0) {
+                delete ownerData.placedDecorations[decorationId];
+              }
+            }
+          }
         }
 
         // Reset visitor data for this world to defaults
@@ -148,18 +178,38 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
       await Promise.all(batchPromises);
     }
 
-    // Delete all selected dropped assets from all plot squares in batches
-    if (allDroppedAssetIds.length > 0) {
-      // Split large arrays of asset IDs into smaller chunks to avoid API limits
-      const deleteChunkSize = 50;
-      for (let i = 0; i < allDroppedAssetIds.length; i += deleteChunkSize) {
-        const chunk = allDroppedAssetIds.slice(i, i + deleteChunkSize);
-        promises.push(World.deleteDroppedAssets(urlSlug, chunk, process.env.INTERACTIVE_SECRET!, credentials));
+    if (textAssetIds.length > 0) {
+      // Remove duplicates and already-included id
+      const textAssetIdsToCheck = textAssetIds.filter((id) => !allDroppedAssetIds.includes(id));
+      if (textAssetIdsToCheck.length > 0) {
+        // Fetch all in parallel, only push if found
+        const results = await Promise.allSettled(
+          textAssetIdsToCheck.map((textAssetId) =>
+            DroppedAsset.get(textAssetId, urlSlug, {
+              credentials: { ...credentials, assetId: textAssetId },
+            }),
+          ),
+        );
+        results.forEach((result, idx) => {
+          if (result.status === "fulfilled" && result.value?.id) {
+            allDroppedAssetIds.push(result.value.id);
+          } else if (result.status === "rejected") {
+            console.error("Text asset no longer in world", textAssetIdsToCheck[idx]);
+          }
+        });
       }
     }
 
-    // Update world data to remove ownership from selected claimed plots
-    const world = await World.create(urlSlug, { credentials });
+    // Delete all selected dropped assets from all plot squares in batches
+    const uniqueDroppedAssetIds = [...new Set(allDroppedAssetIds)]; // Remove duplicates
+    if (uniqueDroppedAssetIds.length > 0) {
+      // Split large arrays of asset ids into smaller chunks to avoid API limits
+      const deleteChunkSize = 50;
+      for (let i = 0; i < uniqueDroppedAssetIds.length; i += deleteChunkSize) {
+        const chunk = uniqueDroppedAssetIds.slice(i, i + deleteChunkSize);
+        promises.push(World.deleteDroppedAssets(urlSlug, chunk, process.env.INTERACTIVE_SECRET!, credentials));
+      }
+    }
 
     // Create an update object with selected plot assets set to null
     // Process in batches to avoid large object updates
@@ -172,6 +222,7 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
         updateObj[`plots.${plotId}`] = null;
       });
 
+      // Update world data to remove ownership from selected claimed plots
       promises.push(world.setDataObject(updateObj));
     }
 

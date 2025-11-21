@@ -39,25 +39,24 @@ export const handleRemoveDecoration = async (req: Request, res: Response) => {
     const decorationConfig = decorations[decoration.decorationId];
     if (!decorationConfig) throw "Invalid decoration type";
 
-    // Return the decoration to visitor's inventory
-    const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
-      credentials,
-      visitor,
-      name: decorationConfig.name,
-      quantity: 1,
-    });
-    if (typeof modifyInventoryItemResponse === "number") {
-      visitorInventory[decorationConfig.name] = {
-        id: decorationConfig.name,
-        quantity: modifyInventoryItemResponse,
-      };
-    } else {
-      console.log("Error while modifying inventory item:", modifyInventoryItemResponse);
-    }
-
     // Update visitor's data object
     visitorData.worlds[urlSlug].plotSquares[squareId] = null;
     delete visitorData.worlds[urlSlug].decorations[assetId];
+
+    // Remove the placedDecoration entry for this assetId
+    if (visitorData.placedDecorations?.[decoration.decorationName]?.[urlSlug]) {
+      const index = visitorData.placedDecorations[decoration.decorationName][urlSlug].indexOf(assetId);
+      if (index > -1) {
+        visitorData.placedDecorations[decoration.decorationName][urlSlug].splice(index, 1);
+      }
+    }
+    // Only increment availableQuantity if it does not exceed quantity
+    if (
+      visitorInventory[decoration.decorationName].availableQuantity + 1 <=
+      visitorInventory[decoration.decorationName].quantity
+    ) {
+      visitorInventory[decoration.decorationName].availableQuantity += 1;
+    }
 
     await visitor.updateDataObject(visitorData, {
       analytics: [

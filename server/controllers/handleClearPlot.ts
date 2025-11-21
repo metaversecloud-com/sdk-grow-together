@@ -8,7 +8,6 @@ import {
   DEFAULT_VISITOR_WORLD_DATA,
   User,
   getBaseUrl,
-  modifyUserInventoryItem,
 } from "../utils/index.js";
 import { PlotAssetDataObjectType, VisitorDataObjectType } from "../types/index.js";
 import { DroppedAssetClickType, VisitorInterface } from "@rtsdk/topia";
@@ -36,30 +35,62 @@ export const handleClearPlot = async (req: Request, res: Response) => {
 
     const plotOwner = await User.create({ credentials, profileId: plotAssetData.ownerId });
     const ownerData = (await plotOwner.fetchDataObject()) as VisitorDataObjectType;
-    const ownerWorldData = ownerData.worlds?.[urlSlug];
 
-    if (Object.keys(ownerWorldData.decorations).length > 0) {
-      for (const decoration of Object.values(ownerWorldData.decorations)) {
-        promises.push(
-          modifyUserInventoryItem({
-            credentials,
-            user: plotOwner,
-            name: decoration.decorationName,
-            quantity: 1,
-          }),
-        );
+    // Delete all dropped assets in this plot
+    const droppedAssetIds: string[] = [];
+    const world = await World.create(urlSlug, { credentials });
+
+    const [cropAssets, decorationAssets] = await Promise.all([
+      world.fetchDroppedAssetsWithUniqueName({
+        uniqueName: `GrowTogether_crop_${plotAssetData.ownerId}`,
+        isPartial: true,
+      }),
+      world.fetchDroppedAssetsWithUniqueName({
+        uniqueName: `GrowTogether_decoration_${plotAssetData.ownerId}`,
+        isPartial: true,
+      }),
+    ]);
+
+    if (Object.keys(cropAssets).length > 0) {
+      for (const index in cropAssets) {
+        droppedAssetIds.push(cropAssets[index].id!);
+      }
+    }
+    if (Object.keys(decorationAssets).length > 0) {
+      for (const index in decorationAssets) {
+        droppedAssetIds.push(decorationAssets[index].id!);
       }
     }
 
-    // Delete all dropped assets in this plot
-    const droppedAssetIds = Object.values(ownerWorldData?.plotSquares || {}).filter(
-      (droppedAssetId): droppedAssetId is string => !!droppedAssetId,
-    );
+    const ownerWorldData = ownerData.worlds?.[urlSlug];
 
-    if (ownerWorldData.plotSignAssetId) droppedAssetIds.push(ownerWorldData.plotSignAssetId);
+    if (ownerWorldData.plotSignAssetId) {
+      await DroppedAsset.get(ownerWorldData.plotSignAssetId, urlSlug, {
+        credentials: { ...credentials, assetId: ownerWorldData.plotSignAssetId },
+      })
+        .then(async (textAsset) => {
+          droppedAssetIds.push(textAsset.id!);
+        })
+        .catch(() => {
+          console.error("Visitor text asset no longer in world");
+        });
+    }
 
     if (droppedAssetIds.length > 0) {
       promises.push(World.deleteDroppedAssets(urlSlug, droppedAssetIds, process.env.INTERACTIVE_SECRET!, credentials));
+    }
+
+    // Reset placedDecorations for this urlSlug only
+    if (ownerData.placedDecorations) {
+      for (const decorationId of Object.keys(ownerData.placedDecorations)) {
+        if (ownerData.placedDecorations[decorationId][urlSlug]) {
+          delete ownerData.placedDecorations[decorationId][urlSlug];
+          // Clean up empty objects
+          if (Object.keys(ownerData.placedDecorations[decorationId]).length === 0) {
+            delete ownerData.placedDecorations[decorationId];
+          }
+        }
+      }
     }
 
     // Reset visitor data for this world to defaults
@@ -85,8 +116,6 @@ export const handleClearPlot = async (req: Request, res: Response) => {
     promises.push(plotAsset.setDataObject({}));
 
     // Update world data to add this plot to claimed plots and remove original assetId
-    const world = await World.create(urlSlug, { credentials });
-
     promises.push(
       world.updateDataObject({
         [`plots.${assetId}`]: null,

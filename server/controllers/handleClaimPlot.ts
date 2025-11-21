@@ -51,7 +51,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       position: { x: plotAsset.position.x, y: plotAsset.position.y + 580 },
       isTextTopLayer: true,
       text: title,
-      uniqueName: `GrowTogether_ownerText`,
+      uniqueName: `GrowTogether_ownerText_${profileId}`,
       urlSlug,
     });
 
@@ -76,7 +76,11 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       });
       // Throw error if Carrots doesn't exist in inventory for Public Key - user will not be able to do anything with their garden if they don't have any seeds to start with
       if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
-      visitorInventory[name] = { id: name, quantity: modifyInventoryItemResponse };
+      visitorInventory[name] = {
+        id: name,
+        quantity: modifyInventoryItemResponse,
+        availableQuantity: modifyInventoryItemResponse,
+      };
     }
 
     // Update plot asset's data object to mark ownership
@@ -84,6 +88,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       ownerId: profileId,
       ownerName: displayName,
       claimedDate,
+      lastInteractionDate: new Date().toISOString(),
     };
     promises.push(plotAsset.setDataObject(plotAssetData));
 

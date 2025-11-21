@@ -72,7 +72,11 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
           quantity: seedConfig.reward,
         });
         if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
-        visitorInventory[name] = { id: name, quantity: modifyInventoryItemResponse };
+        visitorInventory[name] = {
+          id: name,
+          quantity: modifyInventoryItemResponse,
+          availableQuantity: modifyInventoryItemResponse,
+        };
       }
 
       // Update visitor's data object

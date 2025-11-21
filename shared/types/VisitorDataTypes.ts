@@ -24,12 +24,18 @@ export type VisitorInventoryType = {
   [itemId: string]: {
     id: string;
     quantity: number;
+    availableQuantity: number;
   };
 };
 
 export type VisitorDataObjectType = {
   lastDateCoinsEarned: string; // ISO date string when the plot was claimed
   totalCoinsEarned: number; // Lifetime coins earned (for unlocks)
+  placedDecorations: {
+    [decorationId: string]: {
+      [urlSlug: string]: string[]; // array of droppedAssetIds
+    };
+  };
   worlds: {
     [urlSlug: string]: VisitorWorldDataType;
   };

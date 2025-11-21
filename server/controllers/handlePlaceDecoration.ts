@@ -9,7 +9,6 @@ import {
   World,
   getBaseUrl,
   getInventoryItems,
-  modifyVisitorInventoryItem,
   getAnalyticName,
 } from "../utils/index.js";
 import { calculateNumberOfSquares, getDecorationImageVariation } from "../../shared/index.js";
@@ -113,6 +112,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
       uniqueName: `GrowTogether_decoration_${profileId}`,
       urlSlug,
     });
+    if (!decorationAsset.id) throw "Failed to place decoration asset";
 
     const now = new Date().toISOString();
     const decorationData = {
@@ -128,22 +128,19 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
       ownerName: displayName,
     });
 
-    // Deduct the decoration from visitor's inventory
-    const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
-      credentials,
-      visitor,
-      name: decoration.name,
-      quantity: -1,
-    });
-    if (typeof modifyInventoryItemResponse === "number") {
-      visitorInventory[decoration.name].quantity = modifyInventoryItemResponse;
+    // Update visitor's data object
+    visitorData.worlds[urlSlug].plotSquares[squareId] = decorationAsset.id;
+    visitorData.worlds[urlSlug].decorations[decorationAsset.id] = decorationData;
+
+    if (!visitorData.placedDecorations[decoration.name]) {
+      visitorData.placedDecorations[decoration.name] = { [urlSlug]: [decorationAsset.id] };
+    } else if (!visitorData.placedDecorations[decoration.name][urlSlug]) {
+      visitorData.placedDecorations[decoration.name][urlSlug] = [decorationAsset.id];
     } else {
-      console.log("Error while modifying inventory item:", modifyInventoryItemResponse);
+      visitorData.placedDecorations[decoration.name][urlSlug].push(decorationAsset.id);
     }
 
-    // Update visitor's data object
-    visitorData.worlds[urlSlug].plotSquares[squareId] = decorationAsset.id!;
-    visitorData.worlds[urlSlug].decorations[decorationAsset.id!] = decorationData;
+    if (visitorInventory[decoration.name]) visitorInventory[decoration.name].availableQuantity -= 1;
 
     await visitor.updateDataObject(visitorData, {
       analytics: [
