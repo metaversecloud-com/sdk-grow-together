@@ -8,7 +8,7 @@ import {
   getInventoryItems,
   getAnalyticName,
 } from "../utils/index.js";
-import { getSeedImageVariation } from "../../shared/index.js";
+import { CropDataObjectType, getSeedImageVariation } from "../../shared/index.js";
 import { plotConfig } from "../../shared/constants/plotConfig.js";
 
 /**
@@ -69,43 +69,45 @@ export const handleWaterCrop = async (req: Request, res: Response) => {
       // Update visitor's data object
       visitorData.worlds[urlSlug].crops[assetId] = cropData;
 
-      await visitor.updateDataObject(visitorData, {
-        analytics: [
-          {
-            analyticName: "cropsWatered",
-            profileId,
-            urlSlug,
-            uniqueKey: profileId,
-          },
-          {
-            analyticName: `${getAnalyticName(seedConfig)}Watered`,
-            profileId,
-            urlSlug,
-            uniqueKey: profileId,
-          },
-        ],
-      });
-
-      // Trigger particle effect at crop position (if we can still get the asset)
       const world = World.create(urlSlug, { credentials });
-      await world
-        .triggerParticle({
-          name: "drop_grow_together",
-          duration: 1,
-          position: {
-            x: cropAsset.position.x - plotConfig.squareSpacing / 2,
-            y: cropAsset.position.y - 200,
-          },
-        })
-        .catch((error) => {
-          errorHandler({
-            error,
-            functionName: "handleWaterCrop",
-            message: `Failed to trigger water particle effect: ${error}`,
-          });
-        });
 
-      const cropAssetData = await cropAsset.fetchDataObject();
+      await Promise.all([
+        visitor.updateDataObject(visitorData, {
+          analytics: [
+            {
+              analyticName: "cropsWatered",
+              profileId,
+              urlSlug,
+              uniqueKey: profileId,
+            },
+            {
+              analyticName: `${getAnalyticName(seedConfig)}Watered`,
+              profileId,
+              urlSlug,
+              uniqueKey: profileId,
+            },
+          ],
+        }),
+        world
+          .triggerParticle({
+            name: "drop_grow_together",
+            duration: 1,
+            position: {
+              x: cropAsset.position.x - plotConfig.squareSpacing / 2,
+              y: cropAsset.position.y - 200,
+            },
+          })
+          .catch((error) => {
+            errorHandler({
+              error,
+              functionName: "handleWaterCrop",
+              message: `Failed to trigger water particle effect: ${error}`,
+            });
+          }),
+        cropAsset.fetchDataObject(),
+      ]);
+
+      const cropAssetData = cropAsset.dataObject as CropDataObjectType;
 
       // update the crop data on the asset
       await cropAsset.updateDataObject({ ...cropAssetData, ...cropData });
