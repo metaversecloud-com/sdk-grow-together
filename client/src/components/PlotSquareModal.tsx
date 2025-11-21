@@ -105,9 +105,20 @@ export const PlotSquareModal = ({
             <img className="m-auto" src={icon} />
           )}
         </div>
-        {isReadyToWater && <WaterButton cropAssetId={itemAssetId} handleAfterWater={closeSquareModal} />}
+        {isReadyToWater && (
+          <WaterButton
+            cropAssetId={itemAssetId}
+            handleAfterWater={closeSquareModal}
+            setAreButtonsDisabled={setAreButtonsDisabled}
+          />
+        )}
         {isReadyToHarvest && (
-          <HarvestButton cropAssetId={itemAssetId} handleAfterHarvest={closeSquareModal} reward={reward || 0} />
+          <HarvestButton
+            cropAssetId={itemAssetId}
+            handleAfterHarvest={closeSquareModal}
+            reward={reward || 0}
+            setAreButtonsDisabled={setAreButtonsDisabled}
+          />
         )}
         <div className="actions">
           <button

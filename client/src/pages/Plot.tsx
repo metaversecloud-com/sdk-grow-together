@@ -63,16 +63,6 @@ export const Plot = () => {
     }
   }, [hasInteractiveParams]);
 
-  // Callback to trigger a re-render when crop data changes
-  const handlePlotDataChange = () => {
-    backendAPI
-      .get("/game-state")
-      .then((response) => {
-        setGameState(dispatch, response.data);
-      })
-      .catch((error) => setErrorMessage(dispatch, error as ErrorType));
-  };
-
   const handleClaimPlot = async () => {
     setIsClaiming(true);
     await backendAPI
@@ -108,12 +98,7 @@ export const Plot = () => {
             </div>
             <hr className="my-2" />
             <h4>Garden Plot</h4>
-            <PlotGrid
-              plotSquares={plotSquares}
-              crops={crops || {}}
-              placedDecorations={decorations || {}}
-              handlePlotDataChange={handlePlotDataChange}
-            />
+            <PlotGrid plotSquares={plotSquares} crops={crops || {}} placedDecorations={decorations || {}} />
           </div>
         )}
 
