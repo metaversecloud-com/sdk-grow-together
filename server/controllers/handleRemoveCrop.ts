@@ -54,12 +54,12 @@ export const handleRemoveCrop = async (req: Request, res: Response) => {
 
       await droppedAsset.deleteDroppedAsset();
     } catch (error) {
+      // Continue with removal even if asset deletion fails (it might have been manually removed from world)
       errorHandler({
         error,
         functionName: "handleRemoveCrop",
         message: `Failed to trigger remove crop asset ${assetId} from world: ${error}`,
       });
-      // Continue with removal even if asset deletion fails (it might have been manually removed from world)
     }
 
     return res.json({

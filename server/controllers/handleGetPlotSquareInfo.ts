@@ -24,7 +24,24 @@ export const handleGetPlotSquareInfo = async (req: Request, res: Response) => {
     const droppedAsset = await DroppedAsset.create(assetId, urlSlug, { credentials });
     const squareData = (await droppedAsset.fetchDataObject()) as CropDataObjectType;
 
-    const { seedId, ownerId } = squareData;
+    const { seedId, squareId, ownerId } = squareData;
+
+    if (!visitorData.worlds[urlSlug]?.plotSquares[squareId]) {
+      await visitor.closeIframe(assetId).catch((error: any) => {
+        return errorHandler({
+          error,
+          functionName: "handleGetPlotSquareInfo",
+          message: "Error closing iframe",
+        });
+      });
+
+      await droppedAsset.deleteDroppedAsset();
+
+      return res.json({
+        success: false,
+        message: "No crop found on the specified square",
+      });
+    }
 
     const getInventoryItemsResponse = await getInventoryItems(credentials);
     if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
