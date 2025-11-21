@@ -26,7 +26,7 @@ export const handleGetPlotSquareInfo = async (req: Request, res: Response) => {
 
     const { seedId, squareId, ownerId } = squareData;
 
-    if (!visitorData.worlds[urlSlug]?.plotSquares[squareId]) {
+    if (seedId && profileId === ownerId && !visitorData.worlds[urlSlug]?.plotSquares[squareId]) {
       await visitor.closeIframe(assetId).catch((error: any) => {
         return errorHandler({
           error,
