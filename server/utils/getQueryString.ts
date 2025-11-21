@@ -6,9 +6,7 @@ export const getQueryString = (credentials: Credentials): string => {
     const { displayName, identityId, interactiveNonce, interactivePublicKey, profileId, urlSlug, username, visitorId } =
       credentials;
 
-    return encodeURIComponent(
-      `displayName=${displayName}&identityId=${identityId}&interactiveNonce=${interactiveNonce}&interactivePublicKey=${interactivePublicKey}&profileId=${profileId}&urlSlug=${urlSlug}&username=${username}&visitorId=${visitorId}`,
-    );
+    return `displayName=${encodeURIComponent(displayName)}&identityId=${encodeURIComponent(identityId)}&interactiveNonce=${encodeURIComponent(interactiveNonce)}&interactivePublicKey=${encodeURIComponent(interactivePublicKey)}&profileId=${encodeURIComponent(profileId)}&urlSlug=${encodeURIComponent(urlSlug)}&username=${encodeURIComponent(username)}&visitorId=${encodeURIComponent(visitorId)}`;
   } catch (error) {
     return errorHandler({
       error,
