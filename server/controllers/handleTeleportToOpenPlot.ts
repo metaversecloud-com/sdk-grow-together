@@ -12,7 +12,7 @@ import {
 export const handleTeleportToOpenPlot = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { assetId, urlSlug, visitorId } = credentials;
+    const { assetId, profileId, urlSlug, visitorId } = credentials;
 
     const visitor = await Visitor.create(visitorId, urlSlug, { credentials });
 
@@ -61,6 +61,20 @@ export const handleTeleportToOpenPlot = async (req: Request, res: Response) => {
           });
         });
       });
+
+    visitor.updateDataObject(
+      {},
+      {
+        analytics: [
+          {
+            analyticName: "teleport-openPlot",
+            profileId,
+            urlSlug,
+            uniqueKey: profileId,
+          },
+        ],
+      },
+    );
 
     return res.json({
       success: true,
