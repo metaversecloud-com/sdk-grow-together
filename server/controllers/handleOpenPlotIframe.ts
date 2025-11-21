@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
-import { errorHandler, getBaseUrl, getCredentials, Visitor } from "../utils/index.js";
+import { errorHandler, getBaseUrl, getCredentials, getQueryString, Visitor } from "../utils/index.js";
 
 export const handleOpenPlotIframe = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { displayName, interactivePublicKey, interactiveNonce, profileId, urlSlug, visitorId } = credentials;
+    const { urlSlug, visitorId } = credentials;
     const { plotAssetId } = req.body;
 
     if (!plotAssetId) throw new Error("Plot asset id is undefined.");
@@ -12,11 +12,10 @@ export const handleOpenPlotIframe = async (req: Request, res: Response) => {
     const visitor = await Visitor.create(visitorId, urlSlug, { credentials: { ...credentials, assetId: plotAssetId } });
 
     const baseUrl = getBaseUrl(req.hostname);
-    const query = `?assetId=${plotAssetId}&displayName=${displayName}&profileId=${profileId}&urlSlug=${urlSlug}&interactiveKey=${interactivePublicKey}&interactiveNonce=${interactiveNonce}&visitorId=${visitorId}`;
     await visitor
       .openIframe({
         droppedAssetId: plotAssetId,
-        link: `${baseUrl}/plot?${encodeURIComponent(query)}`,
+        link: `${baseUrl}/plot?assetId=${plotAssetId}&${getQueryString(credentials)}`,
         shouldOpenInDrawer: true,
         title: "Garden Plot",
       })

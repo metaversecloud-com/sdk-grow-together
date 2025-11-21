@@ -4,7 +4,7 @@ import { DroppedAsset, errorHandler, getCredentials, initializeVisitorData } fro
 export const handleTeleportToPlot = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { assetId, urlSlug } = credentials;
+    const { assetId, profileId, urlSlug } = credentials;
 
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
@@ -31,6 +31,20 @@ export const handleTeleportToPlot = async (req: Request, res: Response) => {
         functionName: "handleTeleportToPlot",
         message: "Error closing iframe",
       }),
+    );
+
+    visitor.updateDataObject(
+      {},
+      {
+        analytics: [
+          {
+            analyticName: "teleport-selfPlot",
+            profileId,
+            urlSlug,
+            uniqueKey: profileId,
+          },
+        ],
+      },
     );
 
     return res.json({

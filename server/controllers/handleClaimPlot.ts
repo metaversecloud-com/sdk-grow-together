@@ -8,6 +8,7 @@ import {
   modifyVisitorInventoryItem,
   getBaseUrl,
   Asset,
+  getQueryString,
 } from "../utils/index.js";
 import { PlotAssetDataObjectType, WorldDataObjectType } from "../types/index.js";
 import { calculateNumberOfSquares, s3URL } from "../../shared/index.js";
@@ -20,7 +21,7 @@ import { DroppedAssetClickType } from "@rtsdk/topia";
 export const handleClaimPlot = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { assetId, displayName, interactiveNonce, interactivePublicKey, profileId, urlSlug, visitorId } = credentials;
+    const { assetId, displayName, profileId, urlSlug } = credentials;
 
     const promises = [];
 
@@ -147,7 +148,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
     await visitor
       .openIframe({
         droppedAssetId: assetId,
-        link: `${clickableLink}&assetId=${droppedTextAsset.id!}&visitorId=${visitorId}&interactiveNonce=${interactiveNonce}&interactivePublicKey=${interactivePublicKey}&urlSlug=${urlSlug}&isFirstTimeOpen=true`,
+        link: `${clickableLink}&assetId=${droppedTextAsset.id!}}&isFirstTimeOpen=true&${getQueryString(credentials)}`,
         shouldOpenInDrawer: true,
         title,
       })

@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
-import { errorHandler, getBaseUrl, getCredentials, initializeVisitorData } from "../utils/index.js";
+import { errorHandler, getBaseUrl, getCredentials, getQueryString, initializeVisitorData } from "../utils/index.js";
 
 export const handleOpenPlotSquareIframe = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
-    const { displayName, interactivePublicKey, interactiveNonce, profileId, urlSlug, visitorId } = credentials;
+    const { urlSlug } = credentials;
     const { squareId, type } = req.body;
 
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
@@ -18,7 +18,7 @@ export const handleOpenPlotSquareIframe = async (req: Request, res: Response) =>
     if (!assetId) throw new Error("Nothing found on the specified square");
 
     const baseUrl = getBaseUrl(req.hostname);
-    const query = `?assetId=${assetId}&displayName=${displayName}&profileId=${profileId}&urlSlug=${urlSlug}&interactiveKey=${interactivePublicKey}&interactiveNonce=${interactiveNonce}&visitorId=${visitorId}`;
+    const query = `?assetId=${assetId}&${getQueryString(credentials)}`;
     await visitor
       .openIframe({
         droppedAssetId: assetId,

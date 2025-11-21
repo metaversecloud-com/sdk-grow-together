@@ -21,27 +21,31 @@ export const getPlotAssets = async (
     if (plotAssets.length === 0) throw "No plot assets found.";
 
     if (plotAssets.length !== Object.keys(plots).length) {
-      // Process all plot assets in parallel and wait for all to complete
-      const plotDataPromises = plotAssets.map(async (asset) => {
-        const plotAsset = await DroppedAsset.create(asset.id!, urlSlug, {
-          credentials: { ...credentials, assetId: asset.id! },
+      // Limit concurrency for DroppedAsset.create/fetchDataObject
+      const CONCURRENCY_LIMIT = 20;
+      const results: { assetId: string; ownerId: string | null }[] = [];
+      let idx = 0;
+      while (idx < plotAssets.length) {
+        const batch = plotAssets.slice(idx, idx + CONCURRENCY_LIMIT);
+        const batchPromises = batch.map(async (asset) => {
+          try {
+            const plotAsset = await DroppedAsset.create(asset.id!, urlSlug, {
+              credentials: { ...credentials, assetId: asset.id! },
+            });
+            await plotAsset.fetchDataObject();
+            const plotAssetData = plotAsset.dataObject as PlotAssetDataObjectType;
+
+            // Return the asset id and owner id (or null if not owned)
+            return { assetId: asset.id!, ownerId: plotAssetData?.ownerId || null };
+          } catch {
+            return null;
+          }
         });
-        await plotAsset.fetchDataObject();
-
-        const plotAssetData = plotAsset.dataObject as PlotAssetDataObjectType;
-
-        // Return the asset ID and owner ID (or null if not owned)
-        return {
-          assetId: asset.id!,
-          ownerId: plotAssetData?.ownerId || null,
-        };
-      });
-
-      // Wait for all promises to resolve
-      const plotDataResults = await Promise.all(plotDataPromises);
-
-      // Build the plots object from the results
-      plots = plotDataResults.reduce<{ [key: string]: string | null }>((acc, result) => {
+        const batchResults = await Promise.all(batchPromises);
+        results.push(...(batchResults.filter(Boolean) as { assetId: string; ownerId: string | null }[]));
+        idx += CONCURRENCY_LIMIT;
+      }
+      plots = results.reduce<{ [key: string]: string | null }>((acc, result) => {
         acc[result.assetId] = result.ownerId;
         return acc;
       }, {});
@@ -56,6 +60,7 @@ export const getPlotAssets = async (
       },
     );
 
+    // Separate available and claimed plot asset ids
     const availablePlotAssetIds = Object.entries(plots)
       .filter(([_, ownerId]) => ownerId === null)
       .map(([plotId, _]) => plotId);
