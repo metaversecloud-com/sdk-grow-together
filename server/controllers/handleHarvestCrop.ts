@@ -89,38 +89,39 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
       updatedVisitorData.worlds[urlSlug].plotSquares[crop.squareId] = null;
       delete updatedVisitorData.worlds[urlSlug].crops[assetId];
 
-      await visitor.updateDataObject(updatedVisitorData, {
-        analytics: [
-          {
-            analyticName: "cropsHarvested",
-            profileId,
-            urlSlug,
-            uniqueKey: profileId,
-          },
-          {
-            analyticName: `${getAnalyticName(seedConfig)}Harvested`,
-            profileId,
-            urlSlug,
-            uniqueKey: profileId,
-          },
-        ],
-      });
-
-      // Trigger particle effect at crop position (if we can still get the asset)
       const world = World.create(urlSlug, { credentials });
-      await world
-        .triggerParticle({
-          name: "coin_grow_together",
-          duration: 2,
-          position: cropAsset.position,
-        })
-        .catch((error) => {
-          errorHandler({
-            error,
-            functionName: "handleHarvestCrop",
-            message: `Failed to trigger harvest particle effect: ${error}`,
-          });
-        });
+
+      await Promise.all([
+        visitor.updateDataObject(updatedVisitorData, {
+          analytics: [
+            {
+              analyticName: "cropsHarvested",
+              profileId,
+              urlSlug,
+              uniqueKey: profileId,
+            },
+            {
+              analyticName: `${getAnalyticName(seedConfig)}Harvested`,
+              profileId,
+              urlSlug,
+              uniqueKey: profileId,
+            },
+          ],
+        }),
+        world
+          .triggerParticle({
+            name: "coin_grow_together",
+            duration: 2,
+            position: cropAsset.position,
+          })
+          .catch((error) => {
+            errorHandler({
+              error,
+              functionName: "handleHarvestCrop",
+              message: `Failed to trigger harvest particle effect: ${error}`,
+            });
+          }),
+      ]);
 
       // Remove the crop asset from the world
       await cropAsset.deleteDroppedAsset().catch((error) => {
