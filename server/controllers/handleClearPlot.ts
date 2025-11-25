@@ -74,6 +74,16 @@ export const handleClearPlot = async (req: Request, res: Response) => {
         .catch(() => {
           console.error("Visitor text asset no longer in world");
         });
+    } else {
+      const textAssets = await world.fetchDroppedAssetsWithUniqueName({
+        uniqueName: `GrowTogether_ownerText_${plotAssetData.ownerId}`,
+        isPartial: true,
+      });
+      if (Object.keys(textAssets).length > 0) {
+        for (const index in textAssets) {
+          droppedAssetIds.push(textAssets[index].id!);
+        }
+      }
     }
 
     if (droppedAssetIds.length > 0) {

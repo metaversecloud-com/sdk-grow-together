@@ -96,7 +96,6 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
     // Update visitor's data object
     const visitorPlotData = {
       plotAssetId: plotAsset.id,
-      plotSignAssetId: droppedTextAsset.id,
       claimedDate,
       plotSquares,
       crops: {},

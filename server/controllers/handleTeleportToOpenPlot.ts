@@ -33,7 +33,7 @@ export const handleTeleportToOpenPlot = async (req: Request, res: Response) => {
     await visitor.moveVisitor({
       shouldTeleportVisitor: true,
       x,
-      y: y + 100,
+      y: y + 140,
     });
 
     // Open the plot iframe for the visitor

@@ -9,7 +9,6 @@ export const DEFAULT_VISITOR_DATA: VisitorDataObjectType = {
 
 export const DEFAULT_VISITOR_WORLD_DATA: VisitorWorldDataType = {
   plotAssetId: null,
-  plotSignAssetId: null,
   claimedDate: "",
   lastInteractionDate: "",
   plotSquares: {},

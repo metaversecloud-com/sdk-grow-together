@@ -6,7 +6,7 @@ import { CropDataObjectType, PlacedDecorationDataObjectType } from "./index.js";
 
 export type VisitorWorldDataType = {
   plotAssetId: string | null;
-  plotSignAssetId: string | null;
+  plotSignAssetId?: string | null;
   claimedDate: string;
   lastInteractionDate: string;
   plotSquares: {

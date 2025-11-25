@@ -5,7 +5,6 @@ import {
   initializeVisitorData,
   DroppedAsset,
   World,
-  modifyVisitorInventoryItem,
   getInventoryItems,
 } from "../utils/index.js";
 
@@ -69,20 +68,29 @@ export const handleRemoveDecoration = async (req: Request, res: Response) => {
       ],
     });
 
-    const droppedAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
+    try {
+      const droppedAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
 
-    const world = World.create(urlSlug, { credentials });
-    await world
-      .triggerParticle({
-        name: "dirt_grow_together",
-        duration: 1,
-        position: droppedAsset.position,
-      })
-      .catch((error) => {
-        console.error(`Failed to trigger particle effect:`, error);
+      const world = World.create(urlSlug, { credentials });
+      await world
+        .triggerParticle({
+          name: "dirt_grow_together",
+          duration: 1,
+          position: droppedAsset.position,
+        })
+        .catch((error) => {
+          console.error(`Failed to trigger particle effect:`, error);
+        });
+
+      await droppedAsset.deleteDroppedAsset();
+    } catch (error) {
+      // Continue with removal even if asset deletion fails (it might have been manually removed from world)
+      errorHandler({
+        error,
+        functionName: "handleRemoveDecoration",
+        message: `Decoration asset with id '${assetId}' has already been removed from world.`,
       });
-
-    await droppedAsset.deleteDroppedAsset();
+    }
 
     return res.json({
       success: true,

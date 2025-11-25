@@ -17,7 +17,7 @@ export const handleGetGameState = async (req: Request, res: Response) => {
     const credentials = getCredentials(req.query);
     const { assetId, profileId, urlSlug } = credentials;
 
-    const getPlotAssetsResult = await getPlotAssets(credentials);
+    const getPlotAssetsResult = await getPlotAssets(credentials, false);
     if (getPlotAssetsResult instanceof Error) throw getPlotAssetsResult;
 
     const plotAsset = await DroppedAsset.create(assetId, urlSlug, { credentials });
@@ -31,23 +31,27 @@ export const handleGetGameState = async (req: Request, res: Response) => {
 
     const visitorPlotData = visitorData.worlds[urlSlug];
 
+    const promises = [];
+
     if (visitorPlotData.plotAssetId === assetId) {
       const droppedAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
-      droppedAsset.updateDataObject({ lastInteractionDate: new Date().toISOString() });
+      promises.push(droppedAsset.updateDataObject({ lastInteractionDate: new Date().toISOString() }));
     }
 
-    await visitor.updateDataObject(
-      {},
-      {
-        analytics: [
-          {
-            analyticName: `plotDrawerViews-${visitorPlotData.plotAssetId === assetId ? "self" : "non-self"}`,
-            profileId,
-            urlSlug,
-            uniqueKey: profileId,
-          },
-        ],
-      },
+    promises.push(
+      visitor.updateDataObject(
+        {},
+        {
+          analytics: [
+            {
+              analyticName: `plotDrawerViews-${visitorPlotData.plotAssetId === assetId ? "self" : "non-self"}`,
+              profileId,
+              urlSlug,
+              uniqueKey: profileId,
+            },
+          ],
+        },
+      ),
     );
 
     // Get all inventory items
@@ -56,7 +60,10 @@ export const handleGetGameState = async (req: Request, res: Response) => {
 
     const { decorations, seeds } = getInventoryItemsResponse;
 
-    await visitor.fetchVisitor(); // fetch visitor details to get isAdmin status
+    // Fetch visitor details to get isAdmin status
+    promises.push(visitor.fetchVisitor());
+
+    await Promise.allSettled(promises);
 
     return res.json({
       success: true,

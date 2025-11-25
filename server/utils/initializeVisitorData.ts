@@ -1,6 +1,6 @@
 import { DroppedAsset, Visitor } from "./topiaInit.js";
-import { Credentials } from "../types/Credentials.js";
 import {
+  Credentials,
   EcosystemItems,
   PlotAssetDataObjectType,
   VisitorDataObjectType,
@@ -66,40 +66,45 @@ export const initializeVisitorData = async (credentials: Credentials) => {
     await visitor.fetchInventoryItems();
     const allItems = visitor.inventoryItems as EcosystemItems[];
     let visitorInventory = {} as VisitorInventoryType;
+
     for (const item of allItems || []) {
       const itemId = item.name!;
       // Calculate availableQuantity as item.quantity minus the total placed decorations for all urlSlugs
       let placedCount = 0;
-      if (visitorData.placedDecorations?.[itemId]) {
-        for (const arr of Object.values(visitorData.placedDecorations[itemId])) {
-          placedCount += Array.isArray(arr) ? arr.length : 0;
-        }
+      const placedDecorationsForItem = visitorData.placedDecorations?.[itemId];
+      if (placedDecorationsForItem) {
+        // Use Object.values and flatMap for better performance
+        placedCount = Object.values(placedDecorationsForItem).reduce(
+          (acc, arr) => acc + (Array.isArray(arr) ? arr.length : 0),
+          0,
+        );
       }
       let availableQuantity = (item.quantity || 0) - placedCount;
 
       // Check for placed decorations for this decorationId in this world
-      // this should be updated to check for existance in all worlds once the endpoint is available
-      if (visitorData.placedDecorations?.[itemId]?.[urlSlug]) {
-        // Make a copy to avoid mutating while iterating
-        const droppedAssetIds = [...visitorData.placedDecorations[itemId][urlSlug]];
-        for (const droppedAssetId of droppedAssetIds) {
-          await DroppedAsset.get(droppedAssetId, urlSlug, {
-            credentials: { ...credentials, assetId: droppedAssetId },
-          }).catch(() => {
-            // decoration no longer exists in world - remove from array and adjust inventory item quantity
-            const arr = visitorData.placedDecorations[itemId][urlSlug];
-            const idx = arr.indexOf(droppedAssetId);
-            if (idx !== -1) {
-              arr.splice(idx, 1);
-              availableQuantity += 1;
-            }
-          });
+      // this should be updated to check for existence in all worlds once the endpoint is available
+      const placedArr = placedDecorationsForItem?.[urlSlug];
+      if (placedArr && placedArr.length > 0) {
+        // Use Promise.allSettled for parallel existence checks
+        const results = await Promise.allSettled(
+          placedArr.map((droppedAssetId) =>
+            DroppedAsset.get(droppedAssetId, urlSlug, {
+              credentials: { ...credentials, assetId: droppedAssetId },
+            }),
+          ),
+        );
+        // Remove missing assets and adjust availableQuantity
+        for (let i = placedArr.length - 1; i >= 0; i--) {
+          if (results[i].status === "rejected") {
+            placedArr.splice(i, 1);
+            availableQuantity += 1;
+          }
         }
         // Clean up empty arrays
-        if (visitorData.placedDecorations[itemId][urlSlug].length === 0) {
-          delete visitorData.placedDecorations[itemId][urlSlug];
+        if (placedArr.length === 0) {
+          delete placedDecorationsForItem[urlSlug];
         }
-        if (Object.keys(visitorData.placedDecorations[itemId]).length === 0) {
+        if (Object.keys(placedDecorationsForItem).length === 0) {
           delete visitorData.placedDecorations[itemId];
         }
       }

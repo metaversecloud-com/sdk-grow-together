@@ -56,7 +56,7 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
 
         const plotAssetData = plotAsset.dataObject as PlotAssetDataObjectType;
 
-        // only clear plots that are owned and if they have been inactive for more than 2 weeks when clearInactiveOnly is true
+        // Only clear plots that are owned and if they have been inactive for more than 2 weeks when clearInactiveOnly is true
         if (
           plotAssetData.ownerId &&
           (!clearInactiveOnly ||
