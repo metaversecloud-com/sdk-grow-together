@@ -215,15 +215,16 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
     // Process in batches to avoid large object updates
     const batchUpdateSize = 25;
     for (let i = 0; i < newPlotAssetIds.length; i += batchUpdateSize) {
-      const updateObj: Record<string, null> = {};
+      // Build the update object as { plots: { plotId: null, ... } }
+      const plotsUpdate: Record<string, null> = {};
       const chunk = newPlotAssetIds.slice(i, i + batchUpdateSize);
 
       chunk.forEach((plotId) => {
-        updateObj[`plots.${plotId}`] = null;
+        plotsUpdate[plotId] = null;
       });
 
       // Update world data to remove ownership from selected claimed plots
-      promises.push(world.setDataObject(updateObj));
+      promises.push(world.setDataObject({ plots: plotsUpdate }));
     }
 
     // Run all the promises in parallel but catch errors
