@@ -58,7 +58,7 @@ export const handleRemoveCrop = async (req: Request, res: Response) => {
       errorHandler({
         error,
         functionName: "handleRemoveCrop",
-        message: `Failed to trigger remove crop asset ${assetId} from world: ${error}`,
+        message: `Crop asset with id '${assetId}' has already been removed from world.`,
       });
     }
 

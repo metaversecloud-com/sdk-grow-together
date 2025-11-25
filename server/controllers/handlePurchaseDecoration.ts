@@ -56,9 +56,11 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
       quantity: 1,
     });
     if (typeof modifyInventoryItemResponse === "number") {
+      const availableQuantity = visitorInventory[decorationConfig.name]?.availableQuantity || 0;
       visitorInventory[decorationConfig.name] = {
         id: decorationConfig.name,
         quantity: modifyInventoryItemResponse,
+        availableQuantity: availableQuantity + 1,
       };
     } else {
       console.log("Error while modifying inventory item:", modifyInventoryItemResponse);

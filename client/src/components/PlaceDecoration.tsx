@@ -101,12 +101,11 @@ export const PlaceDecoration = ({ selectedSquareId, setSelectedSquareId }: Place
             {Object.values(decorations)
               .filter((decoration) => {
                 // Only show decorations that are available in inventory
-                const available = visitorInventory[decoration.name]?.quantity || 0;
+                const available = visitorInventory[decoration.name]?.availableQuantity || 0;
                 return available > 0;
               })
               .map((decoration) => {
-                const available = visitorInventory[decoration.name]?.quantity || 0;
-
+                const available = visitorInventory[decoration.name]?.availableQuantity || 0;
                 return (
                   <div
                     key={decoration.id}

@@ -59,9 +59,11 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
       quantity: 1,
     });
     if (typeof modifyInventoryItemResponse === "number") {
+      const availableQuantity = visitorInventory[seedConfig.name]?.availableQuantity || 0;
       visitorInventory[seedConfig.name] = {
         id: seedConfig.name,
         quantity: modifyInventoryItemResponse,
+        availableQuantity: availableQuantity + 1,
       };
     } else {
       console.log("Error while modifying inventory item:", modifyInventoryItemResponse);

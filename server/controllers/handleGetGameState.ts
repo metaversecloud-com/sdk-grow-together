@@ -17,7 +17,7 @@ export const handleGetGameState = async (req: Request, res: Response) => {
     const credentials = getCredentials(req.query);
     const { assetId, profileId, urlSlug } = credentials;
 
-    const getPlotAssetsResult = await getPlotAssets(credentials);
+    const getPlotAssetsResult = await getPlotAssets(credentials, false);
     if (getPlotAssetsResult instanceof Error) throw getPlotAssetsResult;
 
     const plotAsset = await DroppedAsset.create(assetId, urlSlug, { credentials });
@@ -29,98 +29,41 @@ export const handleGetGameState = async (req: Request, res: Response) => {
 
     const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
 
-    const updatedVisitorData = visitorData;
     const visitorPlotData = visitorData.worlds[urlSlug];
 
-    if (visitorPlotData.plotAssetId) {
-      if (visitorPlotData.plotAssetId === assetId) {
-        updatedVisitorData.worlds[urlSlug].lastInteractionDate = new Date().toISOString();
+    const promises = [];
 
-        const droppedAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
-        droppedAsset.updateDataObject({ lastInteractionDate: new Date().toISOString() }).catch((error) => {
-          errorHandler({
-            error,
-            functionName: "handleGetGameState",
-            message: "Failed to update plot asset's last interaction date",
-          });
-        });
-      } else {
-        await DroppedAsset.get(visitorPlotData.plotAssetId, urlSlug, {
-          credentials: { ...credentials, assetId: visitorPlotData.plotAssetId },
-        }).catch(() => {
-          console.error("Visitor plot asset no longer in world");
-          // their plot is gone - clear from visitor data object for this world only so they can claim a new one
-          delete updatedVisitorData.worlds[urlSlug];
-        });
-      }
+    if (visitorPlotData.plotAssetId === assetId) {
+      const droppedAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
+      promises.push(droppedAsset.updateDataObject({ lastInteractionDate: new Date().toISOString() }));
     }
 
-    await visitor.updateDataObject(updatedVisitorData, {
-      analytics: [
+    promises.push(
+      visitor.updateDataObject(
+        {},
         {
-          analyticName: `plotDrawerViews-${visitorPlotData.plotAssetId === assetId ? "self" : "non-self"}`,
-          profileId,
-          urlSlug,
-          uniqueKey: profileId,
+          analytics: [
+            {
+              analyticName: `plotDrawerViews-${visitorPlotData.plotAssetId === assetId ? "self" : "non-self"}`,
+              profileId,
+              urlSlug,
+              uniqueKey: profileId,
+            },
+          ],
         },
-      ],
-    });
+      ),
+    );
 
-    // Get inventory items
+    // Get all inventory items
     const getInventoryItemsResponse = await getInventoryItems(credentials);
     if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
 
     const { decorations, seeds } = getInventoryItemsResponse;
 
-    /* Commenting out for now but may be used for wilting and losing crops in future
-    // Update crop growth levels for all crops
-    const updatedCrops = { ...visitorData.crops };
-    let hasUpdates = false;
+    // Fetch visitor details to get isAdmin status
+    promises.push(visitor.fetchVisitor());
 
-    for (const [cropAssetId, crop] of Object.entries(visitorData.crops)) {
-      const seedConfig = seeds[crop.seedId];
-      if (seedConfig) {
-        const currentGrowthLevel = calculateGrowthLevel(
-          crop.dateDropped,
-          seedConfig.growthTime,
-          seedConfig.harvestLevel,
-        );
-
-        if (currentGrowthLevel !== crop.growLevel) {
-          // Update growth level in memory
-          updatedCrops[cropAssetId] = {
-            ...crop,
-            growLevel: currentGrowthLevel,
-          };
-          hasUpdates = true;
-
-          try {
-            const droppedAsset = await DroppedAsset.create(cropAssetId, urlSlug, { credentials });
-            if (droppedAsset) {
-              const layer1 = getImageVariation(crop.seedId, currentGrowthLevel)
-              await droppedAsset.updateWebImageLayers("", layer1);
-            }
-          } catch (error) {
-            console.error("Failed to update dropped asset:", error);
-          }
-        }
-      }
-    }
-
-    // Save updated crop data if there were changes
-    if (hasUpdates) {
-      const visitor = await Visitor.get(visitorId, urlSlug, { credentials });
-      visitorData = { ...visitorData, crops: updatedCrops };
-      await visitor.updateDataObject(
-        { [urlSlug]: visitorData },
-        {
-          analytics: [{ analyticName: "cropGrowthUpdated" }],
-        },
-      );
-    }
-      */
-
-    await visitor.fetchVisitor(); // fetch visitor details to get isAdmin status
+    await Promise.allSettled(promises);
 
     return res.json({
       success: true,

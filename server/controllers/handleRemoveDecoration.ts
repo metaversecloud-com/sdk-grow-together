@@ -5,7 +5,6 @@ import {
   initializeVisitorData,
   DroppedAsset,
   World,
-  modifyVisitorInventoryItem,
   getInventoryItems,
 } from "../utils/index.js";
 
@@ -39,25 +38,24 @@ export const handleRemoveDecoration = async (req: Request, res: Response) => {
     const decorationConfig = decorations[decoration.decorationId];
     if (!decorationConfig) throw "Invalid decoration type";
 
-    // Return the decoration to visitor's inventory
-    const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
-      credentials,
-      visitor,
-      name: decorationConfig.name,
-      quantity: 1,
-    });
-    if (typeof modifyInventoryItemResponse === "number") {
-      visitorInventory[decorationConfig.name] = {
-        id: decorationConfig.name,
-        quantity: modifyInventoryItemResponse,
-      };
-    } else {
-      console.log("Error while modifying inventory item:", modifyInventoryItemResponse);
-    }
-
     // Update visitor's data object
     visitorData.worlds[urlSlug].plotSquares[squareId] = null;
     delete visitorData.worlds[urlSlug].decorations[assetId];
+
+    // Remove the placedDecoration entry for this assetId
+    if (visitorData.placedDecorations?.[decoration.decorationName]?.[urlSlug]) {
+      const index = visitorData.placedDecorations[decoration.decorationName][urlSlug].indexOf(assetId);
+      if (index > -1) {
+        visitorData.placedDecorations[decoration.decorationName][urlSlug].splice(index, 1);
+      }
+    }
+    // Only increment availableQuantity if it does not exceed quantity
+    if (
+      visitorInventory[decoration.decorationName].availableQuantity + 1 <=
+      visitorInventory[decoration.decorationName].quantity
+    ) {
+      visitorInventory[decoration.decorationName].availableQuantity += 1;
+    }
 
     await visitor.updateDataObject(visitorData, {
       analytics: [
@@ -70,20 +68,29 @@ export const handleRemoveDecoration = async (req: Request, res: Response) => {
       ],
     });
 
-    const droppedAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
+    try {
+      const droppedAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
 
-    const world = World.create(urlSlug, { credentials });
-    await world
-      .triggerParticle({
-        name: "dirt_grow_together",
-        duration: 1,
-        position: droppedAsset.position,
-      })
-      .catch((error) => {
-        console.error(`Failed to trigger particle effect:`, error);
+      const world = World.create(urlSlug, { credentials });
+      await world
+        .triggerParticle({
+          name: "dirt_grow_together",
+          duration: 1,
+          position: droppedAsset.position,
+        })
+        .catch((error) => {
+          console.error(`Failed to trigger particle effect:`, error);
+        });
+
+      await droppedAsset.deleteDroppedAsset();
+    } catch (error) {
+      // Continue with removal even if asset deletion fails (it might have been manually removed from world)
+      errorHandler({
+        error,
+        functionName: "handleRemoveDecoration",
+        message: `Decoration asset with id '${assetId}' has already been removed from world.`,
       });
-
-    await droppedAsset.deleteDroppedAsset();
+    }
 
     return res.json({
       success: true,
