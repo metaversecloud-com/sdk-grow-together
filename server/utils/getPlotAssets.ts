@@ -15,7 +15,7 @@ export const getPlotAssets = async (
 
     let plots = worldDataObject?.plots || worldDataObject?.claimedPlots || {};
 
-    if (shouldFetchAllPlotAssets) {
+    if (shouldFetchAllPlotAssets || Object.keys(plots).length === 0) {
       const plotAssets: DroppedAssetInterface[] = await world.fetchDroppedAssetsWithUniqueName({
         uniqueName: "GrowTogether_plot",
       });
