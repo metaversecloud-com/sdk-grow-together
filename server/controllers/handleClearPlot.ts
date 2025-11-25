@@ -10,7 +10,7 @@ import {
   getBaseUrl,
 } from "../utils/index.js";
 import { PlotAssetDataObjectType, VisitorDataObjectType } from "../types/index.js";
-import { DroppedAssetClickType, VisitorInterface } from "@rtsdk/topia";
+import { DroppedAssetClickType, DroppedAssetInterface, VisitorInterface } from "@rtsdk/topia";
 import { s3URL } from "../../shared/index.js";
 
 /**
@@ -40,7 +40,7 @@ export const handleClearPlot = async (req: Request, res: Response) => {
     const droppedAssetIds: string[] = [];
     const world = await World.create(urlSlug, { credentials });
 
-    const [cropAssets, decorationAssets] = await Promise.all([
+    const [cropAssets, decorationAssets, textAssets] = await Promise.all([
       world.fetchDroppedAssetsWithUniqueName({
         uniqueName: `GrowTogether_crop_${plotAssetData.ownerId}`,
         isPartial: true,
@@ -49,45 +49,32 @@ export const handleClearPlot = async (req: Request, res: Response) => {
         uniqueName: `GrowTogether_decoration_${plotAssetData.ownerId}`,
         isPartial: true,
       }),
+      world.fetchDroppedAssetsWithUniqueName({
+        uniqueName: `GrowTogether_ownerText_${plotAssetData.ownerId}`,
+        isPartial: true,
+      }),
     ]);
 
-    if (Object.keys(cropAssets).length > 0) {
-      for (const index in cropAssets) {
-        droppedAssetIds.push(cropAssets[index].id!);
-      }
-    }
-    if (Object.keys(decorationAssets).length > 0) {
-      for (const index in decorationAssets) {
-        droppedAssetIds.push(decorationAssets[index].id!);
+    const allDroppedAssets: DroppedAssetInterface[] = [];
+    allDroppedAssets.push(...Object.values(cropAssets));
+    allDroppedAssets.push(...Object.values(decorationAssets));
+    allDroppedAssets.push(...Object.values(textAssets));
+
+    if (allDroppedAssets.length > 0) {
+      for (const index in allDroppedAssets) {
+        droppedAssetIds.push(allDroppedAssets[index].id!);
       }
     }
 
     const ownerWorldData = ownerData.worlds?.[urlSlug];
 
-    if (ownerWorldData.plotSignAssetId) {
-      await DroppedAsset.get(ownerWorldData.plotSignAssetId, urlSlug, {
-        credentials: { ...credentials, assetId: ownerWorldData.plotSignAssetId },
-      })
-        .then(async (textAsset) => {
-          droppedAssetIds.push(textAsset.id!);
-        })
-        .catch(() => {
-          console.error("Visitor text asset no longer in world");
-        });
-    } else {
-      const textAssets = await world.fetchDroppedAssetsWithUniqueName({
-        uniqueName: `GrowTogether_ownerText_${plotAssetData.ownerId}`,
-        isPartial: true,
-      });
-      if (Object.keys(textAssets).length > 0) {
-        for (const index in textAssets) {
-          droppedAssetIds.push(textAssets[index].id!);
-        }
-      }
-    }
+    if (ownerWorldData.plotSignAssetId) droppedAssetIds.push(ownerWorldData.plotSignAssetId);
 
-    if (droppedAssetIds.length > 0) {
-      promises.push(World.deleteDroppedAssets(urlSlug, droppedAssetIds, process.env.INTERACTIVE_SECRET!, credentials));
+    const uniqueDroppedAssetIds = [...new Set(droppedAssetIds)]; // Remove duplicates
+    if (uniqueDroppedAssetIds.length > 0) {
+      promises.push(
+        World.deleteDroppedAssets(urlSlug, uniqueDroppedAssetIds, process.env.INTERACTIVE_SECRET!, credentials),
+      );
     }
 
     // Reset placedDecorations for this urlSlug only
