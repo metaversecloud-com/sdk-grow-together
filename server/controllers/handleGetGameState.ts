@@ -6,6 +6,7 @@ import {
   DroppedAsset,
   getPlotAssets,
   getInventoryItems,
+  World,
 } from "../utils/index.js";
 import { PlotAssetDataObjectType } from "../types/index.js";
 

@@ -34,7 +34,7 @@ export const PlaceDecoration = ({ selectedSquareId, setSelectedSquareId }: Place
       const matchingDecoration = Object.values(decorations).find(
         (decoration) => decoration.name.toLowerCase() === key.toLowerCase(),
       );
-      return matchingDecoration && visitorInventory[key]?.quantity > 0;
+      return matchingDecoration && visitorInventory[key]?.availableQuantity > 0;
     });
     setHasDecorations(hasAvailableDecorations);
 
