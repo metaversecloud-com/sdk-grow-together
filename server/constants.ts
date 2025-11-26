@@ -3,12 +3,12 @@ import { CropDataObjectType, VisitorDataObjectType, VisitorWorldDataType } from 
 export const DEFAULT_VISITOR_DATA: VisitorDataObjectType = {
   lastDateCoinsEarned: "",
   totalCoinsEarned: 0,
+  placedDecorations: {},
   worlds: {},
 };
 
 export const DEFAULT_VISITOR_WORLD_DATA: VisitorWorldDataType = {
   plotAssetId: null,
-  plotSignAssetId: null,
   claimedDate: "",
   lastInteractionDate: "",
   plotSquares: {},

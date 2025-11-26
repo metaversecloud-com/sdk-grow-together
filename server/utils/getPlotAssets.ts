@@ -5,6 +5,7 @@ import { PlotAssetDataObjectType, WorldDataObjectType } from "../types/index.js"
 
 export const getPlotAssets = async (
   credentials: Credentials,
+  shouldFetchAllPlotAssets: boolean = true,
 ): Promise<{ availablePlotAssetIds: string[]; claimedPlotAssetIds: string[] } | Error> => {
   try {
     const { urlSlug } = credentials;
@@ -14,51 +15,55 @@ export const getPlotAssets = async (
 
     let plots = worldDataObject?.plots || worldDataObject?.claimedPlots || {};
 
-    const plotAssets: DroppedAssetInterface[] = await world.fetchDroppedAssetsWithUniqueName({
-      uniqueName: "GrowTogether_plot",
-    });
+    if (shouldFetchAllPlotAssets || Object.keys(plots).length === 0) {
+      const plotAssets: DroppedAssetInterface[] = await world.fetchDroppedAssetsWithUniqueName({
+        uniqueName: "GrowTogether_plot",
+      });
 
-    if (plotAssets.length === 0) throw "No plot assets found.";
+      if (plotAssets.length === 0) throw "No plot assets found.";
 
-    if (plotAssets.length !== Object.keys(plots).length) {
-      // Limit concurrency for DroppedAsset.create/fetchDataObject
-      const CONCURRENCY_LIMIT = 20;
-      const results: { assetId: string; ownerId: string | null }[] = [];
-      let idx = 0;
-      while (idx < plotAssets.length) {
-        const batch = plotAssets.slice(idx, idx + CONCURRENCY_LIMIT);
-        const batchPromises = batch.map(async (asset) => {
-          try {
-            const plotAsset = await DroppedAsset.create(asset.id!, urlSlug, {
-              credentials: { ...credentials, assetId: asset.id! },
-            });
-            await plotAsset.fetchDataObject();
-            const plotAssetData = plotAsset.dataObject as PlotAssetDataObjectType;
+      if (plotAssets.length !== Object.keys(plots).length) {
+        // Limit concurrency for DroppedAsset.create/fetchDataObject
+        const CONCURRENCY_LIMIT = 20;
+        const results: { assetId: string; ownerId: string | null }[] = [];
+        let idx = 0;
+        while (idx < plotAssets.length) {
+          const batch = plotAssets.slice(idx, idx + CONCURRENCY_LIMIT);
+          const batchPromises = batch.map(async (asset) => {
+            try {
+              const plotAsset = await DroppedAsset.create(asset.id!, urlSlug, {
+                credentials: { ...credentials, assetId: asset.id! },
+              });
+              await plotAsset.fetchDataObject();
+              const plotAssetData = plotAsset.dataObject as PlotAssetDataObjectType;
 
-            // Return the asset id and owner id (or null if not owned)
-            return { assetId: asset.id!, ownerId: plotAssetData?.ownerId || null };
-          } catch {
-            return null;
-          }
-        });
-        const batchResults = await Promise.all(batchPromises);
-        results.push(...(batchResults.filter(Boolean) as { assetId: string; ownerId: string | null }[]));
-        idx += CONCURRENCY_LIMIT;
+              // Return the asset id and owner id (or null if not owned)
+              return { assetId: asset.id!, ownerId: plotAssetData?.ownerId || null };
+            } catch {
+              return null;
+            }
+          });
+          const batchResults = await Promise.all(batchPromises);
+          results.push(...(batchResults.filter(Boolean) as { assetId: string; ownerId: string | null }[]));
+          idx += CONCURRENCY_LIMIT;
+        }
+        plots = results.reduce<{ [key: string]: string | null }>((acc, result) => {
+          acc[result.assetId] = result.ownerId;
+          return acc;
+        }, {});
       }
-      plots = results.reduce<{ [key: string]: string | null }>((acc, result) => {
-        acc[result.assetId] = result.ownerId;
-        return acc;
-      }, {});
+
+      world.setDataObject(
+        {
+          plots,
+        },
+        {
+          lock: { lockId: `world_plotAssets_${Math.floor(Date.now() / 60000) * 60000}`, releaseLock: true },
+        },
+      );
     }
 
-    world.setDataObject(
-      {
-        plots,
-      },
-      {
-        lock: { lockId: `world_plotAssets_${Math.floor(Date.now() / 60000) * 60000}`, releaseLock: true },
-      },
-    );
+    if (Object.keys(plots).length === 0) throw "No plot assets found.";
 
     // Separate available and claimed plot asset ids
     const availablePlotAssetIds = Object.entries(plots)
