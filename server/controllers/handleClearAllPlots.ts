@@ -61,8 +61,8 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
           plotAssetData.ownerId &&
           (!clearInactiveOnly ||
             (clearInactiveOnly &&
-              plotAssetData.lastInteractionDate &&
-              new Date(plotAssetData.lastInteractionDate) < new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)))
+              (!plotAssetData.lastInteractionDate ||
+                new Date(plotAssetData.lastInteractionDate) < new Date(Date.now() - 14 * 24 * 60 * 60 * 1000))))
         ) {
           ownerIds.push(plotAssetData.ownerId);
 
@@ -188,24 +188,10 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
       }
     }
 
-    // Create an update object with selected plot assets set to null
-    // Process in batches to avoid large object updates
-    const batchUpdateSize = 25;
-    for (let i = 0; i < newPlotAssetIds.length; i += batchUpdateSize) {
-      // Build the update object as { plots: { plotId: null, ... } }
-      const plotsUpdate: Record<string, null> = {};
-      const chunk = newPlotAssetIds.slice(i, i + batchUpdateSize);
-
-      chunk.forEach((plotId) => {
-        plotsUpdate[plotId] = null;
-      });
-
-      // Update world data to remove ownership from selected claimed plots
-      promises.push(world.setDataObject({ plots: plotsUpdate }));
-    }
-
     // Run all the promises in parallel but catch errors
     await Promise.allSettled(promises);
+
+    await getPlotAssets(credentials, true);
 
     // Close iframe and then delete old plot assets
     await admin.closeIframe(assetId).catch((error: any) => {
