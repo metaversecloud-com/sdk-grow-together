@@ -93,7 +93,6 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
 
     // Collect all dropped assets from all owners
     const allDroppedAssetIds: string[] = [];
-    const textAssetIds: string[] = [];
 
     const world = await World.create(urlSlug, { credentials });
 
@@ -148,7 +147,7 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
 
         if (!ownerWorldData) return { ownerId, ownerData };
 
-        if (ownerWorldData.plotSignAssetId) textAssetIds.push(ownerWorldData.plotSignAssetId);
+        if (ownerWorldData.plotSignAssetId) allDroppedAssetIds.push(ownerWorldData.plotSignAssetId);
 
         // Reset placedDecorations for this urlSlug only
         if (ownerData.placedDecorations) {
@@ -176,28 +175,6 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
 
       // Process each batch sequentially to avoid overwhelming the server
       await Promise.all(batchPromises);
-    }
-
-    if (textAssetIds.length > 0) {
-      // Remove duplicates and already-included id
-      const textAssetIdsToCheck = textAssetIds.filter((id) => !allDroppedAssetIds.includes(id));
-      if (textAssetIdsToCheck.length > 0) {
-        // Fetch all in parallel, only push if found
-        const results = await Promise.allSettled(
-          textAssetIdsToCheck.map((textAssetId) =>
-            DroppedAsset.get(textAssetId, urlSlug, {
-              credentials: { ...credentials, assetId: textAssetId },
-            }),
-          ),
-        );
-        results.forEach((result, idx) => {
-          if (result.status === "fulfilled" && result.value?.id) {
-            allDroppedAssetIds.push(result.value.id);
-          } else if (result.status === "rejected") {
-            console.error("Text asset no longer in world", textAssetIdsToCheck[idx]);
-          }
-        });
-      }
     }
 
     // Delete all selected dropped assets from all plot squares in batches
