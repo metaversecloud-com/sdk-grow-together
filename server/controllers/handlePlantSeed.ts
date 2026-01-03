@@ -61,11 +61,11 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
 
     const visitorPlotData = visitorData.worlds[urlSlug];
 
-    // Check if visitor owns a plot
-    if (!visitorPlotData.plotAssetId) throw "You must claim a plot before planting seeds";
+    // Check if visitor owns this plot
+    if (visitorPlotData.plotAssetId !== assetId) throw "You must own this plot before planting seeds";
 
     // Check if visitor has purchased this seed (for paid seeds)
-    if (seedConfig.cost > 0 && !visitorInventory[seedConfig.name]) {
+    if (seedConfig.cost > 0 && !visitorInventory.seeds?.[seedConfig.name]) {
       throw "You must purchase this seed before planting";
     }
 
@@ -120,6 +120,7 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
 
     await cropAsset.setDataObject({
       ...cropData,
+      plotAssetId: assetId,
       ownerId: profileId,
       ownerName: displayName,
     });

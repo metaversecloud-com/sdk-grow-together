@@ -17,6 +17,8 @@ import {
   handleClearPlot,
   handleClearAllPlots,
   handleTeleportToOpenPlot,
+  handleUseTool,
+  handlePurchaseTool,
 } from "./controllers/index.js";
 import { getVersion } from "./utils/getVersion.js";
 
@@ -60,11 +62,15 @@ router.post("/seed/purchase", handlePurchaseSeed);
 router.post("/crop/drop", handlePlantSeed);
 router.post("/crop/water", handleWaterCrop);
 router.post("/crop/harvest", handleHarvestCrop);
+router.post("/crop/use-tool", handleUseTool);
 router.post("/crop/remove", handleRemoveCrop);
 
 // decoration routes
 router.post("/decoration/purchase", handlePurchaseDecoration);
 router.post("/decoration/drop", handlePlaceDecoration);
 router.post("/decoration/remove", handleRemoveDecoration);
+
+// tool routes
+router.post("/tool/purchase", handlePurchaseTool);
 
 export default router;

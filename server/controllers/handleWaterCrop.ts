@@ -38,7 +38,7 @@ export const handleWaterCrop = async (req: Request, res: Response) => {
         {},
         {
           lock: {
-            lockId: `planting_${assetId}_${cropAssetId}_${Math.round(Date.now() / 30000) * 30000}`,
+            lockId: `planting_${cropAssetId}_${Math.round(Date.now() / 30000) * 30000}`,
           },
         },
       );

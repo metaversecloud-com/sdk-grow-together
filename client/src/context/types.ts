@@ -45,6 +45,7 @@ export interface InitialState {
   visitorPlotData?: VisitorWorldDataType;
   decorations?: { [key: string]: DecorationType };
   seeds?: { [key: string]: SeedType };
+  tools?: { [key: string]: DecorationType };
 }
 
 export type ActionType = {

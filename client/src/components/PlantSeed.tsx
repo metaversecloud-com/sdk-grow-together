@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 
 // components
 import { ModalHeader } from "@/components";
@@ -17,20 +17,10 @@ interface PlantSeedProps {
 
 export const PlantSeed = ({ selectedSquareId, setSelectedSquareId }: PlantSeedProps) => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { seeds = {}, visitorInventory = {} } = useContext(GlobalStateContext);
+  const { visitorInventory } = useContext(GlobalStateContext);
+  const { seeds } = visitorInventory || {};
 
   const [isPlanting, setIsPlanting] = useState(false);
-  const [hasSeeds, setHasSeeds] = useState(false);
-
-  useEffect(() => {
-    // Check if any keys in visitorInventory exist in seeds
-    const hasAvailableSeeds = Object.keys(visitorInventory).some((key) => {
-      // Look for a seed with name that matches the visitorInventory key
-      const matchingSeed = Object.values(seeds).find((seed) => seed.name.toLowerCase() === key.toLowerCase());
-      return matchingSeed && visitorInventory[key]?.quantity > 0;
-    });
-    setHasSeeds(hasAvailableSeeds);
-  }, [visitorInventory, seeds]);
 
   const handlePlantSeed = async (seedId: string) => {
     if (!seedId || selectedSquareId === null) return;
@@ -70,43 +60,44 @@ export const PlantSeed = ({ selectedSquareId, setSelectedSquareId }: PlantSeedPr
     <div className="modal-container">
       <div className="modal">
         <ModalHeader
-          text={hasSeeds ? `Plant Seed in Slot ${selectedSquareId}` : "No seeds unlocked"}
+          text={seeds && Object.keys(seeds).length > 0 ? `Plant Seed in Slot ${selectedSquareId}` : "No seeds unlocked"}
           disabled={isPlanting}
           handleOnClick={() => {
             setSelectedSquareId(null);
           }}
         />
 
-        {!hasSeeds ? (
+        {seeds && Object.keys(seeds).length === 0 ? (
           <p className="p2">Click “Buy Seeds” in the garden store to unlock your first seed.</p>
         ) : (
           <div className="grid gap-2 grid-cols-3">
-            {Object.values(seeds).map((seed) => {
-              const growthTimeInMinutes = (seed.growthTime * seed.harvestLevel) / 60;
-              const isAvailable = seed.cost === 0 || visitorInventory[seed.name]?.quantity > 0;
-              if (!isAvailable) return null;
+            {seeds &&
+              Object.values(seeds).map((seed) => {
+                const growthTimeInMinutes = (seed.growthTime * seed.harvestLevel) / 60;
+                const isAvailable = seed.cost === 0 || seeds[seed.name]?.quantity > 0;
+                if (!isAvailable) return null;
 
-              let buttonClass = "card card-horizontal menu-card";
-              if (isAvailable && !isPlanting) buttonClass += " cursor-pointer available";
+                let buttonClass = "card card-horizontal menu-card";
+                if (isAvailable && !isPlanting) buttonClass += " cursor-pointer available";
 
-              return (
-                <div
-                  key={seed.id}
-                  className={buttonClass}
-                  onClick={() => isAvailable && !isPlanting && handlePlantSeed(seed.id)}
-                  style={{ gap: "0px" }}
-                >
-                  <img className="mb-2 m-auto" src={seed.icon} style={{ opacity: !isAvailable ? 0.5 : 1 }} />
+                return (
+                  <div
+                    key={seed.id}
+                    className={buttonClass}
+                    onClick={() => isAvailable && !isPlanting && handlePlantSeed(seed.id)}
+                    style={{ gap: "0px" }}
+                  >
+                    <img className="mb-2 m-auto" src={seed.icon} style={{ opacity: !isAvailable ? 0.5 : 1 }} />
 
-                  <p className="p3">
-                    <strong>{seed.name}</strong>
-                  </p>
-                  <p className="p4 text-muted">
-                    {growthTimeInMinutes} min{growthTimeInMinutes > 1 ? "s" : ""}
-                  </p>
-                </div>
-              );
-            })}
+                    <p className="p3">
+                      <strong>{seed.name}</strong>
+                    </p>
+                    <p className="p4 text-muted">
+                      {growthTimeInMinutes} min{growthTimeInMinutes > 1 ? "s" : ""}
+                    </p>
+                  </div>
+                );
+              })}
           </div>
         )}
       </div>

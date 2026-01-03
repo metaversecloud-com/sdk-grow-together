@@ -17,26 +17,18 @@ interface PlaceDecorationProps {
 
 export const PlaceDecoration = ({ selectedSquareId, setSelectedSquareId }: PlaceDecorationProps) => {
   const dispatch = useContext(GlobalDispatchContext);
-  const {
-    decorations = {},
-    visitorInventory = {},
-    visitorPlotData = { decorations: {} },
-  } = useContext(GlobalStateContext);
+  const { visitorInventory, visitorPlotData = { decorations: {} } } = useContext(GlobalStateContext);
+  const { decorations } = visitorInventory || {};
 
   const [isPlacing, setIsPlacing] = useState(false);
   const [hasDecorations, setHasDecorations] = useState(false);
   const [hasPlacedDecorations, setHasPlacedDecorations] = useState(false);
 
   useEffect(() => {
-    // Check if any keys in visitorInventory exist in decorations
-    const hasAvailableDecorations = Object.keys(visitorInventory).some((key) => {
-      // Look for a decoration with name that matches the visitorInventory key
-      const matchingDecoration = Object.values(decorations).find(
-        (decoration) => decoration.name.toLowerCase() === key.toLowerCase(),
-      );
-      return matchingDecoration && visitorInventory[key]?.availableQuantity > 0;
-    });
-    setHasDecorations(hasAvailableDecorations);
+    // Set hasDecorations to true if any decoration has availableQuantity > 0
+    const hasAvailableDecorations =
+      decorations && Object.values(decorations).some((decoration) => decoration.availableQuantity > 0);
+    setHasDecorations(!!hasAvailableDecorations);
 
     // Check if any decorations have already been placed
     const placedDecorationCount = Object.keys(visitorPlotData.decorations || {}).length;
@@ -98,30 +90,30 @@ export const PlaceDecoration = ({ selectedSquareId, setSelectedSquareId }: Place
           )
         ) : (
           <div className="grid gap-2 grid-cols-2">
-            {Object.values(decorations)
-              .filter((decoration) => {
-                // Only show decorations that are available in inventory
-                const available = visitorInventory[decoration.name]?.availableQuantity || 0;
-                return available > 0;
-              })
-              .map((decoration) => {
-                const available = visitorInventory[decoration.name]?.availableQuantity || 0;
-                return (
-                  <div
-                    key={decoration.id}
-                    className={`card menu-card text-center ${isPlacing ? "opacity-50" : "cursor-pointer"}`}
-                    onClick={() => !isPlacing && handlePlaceDecoration(decoration.id)}
-                  >
-                    <img className="mr-2" src={decoration.icon} />
-                    <div>
-                      <p className="p2 p-0">
-                        <strong>{decoration.name}</strong>
-                      </p>
-                      <p className="p3 p-0 text-muted">{available} available</p>
+            {decorations &&
+              Object.values(decorations)
+                .filter((decoration) => {
+                  // Only show decorations that are available in inventory
+                  return decorations[decoration.name]?.availableQuantity > 0;
+                })
+                .map((decoration) => {
+                  const available = decorations[decoration.name]?.availableQuantity || 0;
+                  return (
+                    <div
+                      key={decoration.id}
+                      className={`card menu-card text-center ${isPlacing ? "opacity-50" : "cursor-pointer"}`}
+                      onClick={() => !isPlacing && handlePlaceDecoration(decoration.id)}
+                    >
+                      <img className="mr-2" src={decoration.icon} />
+                      <div>
+                        <p className="p2 p-0">
+                          <strong>{decoration.name}</strong>
+                        </p>
+                        <p className="p3 p-0 text-muted">{available} available</p>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
           </div>
         )}
       </div>

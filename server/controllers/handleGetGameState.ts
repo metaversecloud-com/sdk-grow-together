@@ -6,8 +6,9 @@ import {
   DroppedAsset,
   getPlotAssets,
   getInventoryItems,
+  User,
 } from "../utils/index.js";
-import { PlotAssetDataObjectType } from "../types/index.js";
+import { PlotAssetDataObjectType, VisitorDataObjectType } from "../types/index.js";
 
 /**
  * Get the current game state for a visitor including their plot, crops, and coin balance
@@ -29,13 +30,17 @@ export const handleGetGameState = async (req: Request, res: Response) => {
 
     const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
 
-    const visitorPlotData = visitorData.worlds[urlSlug];
+    let visitorPlotData = visitorData.worlds[urlSlug];
 
     const promises = [];
 
     if (visitorPlotData.plotAssetId === assetId) {
       const droppedAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
       promises.push(droppedAsset.updateDataObject({ lastInteractionDate: new Date().toISOString() }));
+    } else if (plotAssetData.ownerId) {
+      const plotOwner = await User.create({ credentials, profileId: plotAssetData.ownerId });
+      const plotOwnerData = (await plotOwner.fetchDataObject()) as VisitorDataObjectType;
+      visitorPlotData = plotOwnerData.worlds[urlSlug];
     }
 
     promises.push(
@@ -58,7 +63,7 @@ export const handleGetGameState = async (req: Request, res: Response) => {
     const getInventoryItemsResponse = await getInventoryItems(credentials);
     if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
 
-    const { decorations, seeds } = getInventoryItemsResponse;
+    const { decorations, seeds, tools } = getInventoryItemsResponse;
 
     // Fetch visitor details to get isAdmin status
     promises.push(visitor.fetchVisitor());
@@ -70,10 +75,11 @@ export const handleGetGameState = async (req: Request, res: Response) => {
       isAdmin: visitor.isAdmin,
       plotAssetData,
       visitorData,
-      visitorPlotData: visitorData.worlds[urlSlug],
+      visitorPlotData,
       visitorInventory,
       decorations,
       seeds,
+      tools,
       noOfAvailablePlots: getPlotAssetsResult.availablePlotAssetIds.length,
     });
   } catch (error) {

@@ -27,6 +27,9 @@ export const handleRemoveDecoration = async (req: Request, res: Response) => {
 
     if (!assetId) throw "No decoration found on the specified square";
 
+    // Check if visitor owns this plot
+    if (visitorPlotData.plotAssetId !== assetId) throw "You must own this plot before removing decorations";
+
     // Get decoration configuration
     const decoration = visitorPlotData.decorations[assetId];
 
@@ -51,10 +54,10 @@ export const handleRemoveDecoration = async (req: Request, res: Response) => {
     }
     // Only increment availableQuantity if it does not exceed quantity
     if (
-      visitorInventory[decoration.decorationName].availableQuantity + 1 <=
-      visitorInventory[decoration.decorationName].quantity
+      visitorInventory.decorations?.[decoration.decorationName]?.availableQuantity + 1 <=
+      visitorInventory.decorations?.[decoration.decorationName]?.quantity
     ) {
-      visitorInventory[decoration.decorationName].availableQuantity += 1;
+      visitorInventory.decorations[decoration.decorationName].availableQuantity += 1;
     }
 
     await visitor.updateDataObject(visitorData, {

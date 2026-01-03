@@ -19,13 +19,16 @@ interface CropDetailsProps {
   isReadOnly: boolean;
 }
 
-export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps) => {
+export const CropDetails = ({ crop, plotAssetId: visitorPlotAssetId, isReadOnly }: CropDetailsProps) => {
   const dispatch = useContext(GlobalDispatchContext);
   const { seeds = {} } = useContext(GlobalStateContext);
 
-  const { lastWatered, growLevel, ownerName, seedId } = crop;
+  const { plotAssetId: cropPlotAssetId, lastWatered, growLevel, ownerName, seedId } = crop;
   const seedConfig = seeds[seedId];
   const { name, reward, growthTime, harvestLevel, rarity } = seedConfig;
+
+  let plotAssetId = cropPlotAssetId;
+  if (!isReadOnly && !cropPlotAssetId && visitorPlotAssetId) plotAssetId = visitorPlotAssetId;
 
   const [timeRemaining, setTimeRemaining] = useState<string | null>(null);
   const [readyForWater, setReadyForWater] = useState(false);
@@ -79,8 +82,7 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
   };
 
   const getGrowthStatus = () => {
-    if (isReadOnly) return `Owned by ${ownerName}`;
-    else if (wasHarvested) return "Harvested";
+    if (wasHarvested) return "Harvested";
     else if (readyForHarvest) return "Ready for Harvest!";
     else if (readyForWater) return `Ready to Water!`;
     else if (growLevel < harvestLevel) return `Ready to water in: ${timeRemaining}`;
@@ -89,55 +91,56 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
     return `Growing... (Level ${growLevel}/${harvestLevel})`;
   };
 
-  const getGrowthColor = () => {
-    if (isReadOnly) return "chip-muted";
-    if (readyForWater || readyForHarvest) return "chip-success";
-  };
-
   return (
-    <div className="grid gap-2">
-      <div className="card small">
-        <div className="card-details" style={{ maxWidth: "100%" }}>
-          <img className="m-auto" src={seeds[seedId].icon} style={{ width: "40px", height: "40px" }} />
-          <div className="text-center">
-            <h3 className="card-title bold">{name}</h3>
-            <p className="text-muted">
-              <i>{rarity}</i>
-            </p>
-            <p>
-              <i>
-                Lvl {growLevel}/{harvestLevel}
-              </i>
-            </p>
-            <p className="text-success">+{reward} Coins</p>
-            <div className={`chip my-4 ${getGrowthColor()}`}>{getGrowthStatus()}</div>
-          </div>
-        </div>
-      </div>
+    <>
+      {isReadOnly && <div className="chip chip-muted mb-2">{`Owned by ${ownerName}`}</div>}
 
-      {/* Water */}
-      {!isReadOnly && readyForWater && <WaterButton handleAfterWater={() => setReadyForWater(false)} />}
-
-      {/* Harvest */}
-      {!isReadOnly && readyForHarvest && <HarvestButton handleAfterHarvest={handleAfterHarvest} reward={reward} />}
-
-      {/* Already harvested */}
-      {wasHarvested && (
-        <>
-          <div className="card success">
-            <div className="card-details">
-              <p className="text-center">Earned {reward} coins</p>
+      <div className="grid gap-2">
+        <div className="card small">
+          <div className="card-details" style={{ maxWidth: "100%" }}>
+            <img className="m-auto" src={seeds[seedId].icon} style={{ width: "40px", height: "40px" }} />
+            <div className="text-center">
+              <h3 className="card-title bold">{name}</h3>
+              <p className="text-muted">
+                <i>{rarity}</i>
+              </p>
+              <p>
+                <i>
+                  Lvl {growLevel}/{harvestLevel}
+                </i>
+              </p>
+              <p className="text-success">+{reward} Coins</p>
+              <div className={`chip my-4 ${readyForWater || readyForHarvest ? "chip-success" : ""}`}>
+                {getGrowthStatus()}
+              </div>
             </div>
           </div>
-        </>
-      )}
+        </div>
 
-      {plotAssetId && (
-        <button className="btn btn-outline" onClick={handleOpenPlotIframe}>
-          View Plot
-        </button>
-      )}
-    </div>
+        {/* Water */}
+        {!isReadOnly && readyForWater && <WaterButton handleAfterWater={() => setReadyForWater(false)} />}
+
+        {/* Harvest */}
+        {!isReadOnly && readyForHarvest && <HarvestButton handleAfterHarvest={handleAfterHarvest} reward={reward} />}
+
+        {/* Already harvested */}
+        {wasHarvested && (
+          <>
+            <div className="card success">
+              <div className="card-details">
+                <p className="text-center">Earned {reward} coins</p>
+              </div>
+            </div>
+          </>
+        )}
+
+        {plotAssetId && (
+          <button className="btn btn-outline" onClick={handleOpenPlotIframe}>
+            View Plot
+          </button>
+        )}
+      </div>
+    </>
   );
 };
 

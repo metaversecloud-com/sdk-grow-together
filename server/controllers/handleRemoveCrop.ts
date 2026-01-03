@@ -20,6 +20,9 @@ export const handleRemoveCrop = async (req: Request, res: Response) => {
 
     if (!assetId) throw "No crop found on the specified square";
 
+    // Check if visitor owns this plot
+    if (visitorPlotData.plotAssetId !== assetId) throw "You must own this plot before remvoving crops";
+
     visitorData.worlds[urlSlug].plotSquares[squareId] = null;
     delete visitorData.worlds[urlSlug].crops[assetId];
 

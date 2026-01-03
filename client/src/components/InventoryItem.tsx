@@ -1,38 +1,39 @@
-interface PurchaseItemProps {
-  coinsAvailable: number;
+interface InventoryItemProps {
+  coinsAvailable?: number;
   id: string;
   icon: string;
   name: string;
   description?: string;
   rarity: string;
-  cost: number;
+  cost?: number;
   value?: number;
   valueText?: string;
-  isPurchasing: boolean;
-  handlePurchase: (id: string) => void;
+  isPurchasing?: boolean;
+  isReadyOnly?: boolean;
+  handlePurchase?: (id: string) => void;
 }
 
-export const PurchaseItem = ({
+export const InventoryItem = ({
   coinsAvailable,
   id,
   icon,
   name,
   description,
-  rarity,
+  rarity = "Common",
   cost,
   value,
   valueText,
   isPurchasing,
+  isReadyOnly,
   handlePurchase,
-}: PurchaseItemProps) => {
-  const affordable = coinsAvailable >= cost;
+}: InventoryItemProps) => {
   return (
     <div key={id} className="card menu-card">
       <img className="mx-auto" src={icon} style={{ maxHeight: "100px" }} />
       <div className="card-details">
         <div className="tooltip" style={{ maxWidth: "100%" }}>
           <span className="tooltip-content">{name}</span>
-          <h4 className="card-title ellipsis bold">{name}</h4>
+          <h5 className="card-title ellipsis bold">{name}</h5>
         </div>
 
         <div className="grid">
@@ -46,22 +47,27 @@ export const PurchaseItem = ({
             </p>
           )}
         </div>
-        <p className="p3 text-muted">
-          <i>Price: {cost}</i>
-        </p>
 
-        <div className="card-actions">
-          <button
-            className="btn btn-outline p3"
-            onClick={() => handlePurchase(id)}
-            disabled={!affordable || isPurchasing}
-          >
-            {isPurchasing ? "Purchasing..." : "Buy"}
-          </button>
-        </div>
+        {!isReadyOnly && handlePurchase && (
+          <>
+            <p className="p3 text-muted">
+              <i>Price: {cost}</i>
+            </p>
+
+            <div className="card-actions">
+              <button
+                className="btn btn-outline p3"
+                onClick={() => handlePurchase(id)}
+                disabled={(coinsAvailable ?? 0) < (cost ?? 0) || isPurchasing}
+              >
+                {isPurchasing ? "Purchasing..." : "Buy"}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
 };
 
-export default PurchaseItem;
+export default InventoryItem;

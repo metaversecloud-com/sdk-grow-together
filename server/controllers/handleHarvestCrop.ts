@@ -37,7 +37,7 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
         {},
         {
           lock: {
-            lockId: `planting_${assetId}_${cropAssetId}_${Math.round(Date.now() / 60000) * 60000}`,
+            lockId: `planting_${assetId}_${Math.round(Date.now() / 60000) * 60000}`,
           },
         },
       );
@@ -64,19 +64,14 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
 
       // Grant coins to visitor (modify quantity or add to inventory)
       if (cropAsset) {
-        const name = "Coins";
         const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
           credentials,
           visitor,
-          name,
+          name: "Coins",
           quantity: seedConfig.reward,
         });
         if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
-        visitorInventory[name] = {
-          id: name,
-          quantity: modifyInventoryItemResponse,
-          availableQuantity: modifyInventoryItemResponse,
-        };
+        visitorInventory.coins = modifyInventoryItemResponse.quantity;
       }
 
       // Update visitor's data object

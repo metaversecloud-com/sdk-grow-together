@@ -3,6 +3,7 @@
  */
 
 export type CropDataObjectType = {
+  plotAssetId?: string;
   ownerId?: string;
   ownerName?: string;
   squareId: number; // Which square in the plot

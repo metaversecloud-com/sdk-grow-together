@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 
 // components
-import { ModalHeader, PurchaseItem, YourMoney } from "@/components";
+import { InventoryItem } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
@@ -9,19 +9,21 @@ import { ErrorType, SET_VISITOR_INVENTORY } from "@/context/types";
 
 // utils
 import { backendAPI, setErrorMessage } from "@/utils";
+import { SeedType } from "@shared/types";
 
-export const SeedMenu = ({ onClose }: { onClose: () => void }) => {
+export const SeedMenu = () => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { visitorInventory = {}, seeds } = useContext(GlobalStateContext);
+  const { seeds, visitorInventory } = useContext(GlobalStateContext);
+  const { coins, seeds: visitorSeeds } = visitorInventory as typeof visitorInventory & {
+    seeds: { [key: string]: SeedType };
+  };
 
-  const availableSeeds = seeds && Object.values(seeds).filter((seed) => !visitorInventory?.[seed.name]);
+  const availableSeeds = seeds && Object.values(seeds).filter((seed) => !visitorSeeds?.[seed.name]);
 
   const [purchasingSeeds, setPurchasingSeeds] = useState<Set<string>>(new Set());
-  const [isPurchasing, setIsPurchasing] = useState(false);
 
   const handlePurchaseSeed = async (seedId: string) => {
     setPurchasingSeeds((prev) => new Set([...prev, seedId]));
-    setIsPurchasing(true);
     await backendAPI
       .post("/seed/purchase", { seedId })
       .then((response) => {
@@ -37,7 +39,6 @@ export const SeedMenu = ({ onClose }: { onClose: () => void }) => {
           updated.delete(seedId);
           return updated;
         });
-        setIsPurchasing(false);
       });
   };
 
@@ -48,43 +49,38 @@ export const SeedMenu = ({ onClose }: { onClose: () => void }) => {
   };
 
   return (
-    <div className="modal-container">
-      <div className="modal">
-        <ModalHeader text="Buy Seeds" disabled={isPurchasing} handleOnClick={onClose} />
+    <>
+      {availableSeeds && availableSeeds.length > 0 ? (
+        <div className="grid grid-cols-2 gap-2">
+          {availableSeeds.map((seed) => {
+            const { id, name, rarity, cost, growthTime, harvestLevel, reward } = seed;
 
-        <YourMoney coinsAvailable={visitorInventory["Coins"]?.quantity || 0} />
-
-        {availableSeeds && availableSeeds.length > 0 ? (
-          <div className="grid grid-cols-2 gap-2">
-            {availableSeeds.map((seed) => {
-              const { id, name, rarity, cost, growthTime, harvestLevel, reward } = seed;
-
-              return (
-                <PurchaseItem
-                  key={id}
-                  coinsAvailable={visitorInventory["Coins"]?.quantity || 0}
-                  id={id}
-                  icon={seeds[id].icon}
-                  name={name}
-                  description={formatTime(growthTime * harvestLevel)}
-                  rarity={rarity}
-                  cost={cost}
-                  value={reward}
-                  valueText="Profit"
-                  isPurchasing={purchasingSeeds.has(id)}
-                  handlePurchase={() => handlePurchaseSeed(id)}
-                />
-              );
-            })}
-          </div>
-        ) : (
-          <p className="p2">
-            Nice work, you've already purchased all currently available seeds! Check back again later to see if new
-            seeds have been added to the store.
-          </p>
-        )}
-      </div>
-    </div>
+            return (
+              <InventoryItem
+                key={id}
+                coinsAvailable={coins}
+                id={id}
+                icon={seeds[id].icon}
+                name={name}
+                description={formatTime(growthTime * harvestLevel)}
+                rarity={rarity}
+                cost={cost}
+                value={reward}
+                valueText="Profit"
+                isPurchasing={purchasingSeeds.has(id)}
+                handlePurchase={() => handlePurchaseSeed(id)}
+                isReadyOnly={false}
+              />
+            );
+          })}
+        </div>
+      ) : (
+        <p className="p2">
+          Nice work, you've already purchased all currently available seeds! Check back again later to see if new seeds
+          have been added to the store.
+        </p>
+      )}
+    </>
   );
 };
 

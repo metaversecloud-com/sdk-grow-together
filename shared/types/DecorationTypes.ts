@@ -12,6 +12,7 @@ export type DecorationType = {
 };
 
 export type PlacedDecorationDataObjectType = {
+  plotAssetId?: string;
   decorationId: string;
   decorationName: string;
   ownerId?: string;

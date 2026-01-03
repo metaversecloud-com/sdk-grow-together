@@ -18,11 +18,13 @@ interface PlotGridProps {
   crops: VisitorWorldDataType["crops"];
   placedDecorations: VisitorWorldDataType["decorations"];
   visitorInventory?: VisitorInventoryType;
+  isOwnedByCurrentUser?: boolean;
+  ownerId?: string;
 }
 
 type PlotSquareType = "crop" | "decoration";
 
-export const PlotGrid = ({ plotSquares, crops, placedDecorations }: PlotGridProps) => {
+export const PlotGrid = ({ plotSquares, crops, placedDecorations, isOwnedByCurrentUser, ownerId }: PlotGridProps) => {
   const { decorations = {}, seeds = {} } = useContext(GlobalStateContext);
 
   const [selectedSquareId, setSelectedSquareId] = useState<number | null>(null);
@@ -81,20 +83,23 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations }: PlotGridProp
   return (
     <div>
       {/* Decorations Grid */}
-      <div className="mb-4">
-        <h6 className="pb-1">Decorations</h6>
-        <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
-          {plotConfig.reservedSquares.map((squareId) => (
-            <PlotSquare
-              key={squareId}
-              squareId={squareId}
-              itemType="decoration"
-              squareDetails={getSquareDetails(squareId)}
-              handleSquareClick={() => handleSquareClick(squareId, "decoration")}
-            />
-          ))}
+      {isOwnedByCurrentUser && (
+        <div className="mb-4">
+          <h6 className="pb-1">Decorations</h6>
+          <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
+            {plotConfig.reservedSquares.map((squareId) => (
+              <PlotSquare
+                key={squareId}
+                squareId={squareId}
+                itemType="decoration"
+                squareDetails={getSquareDetails(squareId)}
+                isOwnedByCurrentUser={isOwnedByCurrentUser}
+                handleSquareClick={() => handleSquareClick(squareId, "decoration")}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Crops Grid */}
       <div className="mb-4">
@@ -110,6 +115,7 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations }: PlotGridProp
                   squareId={squareId}
                   itemType="crop"
                   squareDetails={getSquareDetails(squareId)}
+                  isOwnedByCurrentUser={isOwnedByCurrentUser}
                   handleSquareClick={() => handleSquareClick(squareId, "crop")}
                 />
               );
@@ -134,6 +140,8 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations }: PlotGridProp
           itemAssetId={plotSquares[selectedSquareId]!}
           itemType={selectedSquareType}
           selectedSquareDetails={selectedSquareDetails}
+          isOwnedByCurrentUser={isOwnedByCurrentUser}
+          ownerId={ownerId}
           closeSquareModal={closeSquareModal}
         />
       )}
