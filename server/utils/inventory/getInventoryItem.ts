@@ -19,6 +19,7 @@ export const getInventoryItem = async (credentials: Credentials, itemName: strin
       rarity: getRarity(inventoryItem.metadata?.rarity || 0),
       description: inventoryItem.description || "",
       reward: inventoryItem.metadata?.reward || 0,
+      xp: inventoryItem.metadata?.xp || 0,
       growthTime: inventoryItem.metadata?.growthTime || 0,
       harvestLevel: inventoryItem.metadata?.harvestLevel || 0,
       canBeUsedOnPlot: inventoryItem.metadata?.canBeUsedOnPlot || false,

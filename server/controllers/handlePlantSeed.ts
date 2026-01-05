@@ -59,10 +59,10 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     const seedConfig = seeds[seedId];
     if (!seedConfig) throw "Invalid seed type";
 
-    const visitorPlotData = visitorData.worlds[urlSlug];
+    const plotData = visitorData.worlds[urlSlug];
 
     // Check if visitor owns this plot
-    if (visitorPlotData.plotAssetId !== assetId) throw "You must own this plot before planting seeds";
+    if (plotData.plotAssetId !== assetId) throw "You must own this plot before planting seeds";
 
     // Check if visitor has purchased this seed (for paid seeds)
     if (seedConfig.cost > 0 && !visitorInventory.seeds?.[seedConfig.name]) {
@@ -70,7 +70,7 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     }
 
     // Check if the square is already occupied
-    if (visitorPlotData.plotSquares?.[squareId]) throw "This square is already occupied";
+    if (plotData.plotSquares?.[squareId]) throw "This square is already occupied";
 
     // Use the plot asset to determine position
     const position = calculateSquarePosition(plotAsset.position, squareId);
@@ -149,7 +149,7 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     return res.json({
       success: true,
       visitorData,
-      visitorPlotData: visitorData.worlds[urlSlug],
+      plotData: visitorData.worlds[urlSlug],
     });
   } catch (error) {
     return errorHandler({

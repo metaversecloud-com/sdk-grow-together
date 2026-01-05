@@ -18,10 +18,11 @@ export const Plot = () => {
     hasInteractiveParams,
     plotAssetData,
     visitorInventory = { coins: 0 },
-    visitorPlotData,
+    plotData,
+    xp,
   } = useContext(GlobalStateContext);
   const { claimedDate, ownerId, ownerName } = plotAssetData || {};
-  const { plotAssetId, plotSquares, crops, decorations } = visitorPlotData || { plotSquares: {} };
+  const { plotAssetId, plotSquares, crops, decorations } = plotData || { plotSquares: {} };
   const { coins } = visitorInventory;
 
   const [searchParams] = useSearchParams();
@@ -75,7 +76,7 @@ export const Plot = () => {
   };
 
   return (
-    <PageContainer isLoading={isLoading} headerText={headerText} showInfoIcon={isOwnedByCurrentUser}>
+    <PageContainer isLoading={isLoading} headerText={headerText} showInfoIcon={isOwnedByCurrentUser} xp={xp}>
       <div className="container">
         {/* Current user's plot */}
         {isOwnedByCurrentUser && plotAssetId && (
@@ -123,7 +124,7 @@ export const Plot = () => {
 
         {/* Plot owned by another user */}
         {isOwnedByOtherUser && (
-          <div className="grid gap-2 mb-10">
+          <div className="grid gap-4 mb-10">
             {claimedDate && <p>Garden Started: {new Date(claimedDate).toLocaleDateString()}</p>}
             <PlotGrid
               plotSquares={plotSquares}

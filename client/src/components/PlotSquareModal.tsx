@@ -64,7 +64,7 @@ export const PlotSquareModal = ({
         squareId: selectedSquareId,
       })
       .then((response) => {
-        const { visitorInventory, visitorData, visitorPlotData } = response.data;
+        const { visitorInventory, visitorData, plotData } = response.data;
         dispatch!({
           type: SET_VISITOR_INVENTORY,
           payload: { visitorInventory, error: "" },
@@ -75,7 +75,7 @@ export const PlotSquareModal = ({
         });
         dispatch!({
           type: SET_VISITOR_PLOT_DATA,
-          payload: { visitorPlotData, error: "" },
+          payload: { plotData, error: "" },
         });
       })
       .catch((error) => {

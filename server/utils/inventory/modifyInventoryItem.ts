@@ -14,7 +14,7 @@ export const modifyVisitorInventoryItem = async ({
   visitor: VisitorInterface;
   name: string;
   quantity: number;
-}) => {
+}): Promise<VisitorInventoryItemType | Error> => {
   try {
     let item = {} as VisitorInventoryItemType;
 

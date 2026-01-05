@@ -64,10 +64,10 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     // Verify decoration exists
     if (!decoration) throw "Invalid decoration type";
 
-    const visitorPlotData = visitorData.worlds[urlSlug];
+    const plotData = visitorData.worlds[urlSlug];
 
     // Check if visitor owns this plot
-    if (visitorPlotData.plotAssetId !== assetId) throw "You must own this plot before placing decorations";
+    if (plotData.plotAssetId !== assetId) throw "You must own this plot before placing decorations";
 
     // Check if visitor owns this decoration
     if (
@@ -79,7 +79,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     }
 
     // Check if the square is already occupied
-    if (visitorPlotData.plotSquares?.[squareId]) throw "This square is already occupied";
+    if (plotData.plotSquares?.[squareId]) throw "This square is already occupied";
 
     // Use the plot asset to determine position
     const position = calculateSquarePosition(plotAsset.position, squareId);
@@ -167,7 +167,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
 
     return res.json({
       success: true,
-      visitorPlotData: visitorData.worlds[urlSlug],
+      plotData: visitorData.worlds[urlSlug],
       visitorInventory,
     });
   } catch (error) {

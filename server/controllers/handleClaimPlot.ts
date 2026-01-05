@@ -91,7 +91,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
     promises.push(plotAsset.setDataObject(plotAssetData));
 
     // Update visitor's data object
-    const visitorPlotData = {
+    const plotData = {
       plotAssetId: plotAsset.id,
       claimedDate,
       plotSquares,
@@ -103,7 +103,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       ...visitorData,
       worlds: {
         ...visitorData.worlds,
-        [urlSlug]: visitorPlotData,
+        [urlSlug]: plotData,
       },
     };
 
@@ -168,7 +168,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       success: true,
       plotAssetData,
       visitorData: updatedVisitorData,
-      visitorPlotData,
+      plotData,
       visitorInventory,
     });
   } catch (error) {

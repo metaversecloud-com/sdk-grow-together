@@ -26,7 +26,7 @@ export const WaterButton = ({
     await backendAPI
       .post("/crop/water", { cropAssetId })
       .then((response) => {
-        const { success, cropData, visitorData, visitorPlotData } = response.data;
+        const { success, cropData, visitorData, plotData } = response.data;
         if (success) {
           const waterAudio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/water_plant.mp3");
           waterAudio.volume = 0.5; // 50% volume
@@ -39,7 +39,7 @@ export const WaterButton = ({
         });
         dispatch!({
           type: SET_VISITOR_PLOT_DATA,
-          payload: { visitorPlotData, error: "" },
+          payload: { plotData, error: "" },
         });
         dispatch!({
           type: SET_CROP_DATA,

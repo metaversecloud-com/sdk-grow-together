@@ -12,6 +12,7 @@ export * from "./InventoryItem.js";
 export * from "./InventoryModal.js";
 export * from "./InventorySeeds.js";
 export * from "./InventoryTools.js";
+export * from "./LevelAndRank.js";
 export * from "./Loading.js";
 export * from "./ModalHeader.js";
 export * from "./NewUserInfo.js";

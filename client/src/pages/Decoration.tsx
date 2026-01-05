@@ -16,7 +16,7 @@ export const Decoration = () => {
   const {
     hasInteractiveParams,
     decorationData,
-    visitorPlotData,
+    plotData,
     visitorInventory = { coins: 0 },
     decorations = {},
   } = useContext(GlobalStateContext);
@@ -33,8 +33,7 @@ export const Decoration = () => {
   const isOwnedByCurrentUser = ownerId === profileId;
 
   let plotAssetId = decorationPlotAssetId;
-  if (isOwnedByCurrentUser && !decorationPlotAssetId && visitorPlotData?.plotAssetId)
-    plotAssetId = visitorPlotData.plotAssetId;
+  if (isOwnedByCurrentUser && !decorationPlotAssetId && plotData?.plotAssetId) plotAssetId = plotData.plotAssetId;
 
   useEffect(() => {
     if (hasInteractiveParams) {

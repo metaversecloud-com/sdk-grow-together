@@ -8,8 +8,7 @@ import {
   getInventoryItems,
   getAnalyticName,
 } from "../utils/index.js";
-import { CropDataObjectType, getSeedImageVariation } from "../../shared/index.js";
-import { plotConfig } from "../../shared/constants/plotConfig.js";
+import { CropDataObjectType, getSeedImageVariation, plotConfig } from "../../shared/index.js";
 
 /**
  * Handle crop watering - grows crop by 1 level and updates dropped asset image in world
@@ -26,10 +25,10 @@ export const handleWaterCrop = async (req: Request, res: Response) => {
 
     const { visitor, visitorData } = initializeVisitorDataResponse;
 
-    const visitorPlotData = visitorData.worlds[urlSlug];
+    const plotData = visitorData.worlds[urlSlug];
 
     // Check if the crop exists in visitor's data
-    const crop = visitorPlotData.crops[assetId];
+    const crop = plotData.crops[assetId];
     if (!crop) throw "Crop not found";
 
     // Lock to prevent simultaneous waterings
@@ -38,7 +37,7 @@ export const handleWaterCrop = async (req: Request, res: Response) => {
         {},
         {
           lock: {
-            lockId: `planting_${cropAssetId}_${Math.round(Date.now() / 30000) * 30000}`,
+            lockId: `watering_${assetId}_${Math.round(Date.now() / 30000) * 30000}`,
           },
         },
       );
@@ -57,77 +56,9 @@ export const handleWaterCrop = async (req: Request, res: Response) => {
 
     if (crop.growLevel >= seedConfig.harvestLevel) throw "Crop is already fully grown";
 
+    let cropAsset;
     try {
-      const cropAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
-
-      const cropData = {
-        ...crop,
-        growLevel: crop.growLevel + 1,
-        lastWatered: new Date().toISOString(),
-      };
-
-      // Update visitor's data object
-      visitorData.worlds[urlSlug].crops[assetId] = cropData;
-
-      const world = World.create(urlSlug, { credentials });
-
-      await Promise.all([
-        visitor.updateDataObject(visitorData, {
-          analytics: [
-            {
-              analyticName: "cropsWatered",
-              profileId,
-              urlSlug,
-              uniqueKey: profileId,
-            },
-            {
-              analyticName: `${getAnalyticName(seedConfig)}Watered`,
-              profileId,
-              urlSlug,
-              uniqueKey: profileId,
-            },
-          ],
-        }),
-        world
-          .triggerParticle({
-            name: "drop_grow_together",
-            duration: 1,
-            position: {
-              x: cropAsset.position.x - plotConfig.squareSpacing / 2,
-              y: cropAsset.position.y - 200,
-            },
-          })
-          .catch((error) => {
-            errorHandler({
-              error,
-              functionName: "handleWaterCrop",
-              message: `Failed to trigger water particle effect: ${error}`,
-            });
-          }),
-        cropAsset.fetchDataObject(),
-      ]);
-
-      const cropAssetData = cropAsset.dataObject as CropDataObjectType;
-
-      // update the crop data on the asset
-      await cropAsset.updateDataObject({ ...cropAssetData, ...cropData });
-
-      // Update the crop asset image to reflect new growth level
-      const layer1 = getSeedImageVariation(seedConfig.name, crop.growLevel + 1);
-      await cropAsset.updateWebImageLayers("", layer1).catch((error) => {
-        errorHandler({
-          error,
-          functionName: "handleWaterCrop",
-          message: `Failed to update crop asset ${assetId}: ${error}`,
-        });
-      });
-
-      return res.json({
-        success: true,
-        cropData: { ...cropAssetData, ...cropData },
-        visitorData,
-        visitorPlotData: visitorData.worlds[urlSlug],
-      });
+      cropAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
     } catch (error) {
       console.error("Crop asset no longer in world. Continuing to clean up data object.");
 
@@ -139,9 +70,78 @@ export const handleWaterCrop = async (req: Request, res: Response) => {
       return res.json({
         success: false,
         visitorData,
-        visitorPlotData: visitorData.worlds[urlSlug],
+        plotData: visitorData.worlds[urlSlug],
       });
     }
+
+    const cropData = {
+      ...crop,
+      growLevel: crop.growLevel + 1,
+      lastWatered: new Date().toISOString(),
+    };
+
+    // Update visitor's data object
+    visitorData.worlds[urlSlug].crops[assetId] = cropData;
+
+    const world = World.create(urlSlug, { credentials });
+
+    await Promise.all([
+      visitor.updateDataObject(visitorData, {
+        analytics: [
+          {
+            analyticName: "cropsWatered",
+            profileId,
+            urlSlug,
+            uniqueKey: profileId,
+          },
+          {
+            analyticName: `${getAnalyticName(seedConfig)}Watered`,
+            profileId,
+            urlSlug,
+            uniqueKey: profileId,
+          },
+        ],
+      }),
+      world
+        .triggerParticle({
+          name: "drop_grow_together",
+          duration: 1,
+          position: {
+            x: cropAsset.position.x - plotConfig.squareSpacing / 2,
+            y: cropAsset.position.y - 200,
+          },
+        })
+        .catch((error) => {
+          errorHandler({
+            error,
+            functionName: "handleWaterCrop",
+            message: `Failed to trigger water particle effect: ${error}`,
+          });
+        }),
+      cropAsset.fetchDataObject(),
+    ]);
+
+    const cropAssetData = cropAsset.dataObject as CropDataObjectType;
+
+    // update the crop data on the asset
+    await cropAsset.updateDataObject({ ...cropAssetData, ...cropData });
+
+    // Update the crop asset image to reflect new growth level
+    const layer1 = getSeedImageVariation(seedConfig.name, crop.growLevel + 1);
+    await cropAsset.updateWebImageLayers("", layer1).catch((error) => {
+      errorHandler({
+        error,
+        functionName: "handleWaterCrop",
+        message: `Failed to update crop asset ${assetId}: ${error}`,
+      });
+    });
+
+    return res.json({
+      success: true,
+      cropData: { ...cropAssetData, ...cropData },
+      visitorData,
+      plotData: visitorData.worlds[urlSlug],
+    });
   } catch (error) {
     return errorHandler({
       error,

@@ -21,6 +21,7 @@ import {
   handlePurchaseTool,
 } from "./controllers/index.js";
 import { getVersion } from "./utils/getVersion.js";
+import { handleUsePlotTool } from "./controllers/handleUsePlotTool.js";
 
 const router = express.Router();
 const SERVER_START_DATE = new Date();
@@ -54,6 +55,7 @@ router.post("/admin/clear-all-plots", handleClearAllPlots);
 router.post("/plot/claim", handleClaimPlot);
 router.post("/plot/teleport", handleTeleportToPlot);
 router.post("/plot/view", handleOpenPlotIframe);
+router.post("/plot/use-tool", handleUsePlotTool);
 router.post("/square/view", handleOpenPlotSquareIframe);
 router.get("/square", handleGetPlotSquareInfo);
 

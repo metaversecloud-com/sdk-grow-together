@@ -12,8 +12,8 @@ export const handleOpenPlotSquareIframe = async (req: Request, res: Response) =>
 
     const { visitor, visitorData } = initializeVisitorDataResponse;
 
-    const visitorPlotData = visitorData.worlds[urlSlug];
-    const assetId = visitorPlotData.plotSquares[squareId];
+    const plotData = visitorData.worlds[urlSlug];
+    const assetId = plotData.plotSquares[squareId];
 
     if (!assetId) throw new Error("Nothing found on the specified square");
 

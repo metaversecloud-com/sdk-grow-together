@@ -25,10 +25,10 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
 
     const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
 
-    const visitorPlotData = visitorData.worlds[urlSlug];
+    const plotData = visitorData.worlds[urlSlug];
 
     // Check if the crop exists in visitor's data
-    const crop = visitorPlotData.crops[assetId];
+    const crop = plotData.crops[assetId];
     if (!crop) throw "Crop not found";
 
     // Lock to prevent simultaneous harvests
@@ -37,7 +37,7 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
         {},
         {
           lock: {
-            lockId: `planting_${assetId}_${Math.round(Date.now() / 60000) * 60000}`,
+            lockId: `harvesting_${assetId}_${Math.round(Date.now() / 60000) * 60000}`,
           },
         },
       );
@@ -59,80 +59,9 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
       throw `Crop is not ready for harvest. Current growth level: ${crop.growLevel}/${seedConfig.harvestLevel}`;
     }
 
+    let cropAsset;
     try {
-      const cropAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
-
-      // Grant coins to visitor (modify quantity or add to inventory)
-      if (cropAsset) {
-        const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
-          credentials,
-          visitor,
-          name: "Coins",
-          quantity: seedConfig.reward,
-        });
-        if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
-        visitorInventory.coins = modifyInventoryItemResponse.quantity;
-      }
-
-      // Update visitor's data object
-      const updatedVisitorData = {
-        ...visitorData,
-        totalCoinsEarned: visitorData.totalCoinsEarned + seedConfig.reward,
-        lastDateCoinsEarned: new Date().toISOString(),
-      };
-
-      updatedVisitorData.worlds[urlSlug].plotSquares[crop.squareId] = null;
-      delete updatedVisitorData.worlds[urlSlug].crops[assetId];
-
-      const world = World.create(urlSlug, { credentials });
-
-      await Promise.all([
-        visitor.updateDataObject(updatedVisitorData, {
-          analytics: [
-            {
-              analyticName: "cropsHarvested",
-              profileId,
-              urlSlug,
-              uniqueKey: profileId,
-            },
-            {
-              analyticName: `${getAnalyticName(seedConfig)}Harvested`,
-              profileId,
-              urlSlug,
-              uniqueKey: profileId,
-            },
-          ],
-        }),
-        world
-          .triggerParticle({
-            name: "coin_grow_together",
-            duration: 2,
-            position: cropAsset.position,
-          })
-          .catch((error) => {
-            errorHandler({
-              error,
-              functionName: "handleHarvestCrop",
-              message: `Failed to trigger harvest particle effect: ${error}`,
-            });
-          }),
-      ]);
-
-      // Remove the crop asset from the world
-      await cropAsset.deleteDroppedAsset().catch((error) => {
-        errorHandler({
-          error,
-          functionName: "handleHarvestCrop",
-          message: `Failed to delete crop asset ${assetId}: ${error}`,
-        });
-      });
-
-      return res.json({
-        success: true,
-        visitorData: updatedVisitorData,
-        visitorPlotData: updatedVisitorData.worlds[urlSlug],
-        visitorInventory,
-      });
+      cropAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
     } catch (error) {
       console.error("Crop asset no longer in world. Continuing with harvest to clean up data object.");
 
@@ -144,10 +73,90 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
       return res.json({
         success: false,
         visitorData,
-        visitorPlotData: visitorData.worlds[urlSlug],
+        plotData: visitorData.worlds[urlSlug],
         visitorInventory,
+        earnedMessage: `You earned ${seedConfig.reward} Coins and ${seedConfig.xp} XP`,
       });
     }
+
+    // Grant coins and xp to visitor (modify quantity or add to inventory)
+    const modifyCoinsResponse = await modifyVisitorInventoryItem({
+      credentials,
+      visitor,
+      name: "Coins",
+      quantity: seedConfig.reward,
+    });
+    if (modifyCoinsResponse instanceof Error) throw modifyCoinsResponse;
+    visitorInventory.coins = modifyCoinsResponse.quantity;
+
+    const modifyXpResponse = await modifyVisitorInventoryItem({
+      credentials,
+      visitor,
+      name: "Experience Points",
+      quantity: seedConfig.xp,
+    });
+    if (modifyXpResponse instanceof Error) throw modifyXpResponse;
+    visitorInventory.xp = modifyXpResponse.quantity;
+
+    // Update visitor's data object
+    const updatedVisitorData = {
+      ...visitorData,
+      totalCoinsEarned: visitorData.totalCoinsEarned + seedConfig.reward,
+      lastDateCoinsEarned: new Date().toISOString(),
+    };
+
+    updatedVisitorData.worlds[urlSlug].plotSquares[crop.squareId] = null;
+    delete updatedVisitorData.worlds[urlSlug].crops[assetId];
+
+    const world = World.create(urlSlug, { credentials });
+
+    await Promise.all([
+      visitor.updateDataObject(updatedVisitorData, {
+        analytics: [
+          {
+            analyticName: "cropsHarvested",
+            profileId,
+            urlSlug,
+            uniqueKey: profileId,
+          },
+          {
+            analyticName: `${getAnalyticName(seedConfig)}Harvested`,
+            profileId,
+            urlSlug,
+            uniqueKey: profileId,
+          },
+        ],
+      }),
+      world
+        .triggerParticle({
+          name: "coin_grow_together",
+          duration: 2,
+          position: cropAsset.position,
+        })
+        .catch((error) => {
+          errorHandler({
+            error,
+            functionName: "handleHarvestCrop",
+            message: `Failed to trigger harvest particle effect: ${error}`,
+          });
+        }),
+    ]);
+
+    // Remove the crop asset from the world
+    await cropAsset.deleteDroppedAsset().catch((error) => {
+      errorHandler({
+        error,
+        functionName: "handleHarvestCrop",
+        message: `Failed to delete crop asset ${assetId}: ${error}`,
+      });
+    });
+
+    return res.json({
+      success: true,
+      visitorData: updatedVisitorData,
+      plotData: updatedVisitorData.worlds[urlSlug],
+      visitorInventory,
+    });
   } catch (error) {
     return errorHandler({
       error,

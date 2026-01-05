@@ -19,7 +19,7 @@ interface UsePlotToolModalProps {
 
 export const UsePlotToolModal = ({ actionType, ownerId, closeToolModal }: UsePlotToolModalProps) => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { visitorInventory = { tools: {} } } = useContext(GlobalStateContext);
+  const { plotData = { crops: {} }, visitorInventory = { tools: {} } } = useContext(GlobalStateContext);
   const tools = visitorInventory.tools as Record<string, VisitorInventoryItemType>;
 
   const [hasTools, setHasTools] = useState(false);
@@ -34,15 +34,15 @@ export const UsePlotToolModal = ({ actionType, ownerId, closeToolModal }: UsePlo
     setHasTools(!!hasAvailableTools);
   }, [visitorInventory, tools, actionType]);
 
-  const handleUseTool = async (toolName: string) => {
+  const handleUseTool = async (tool: VisitorInventoryItemType) => {
     setAreButtonsDisabled(true);
     await backendAPI
       .post(`/plot/use-tool`, {
-        toolName,
+        tool,
         ownerId,
       })
       .then((response) => {
-        const { success, visitorInventory, visitorData, visitorPlotData } = response.data;
+        const { success, visitorInventory, visitorData, plotData } = response.data;
         if (success) {
           const useToolAudio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/use_tool.mp3");
           useToolAudio.volume = 0.5; // 50% volume
@@ -55,7 +55,7 @@ export const UsePlotToolModal = ({ actionType, ownerId, closeToolModal }: UsePlo
         });
         dispatch!({
           type: SET_VISITOR_PLOT_DATA,
-          payload: { visitorPlotData, error: "" },
+          payload: { plotData, error: "" },
         });
         dispatch!({
           type: SET_VISITOR_INVENTORY,
@@ -67,6 +67,7 @@ export const UsePlotToolModal = ({ actionType, ownerId, closeToolModal }: UsePlo
       })
       .finally(() => {
         setAreButtonsDisabled(false);
+        closeToolModal();
       });
   };
 
@@ -74,7 +75,7 @@ export const UsePlotToolModal = ({ actionType, ownerId, closeToolModal }: UsePlo
     <div className="modal-container">
       <div className="modal">
         <ModalHeader
-          text={`${actionType} __ crops?`}
+          text={`${actionType} ${Object.keys(plotData.crops).length} crops?`}
           disabled={areButtonsDisabled}
           handleOnClick={() => {
             closeToolModal();
@@ -101,7 +102,7 @@ export const UsePlotToolModal = ({ actionType, ownerId, closeToolModal }: UsePlo
                   <div
                     key={id}
                     className={areButtonsDisabled ? "opacity-50" : "cursor-pointer"}
-                    onClick={() => handleUseTool(name)}
+                    onClick={() => handleUseTool(tool)}
                   >
                     <InventoryItem
                       key={id}

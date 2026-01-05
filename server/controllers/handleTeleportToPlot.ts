@@ -18,9 +18,9 @@ export const handleTeleportToPlot = async (req: Request, res: Response) => {
 
     const { visitor, visitorData } = initializeVisitorDataResponse;
 
-    const visitorPlotData = visitorData.worlds[urlSlug];
+    const plotData = visitorData.worlds[urlSlug];
 
-    const plotAssetId = visitorPlotData.plotAssetId;
+    const plotAssetId = plotData.plotAssetId;
     if (!plotAssetId) throw new Error("Plot asset id is undefined.");
 
     const userAsset = await DroppedAsset.get(plotAssetId, urlSlug, { credentials });

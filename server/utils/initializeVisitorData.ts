@@ -79,6 +79,7 @@ export const initializeVisitorData = async (credentials: Credentials) => {
     const allItems = visitor.inventoryItems as UserItems[];
 
     let coins = 0,
+      xp = 0,
       seeds: { [key: string]: any } = {},
       decorations: { [key: string]: any } = {},
       tools: { [key: string]: any } = {};
@@ -88,6 +89,10 @@ export const initializeVisitorData = async (credentials: Credentials) => {
 
       if (name === "Coins") {
         coins = item.quantity || 0;
+      } else if (name === "Experience Points") {
+        xp = item.quantity || 0;
+      } else if (name === "Rank") {
+        xp = item.quantity || 0;
       } else if (ecosystemSeeds[item_id]) {
         // Merge inventory item with seed data
         seeds[name] = {
@@ -183,7 +188,8 @@ export const initializeVisitorData = async (credentials: Credentials) => {
       });
 
     const visitorInventory: VisitorInventoryType = {
-      coins: coins || 0,
+      coins,
+      xp,
       seeds: sortedSeeds,
       decorations: sortedDecorations,
       tools: sortedTools,

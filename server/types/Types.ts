@@ -18,6 +18,7 @@ export interface EcosystemItemType extends InventoryItemInterface {
     cost?: number;
     rarity?: number;
     reward?: number;
+    xp?: number;
     growthTime?: number;
     harvestLevel?: number;
     canBeUsedOnPlot?: boolean;

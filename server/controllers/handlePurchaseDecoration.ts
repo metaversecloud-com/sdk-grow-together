@@ -56,7 +56,10 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
     if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
 
     const availableQuantity = visitorInventory.decorations[decorationConfig.name]?.availableQuantity || 0;
-    visitorInventory.decorations[decorationConfig.name] = modifyInventoryItemResponse;
+    visitorInventory.decorations[decorationConfig.name] = {
+      ...visitorInventory.decorations[decorationConfig.name],
+      ...modifyInventoryItemResponse,
+    };
     visitorInventory.decorations[decorationConfig.name].availableQuantity = availableQuantity + 1;
 
     await visitor.updateDataObject(

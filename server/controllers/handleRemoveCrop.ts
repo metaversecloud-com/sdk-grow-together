@@ -15,13 +15,13 @@ export const handleRemoveCrop = async (req: Request, res: Response) => {
 
     const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
 
-    const visitorPlotData = visitorData.worlds[urlSlug];
-    const assetId = visitorPlotData.plotSquares[squareId];
+    const plotData = visitorData.worlds[urlSlug];
+    const assetId = plotData.plotSquares[squareId];
 
     if (!assetId) throw "No crop found on the specified square";
 
     // Check if visitor owns this plot
-    if (visitorPlotData.plotAssetId !== assetId) throw "You must own this plot before remvoving crops";
+    if (plotData.plotAssetId !== assetId) throw "You must own this plot before removing crops";
 
     visitorData.worlds[urlSlug].plotSquares[squareId] = null;
     delete visitorData.worlds[urlSlug].crops[assetId];
@@ -68,7 +68,7 @@ export const handleRemoveCrop = async (req: Request, res: Response) => {
     return res.json({
       success: true,
       visitorData,
-      visitorPlotData: visitorData.worlds[urlSlug],
+      plotData: visitorData.worlds[urlSlug],
       visitorInventory,
     });
   } catch (error) {

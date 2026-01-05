@@ -14,9 +14,9 @@ import { s3URL } from "@shared/constants";
 
 export const Home = () => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { hasInteractiveParams, noOfAvailablePlots, plotAssetData, visitorPlotData } = useContext(GlobalStateContext);
+  const { hasInteractiveParams, noOfAvailablePlots, plotAssetData, visitorPlotAssetId } =
+    useContext(GlobalStateContext);
   const { ownerId } = plotAssetData || {};
-  const { plotAssetId } = visitorPlotData || { plotSquares: {} };
   const [searchParams] = useSearchParams();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -50,7 +50,7 @@ export const Home = () => {
       <div className="container grid gap-2">
         <img src={`${s3URL}/Logo.png`} alt="Grow Together Logo" style={{ height: "220px" }} />
 
-        {plotAssetId && !isOwnedByCurrentUser && (
+        {visitorPlotAssetId && !isOwnedByCurrentUser && (
           <Accordion title="Looking for your garden?">
             <p className="p2">Howdy, gardener! You already have a garden. Click the button below to teleport to it.</p>
 
@@ -61,7 +61,11 @@ export const Home = () => {
         )}
 
         <Accordion title="Need a garden? Start here.">
-          <NewUserInfo plotAssetId={plotAssetId} noOfAvailablePlots={noOfAvailablePlots} showHeaders={false} />
+          <NewUserInfo
+            visitorPlotAssetId={visitorPlotAssetId}
+            noOfAvailablePlots={noOfAvailablePlots}
+            showHeaders={false}
+          />
         </Accordion>
 
         <Instructions />

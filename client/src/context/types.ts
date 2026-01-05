@@ -17,6 +17,7 @@ export const SET_VISITOR_DATA = "SET_VISITOR_DATA";
 export const SET_VISITOR_PLOT_DATA = "SET_VISITOR_PLOT_DATA";
 export const SET_CROP_DATA = "SET_CROP_DATA";
 export const SET_DECORATION_DATA = "SET_DECORATION_DATA";
+export const SET_EARNED_MESSAGE = "SET_EARNED_MESSAGE";
 
 export type InteractiveParams = {
   assetId: string;
@@ -42,10 +43,13 @@ export interface InitialState {
   plotAssetData?: PlotAssetDataObjectType;
   visitorInventory?: VisitorInventoryType;
   visitorData?: VisitorDataObjectType;
-  visitorPlotData?: VisitorWorldDataType;
+  visitorPlotAssetId?: string;
+  plotData?: VisitorWorldDataType;
   decorations?: { [key: string]: DecorationType };
   seeds?: { [key: string]: SeedType };
   tools?: { [key: string]: DecorationType };
+  xp?: number;
+  earnedMessage?: string;
 }
 
 export type ActionType = {

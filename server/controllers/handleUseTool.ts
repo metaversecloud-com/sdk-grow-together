@@ -44,13 +44,13 @@ export const handleUseTool = async (req: Request, res: Response) => {
     crop = plotData.crops[assetId];
     if (!crop) throw "Crop not found";
 
-    // Lock to prevent simultaneous waterings
+    // Lock to prevent simultaneously using tool
     try {
       await owner.updateDataObject(
         {},
         {
           lock: {
-            lockId: `planting_${assetId}_${Math.round(Date.now() / 30000) * 30000}`,
+            lockId: `usingTool_${assetId}_${Math.round(Date.now() / 30000) * 30000}`,
           },
         },
       );
@@ -82,7 +82,7 @@ export const handleUseTool = async (req: Request, res: Response) => {
     return res.json({
       success: false,
       visitorData: ownerData,
-      visitorPlotData: ownerData.worlds[urlSlug],
+      plotData: ownerData.worlds[urlSlug],
       visitorInventory,
     });
 
@@ -147,7 +147,7 @@ export const handleUseTool = async (req: Request, res: Response) => {
       await cropAsset.updateWebImageLayers("", layer1).catch((error) => {
         errorHandler({
           error,
-          functionName: "handleWaterCrop",
+          functionName: "handleUseTool",
           message: `Failed to update crop asset ${assetId}: ${error}`,
         });
       });
@@ -156,7 +156,7 @@ export const handleUseTool = async (req: Request, res: Response) => {
         success: true,
         cropData: { ...cropAssetData, ...cropData },
         visitorData: ownerData,
-        visitorPlotData: ownerData.worlds[urlSlug],
+        plotData: ownerData.worlds[urlSlug],
       });
     } catch (error) {
       console.error("Crop asset no longer in world. Continuing to clean up data object.");
@@ -169,15 +169,15 @@ export const handleUseTool = async (req: Request, res: Response) => {
       return res.json({
         success: false,
         visitorData: ownerData,
-        visitorPlotData: ownerData.worlds[urlSlug],
+        plotData: ownerData.worlds[urlSlug],
       });
     }
     */
   } catch (error) {
     return errorHandler({
       error,
-      functionName: "handleWaterCrop",
-      message: "Error watering crop",
+      functionName: "handleUseTool",
+      message: "Error using tool",
       req,
       res,
     });

@@ -49,7 +49,7 @@ export const UseToolModal = ({
         ownerId,
       })
       .then((response) => {
-        const { success, visitorInventory, visitorData, visitorPlotData } = response.data;
+        const { success, visitorInventory, visitorData, plotData } = response.data;
         if (success) {
           const useToolAudio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/use_tool.mp3");
           useToolAudio.volume = 0.5; // 50% volume
@@ -62,7 +62,7 @@ export const UseToolModal = ({
         });
         dispatch!({
           type: SET_VISITOR_PLOT_DATA,
-          payload: { visitorPlotData, error: "" },
+          payload: { plotData, error: "" },
         });
         dispatch!({
           type: SET_VISITOR_INVENTORY,

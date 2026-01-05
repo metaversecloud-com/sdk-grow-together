@@ -31,6 +31,7 @@ export type VisitorInventoryItemType = {
   cost: number;
   rarity: string;
   reward: number;
+  xp: number;
   growthTime: number;
   harvestLevel: number;
   canBeUsedOnPlot: boolean;
@@ -40,6 +41,7 @@ export type VisitorInventoryItemType = {
 
 export type VisitorInventoryType = {
   coins: number;
+  xp: number;
   seeds: {
     [itemId: string]: VisitorInventoryItemType;
   };

@@ -37,14 +37,14 @@ export const PlantSeed = ({ selectedSquareId, setSelectedSquareId }: PlantSeedPr
         plantAudio.volume = 0.8; // 80% volume
         plantAudio.play();
 
-        const { visitorData, visitorPlotData } = response.data;
+        const { visitorData, plotData } = response.data;
         dispatch!({
           type: SET_VISITOR_DATA,
           payload: { visitorData, error: "" },
         });
         dispatch!({
           type: SET_VISITOR_PLOT_DATA,
-          payload: { visitorPlotData, error: "" },
+          payload: { plotData, error: "" },
         });
         setSelectedSquareId(null);
       })

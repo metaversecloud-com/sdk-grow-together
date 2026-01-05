@@ -60,9 +60,10 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
     });
     if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
 
-    const availableQuantity = visitorInventory.seeds[seedConfig.name]?.availableQuantity || 0;
-    visitorInventory.seeds[seedConfig.name] = modifyInventoryItemResponse;
-    visitorInventory.seeds[seedConfig.name].availableQuantity = availableQuantity + 1;
+    visitorInventory.seeds[seedConfig.name] = {
+      ...visitorInventory.seeds[seedConfig.name],
+      ...modifyInventoryItemResponse,
+    };
 
     await visitor.updateDataObject(
       {},

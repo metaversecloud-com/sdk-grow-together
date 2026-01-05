@@ -1,9 +1,41 @@
+import { useContext, useEffect, useState } from "react";
+
+// context
+import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
+import { SET_EARNED_MESSAGE } from "@/context/types";
+
 export const YourMoney = ({ coinsAvailable }: { coinsAvailable: number }) => {
+  const dispatch = useContext(GlobalDispatchContext);
+  const { earnedMessage } = useContext(GlobalStateContext);
+
+  const [showEarnedMessage, setShowEarnedMessage] = useState(false);
+
+  useEffect(() => {
+    if (earnedMessage) {
+      setShowEarnedMessage(true);
+      // Clear the earned message after displaying it for 10 seconds
+      setTimeout(() => {
+        setShowEarnedMessage(false);
+        dispatch!({
+          type: SET_EARNED_MESSAGE,
+          payload: { earnedMessage: undefined },
+        });
+      }, 10000);
+    }
+  }, [earnedMessage]);
+
   return (
     <div className="card small">
       <div className="card-details text-center">
         <p className="card-title">
-          <b>Your Money:</b> <span className="text-success">{coinsAvailable} Coins</span>
+          {showEarnedMessage && earnedMessage ? (
+            <span className="text-success">{earnedMessage}</span>
+          ) : (
+            <>
+              {" "}
+              <b>Your Money:</b> <span className="text-success">{coinsAvailable} Coins</span>
+            </>
+          )}
         </p>
       </div>
     </div>

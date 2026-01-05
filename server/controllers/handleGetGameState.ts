@@ -30,17 +30,21 @@ export const handleGetGameState = async (req: Request, res: Response) => {
 
     const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
 
-    let visitorPlotData = visitorData.worlds[urlSlug];
+    let plotData = visitorData.worlds[urlSlug],
+      xp = visitorInventory.xp || 0;
+    const visitorPlotAssetId = plotData.plotAssetId;
 
     const promises = [];
 
-    if (visitorPlotData.plotAssetId === assetId) {
+    if (plotData.plotAssetId === assetId) {
       const droppedAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
       promises.push(droppedAsset.updateDataObject({ lastInteractionDate: new Date().toISOString() }));
     } else if (plotAssetData.ownerId) {
       const plotOwner = await User.create({ credentials, profileId: plotAssetData.ownerId });
       const plotOwnerData = (await plotOwner.fetchDataObject()) as VisitorDataObjectType;
-      visitorPlotData = plotOwnerData.worlds[urlSlug];
+      plotData = plotOwnerData.worlds[urlSlug];
+      await plotOwner.fetchInventoryItems();
+      xp = plotOwner.inventoryItems.find((item) => item.name === "Experience Points")?.quantity || 0;
     }
 
     promises.push(
@@ -49,7 +53,7 @@ export const handleGetGameState = async (req: Request, res: Response) => {
         {
           analytics: [
             {
-              analyticName: `plotDrawerViews-${visitorPlotData.plotAssetId === assetId ? "self" : "non-self"}`,
+              analyticName: `plotDrawerViews-${plotData.plotAssetId === assetId ? "self" : "non-self"}`,
               profileId,
               urlSlug,
               uniqueKey: profileId,
@@ -75,12 +79,14 @@ export const handleGetGameState = async (req: Request, res: Response) => {
       isAdmin: visitor.isAdmin,
       plotAssetData,
       visitorData,
-      visitorPlotData,
+      visitorPlotAssetId,
+      plotData,
       visitorInventory,
       decorations,
       seeds,
       tools,
       noOfAvailablePlots: getPlotAssetsResult.availablePlotAssetIds.length,
+      xp,
     });
   } catch (error) {
     return errorHandler({

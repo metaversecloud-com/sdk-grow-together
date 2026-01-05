@@ -17,7 +17,7 @@ interface PlaceDecorationProps {
 
 export const PlaceDecoration = ({ selectedSquareId, setSelectedSquareId }: PlaceDecorationProps) => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { visitorInventory, visitorPlotData = { decorations: {} } } = useContext(GlobalStateContext);
+  const { visitorInventory, plotData = { decorations: {} } } = useContext(GlobalStateContext);
   const { decorations } = visitorInventory || {};
 
   const [isPlacing, setIsPlacing] = useState(false);
@@ -31,7 +31,7 @@ export const PlaceDecoration = ({ selectedSquareId, setSelectedSquareId }: Place
     setHasDecorations(!!hasAvailableDecorations);
 
     // Check if any decorations have already been placed
-    const placedDecorationCount = Object.keys(visitorPlotData.decorations || {}).length;
+    const placedDecorationCount = Object.keys(plotData.decorations || {}).length;
     setHasPlacedDecorations(placedDecorationCount > 0);
   }, [visitorInventory, decorations]);
 
@@ -46,14 +46,14 @@ export const PlaceDecoration = ({ selectedSquareId, setSelectedSquareId }: Place
         squareId: selectedSquareId,
       })
       .then((response) => {
-        const { visitorInventory, visitorPlotData } = response.data;
+        const { visitorInventory, plotData } = response.data;
         dispatch!({
           type: SET_VISITOR_INVENTORY,
           payload: { visitorInventory, error: "" },
         });
         dispatch!({
           type: SET_VISITOR_PLOT_DATA,
-          payload: { visitorPlotData, error: "" },
+          payload: { plotData, error: "" },
         });
         setSelectedSquareId(null);
       })
@@ -83,7 +83,7 @@ export const PlaceDecoration = ({ selectedSquareId, setSelectedSquareId }: Place
         />
 
         {!hasDecorations ? (
-          Object.keys(visitorPlotData.decorations).length > 0 ? (
+          Object.keys(plotData.decorations).length > 0 ? (
             <p>You've added all of your decorations. You'll need to buy more from the store or remove one.</p>
           ) : (
             <p className="p2">Click “Buy Decorations” in the garden store to unlock your first decoration.</p>

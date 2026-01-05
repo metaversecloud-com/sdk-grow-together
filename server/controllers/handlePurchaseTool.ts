@@ -55,9 +55,10 @@ export const handlePurchaseTool = async (req: Request, res: Response) => {
     });
     if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
 
-    const availableQuantity = visitorInventory.tools[toolConfig.name]?.availableQuantity || 0;
-    visitorInventory.tools[toolConfig.name] = modifyInventoryItemResponse;
-    visitorInventory.tools[toolConfig.name].availableQuantity = availableQuantity + 1;
+    visitorInventory.tools[toolConfig.name] = {
+      ...visitorInventory.tools[toolConfig.name],
+      ...modifyInventoryItemResponse,
+    };
 
     await visitor.updateDataObject(
       {},
