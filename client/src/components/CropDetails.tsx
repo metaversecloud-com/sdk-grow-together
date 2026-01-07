@@ -137,7 +137,7 @@ export const CropDetails = ({
           </div>
         </div>
 
-        {/* Already harvested */}
+        {/* Rewards Earned (by non-owners) */}
         {!isOwnedByCurrentUser && earnedMessage && (
           <>
             <div className="card success">
