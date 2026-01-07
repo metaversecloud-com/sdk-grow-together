@@ -3,6 +3,7 @@
  */
 
 export type CropDataObjectType = {
+  plotAssetId?: string;
   ownerId?: string;
   ownerName?: string;
   squareId: number; // Which square in the plot
@@ -10,4 +11,5 @@ export type CropDataObjectType = {
   lastWatered: string;
   seedId: string;
   growLevel: number;
+  appliedTools: string[];
 };

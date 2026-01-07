@@ -10,6 +10,9 @@ import {
   getBaseUrl,
   getInventoryItems,
   getAnalyticName,
+  modifyVisitorInventoryItem,
+  getXpRewardAmount,
+  getEarnedMessage,
 } from "../utils/index.js";
 import { DroppedAssetClickType } from "@rtsdk/topia";
 import { calculateNumberOfSquares, getSeedImageVariation } from "../../shared/index.js";
@@ -59,18 +62,18 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     const seedConfig = seeds[seedId];
     if (!seedConfig) throw "Invalid seed type";
 
-    const visitorPlotData = visitorData.worlds[urlSlug];
+    const plotData = visitorData.worlds[urlSlug];
 
-    // Check if visitor owns a plot
-    if (!visitorPlotData.plotAssetId) throw "You must claim a plot before planting seeds";
+    // Check if visitor owns this plot
+    if (plotData.plotAssetId !== assetId) throw "You must own this plot before planting seeds";
 
     // Check if visitor has purchased this seed (for paid seeds)
-    if (seedConfig.cost > 0 && !visitorInventory[seedConfig.name]) {
+    if (seedConfig.cost > 0 && !visitorInventory.seeds?.[seedConfig.name]) {
       throw "You must purchase this seed before planting";
     }
 
     // Check if the square is already occupied
-    if (visitorPlotData.plotSquares?.[squareId]) throw "This square is already occupied";
+    if (plotData.plotSquares?.[squareId]) throw "This square is already occupied";
 
     // Use the plot asset to determine position
     const position = calculateSquarePosition(plotAsset.position, squareId);
@@ -116,39 +119,55 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
       seedId,
       growLevel: 0,
       squareId,
+      appliedTools: [],
     };
 
-    await cropAsset.setDataObject({
-      ...cropData,
-      ownerId: profileId,
-      ownerName: displayName,
-    });
-
-    // Update visitor's data object
     visitorData.worlds[urlSlug].plotSquares[squareId] = cropAsset.id!;
     visitorData.worlds[urlSlug].crops[cropAsset.id!] = cropData;
 
-    await visitor.updateDataObject(visitorData, {
-      analytics: [
-        {
-          analyticName: "cropsPlanted",
-          profileId,
-          urlSlug,
-          uniqueKey: profileId,
-        },
-        {
-          analyticName: `${getAnalyticName(seedConfig)}Planted`,
-          profileId,
-          urlSlug,
-          uniqueKey: profileId,
-        },
-      ],
-    });
+    const xpRewardAmount = await getXpRewardAmount(seedConfig, "Plant");
+
+    await Promise.all([
+      cropAsset.setDataObject({
+        ...cropData,
+        plotAssetId: assetId,
+        ownerId: profileId,
+        ownerName: displayName,
+      }),
+      visitor.updateDataObject(visitorData, {
+        analytics: [
+          {
+            analyticName: "cropsPlanted",
+            profileId,
+            urlSlug,
+            uniqueKey: profileId,
+          },
+          {
+            analyticName: `${getAnalyticName(seedConfig)}Planted`,
+            profileId,
+            urlSlug,
+            uniqueKey: profileId,
+          },
+        ],
+      }),
+      modifyVisitorInventoryItem({
+        credentials,
+        visitor,
+        name: "Experience Points",
+        quantity: xpRewardAmount,
+      }).then((modifyXpResponse) => {
+        if (modifyXpResponse instanceof Error) throw modifyXpResponse;
+        visitorInventory.xp = modifyXpResponse.quantity;
+      }),
+    ]);
+
+    const earnedMessage = await getEarnedMessage(0, xpRewardAmount);
 
     return res.json({
       success: true,
       visitorData,
-      visitorPlotData: visitorData.worlds[urlSlug],
+      plotData: visitorData.worlds[urlSlug],
+      earnedMessage,
     });
   } catch (error) {
     return errorHandler({

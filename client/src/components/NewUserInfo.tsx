@@ -8,11 +8,11 @@ import { ErrorType } from "@/context/types";
 import { backendAPI, setErrorMessage } from "@/utils";
 
 export const NewUserInfo = ({
-  plotAssetId,
+  visitorPlotAssetId,
   noOfAvailablePlots = 0,
   showHeaders,
 }: {
-  plotAssetId?: string | null;
+  visitorPlotAssetId?: string | null;
   noOfAvailablePlots?: number;
   showHeaders: boolean;
 }) => {
@@ -29,7 +29,7 @@ export const NewUserInfo = ({
 
   return (
     <>
-      {!plotAssetId && noOfAvailablePlots > 0 && (
+      {!visitorPlotAssetId && noOfAvailablePlots > 0 && (
         <>
           {showHeaders && <h4>Ready to start your garden?</h4>}
           <p className="p2">

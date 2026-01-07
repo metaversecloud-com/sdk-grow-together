@@ -12,12 +12,22 @@
 .crop:hover {
   background: #5bc193 !important;
 }
+.crop.readonly:hover {
+  background: #b4edc4 !important;
+}
 
 .decoration {
   background: #fff6b6 !important;
 }
 .decoration:hover {
   background: #ffdc4b !important;
+}
+
+.tool {
+  background: #f8d3af !important;
+}
+.tool:hover {
+  background: #d5b18d !important;
 }
 
 .common {
@@ -51,4 +61,40 @@
 
 .menu-card {
   padding: 10px !important;
+}
+
+.progress {
+  background: #305bab;
+}
+
+.icon {
+  width: 40px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #ebedef;
+  padding: 12px;
+  display: inline-flex;
+  height: 40px;
+  justify-content: center;
+  align-items: center;
+}
+
+.icon-sm {
+  width: 28px;
+  height: 28px;
+}
+
+.tooltip-secondary {
+  position: relative;
+  display: inline-block;
+  text-align: center;
+}
+.tooltip-secondary-content {
+  top: 50% !important;
+  left: 50%;
+  transform: translate(-50%, 0%);
+  width: 100%;
+}
+.tooltip-secondary:hover .tooltip-secondary-content {
+  visibility: visible;
 }

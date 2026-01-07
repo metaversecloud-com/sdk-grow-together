@@ -35,9 +35,7 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
     const { visitor, visitorInventory } = initializeVisitorDataResponse;
 
     // Check if visitor has enough coins
-    if (visitorInventory["Coins"].quantity < decorationConfig.cost) {
-      throw `Not enough coins. Need ${decorationConfig.cost}, have ${visitorInventory["Coins"].quantity}`;
-    }
+    if (visitorInventory.coins < decorationConfig.cost) throw `Not enough coins.`;
 
     // Purchase the decoration (modify quantity in inventory)
     const modifyCoinsResponse = await modifyVisitorInventoryItem({
@@ -47,7 +45,7 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
       quantity: -decorationConfig.cost,
     });
     if (modifyCoinsResponse instanceof Error) throw modifyCoinsResponse;
-    visitorInventory["Coins"].quantity = modifyCoinsResponse;
+    visitorInventory.coins = modifyCoinsResponse.quantity;
 
     const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
       credentials,
@@ -55,16 +53,14 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
       name: decorationConfig.name,
       quantity: 1,
     });
-    if (typeof modifyInventoryItemResponse === "number") {
-      const availableQuantity = visitorInventory[decorationConfig.name]?.availableQuantity || 0;
-      visitorInventory[decorationConfig.name] = {
-        id: decorationConfig.name,
-        quantity: modifyInventoryItemResponse,
-        availableQuantity: availableQuantity + 1,
-      };
-    } else {
-      console.log("Error while modifying inventory item:", modifyInventoryItemResponse);
-    }
+    if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
+
+    const availableQuantity = visitorInventory.decorations[decorationConfig.name]?.availableQuantity || 0;
+    visitorInventory.decorations[decorationConfig.name] = {
+      ...visitorInventory.decorations[decorationConfig.name],
+      ...modifyInventoryItemResponse,
+    };
+    visitorInventory.decorations[decorationConfig.name].availableQuantity = availableQuantity + 1;
 
     await visitor.updateDataObject(
       {},

@@ -1,0 +1,66 @@
+import { useContext, useState } from "react";
+
+// components
+import { InventoryItem } from "@/components";
+
+// context
+import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
+import { ErrorType, SET_VISITOR_INVENTORY } from "@/context/types";
+
+// utils
+import { backendAPI, setErrorMessage } from "@/utils";
+
+export const ToolMenu = () => {
+  const dispatch = useContext(GlobalDispatchContext);
+  const { tools, visitorInventory = { coins: 0 } } = useContext(GlobalStateContext);
+
+  const [purchasingTools, setPurchasingTools] = useState<Set<string>>(new Set());
+
+  const handlePurchaseTool = async (toolId: string) => {
+    setPurchasingTools((prev) => new Set([...prev, toolId]));
+    await backendAPI
+      .post("/tool/purchase", { toolId })
+      .then((response) => {
+        dispatch!({
+          type: SET_VISITOR_INVENTORY,
+          payload: { visitorInventory: response.data.visitorInventory, error: "" },
+        });
+      })
+      .catch((error) => setErrorMessage(dispatch, error as ErrorType))
+      .finally(() => {
+        setPurchasingTools((prev) => {
+          const updated = new Set(prev);
+          updated.delete(toolId);
+          return updated;
+        });
+      });
+  };
+
+  return (
+    <div>
+      <div className="grid grid-cols-2 gap-2">
+        {tools &&
+          Object.values(tools).map((tool) => {
+            const { id, name, rarity, cost, icon } = tool;
+
+            return (
+              <InventoryItem
+                key={id}
+                coinsAvailable={visitorInventory.coins}
+                id={id}
+                icon={icon}
+                name={name}
+                rarity={rarity}
+                cost={cost}
+                isPurchasing={purchasingTools.has(id)}
+                handlePurchase={() => handlePurchaseTool(id)}
+                isReadyOnly={false}
+              />
+            );
+          })}
+      </div>
+    </div>
+  );
+};
+
+export default ToolMenu;

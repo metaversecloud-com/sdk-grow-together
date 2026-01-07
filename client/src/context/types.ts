@@ -1,9 +1,8 @@
 import {
   CropDataObjectType,
-  DecorationType,
+  EcosystemInventoryItemType,
   PlacedDecorationDataObjectType,
   PlotAssetDataObjectType,
-  SeedType,
   VisitorDataObjectType,
   VisitorInventoryType,
   VisitorWorldDataType,
@@ -17,6 +16,7 @@ export const SET_VISITOR_DATA = "SET_VISITOR_DATA";
 export const SET_VISITOR_PLOT_DATA = "SET_VISITOR_PLOT_DATA";
 export const SET_CROP_DATA = "SET_CROP_DATA";
 export const SET_DECORATION_DATA = "SET_DECORATION_DATA";
+export const SET_EARNED_MESSAGE = "SET_EARNED_MESSAGE";
 
 export type InteractiveParams = {
   assetId: string;
@@ -42,9 +42,12 @@ export interface InitialState {
   plotAssetData?: PlotAssetDataObjectType;
   visitorInventory?: VisitorInventoryType;
   visitorData?: VisitorDataObjectType;
-  visitorPlotData?: VisitorWorldDataType;
-  decorations?: { [key: string]: DecorationType };
-  seeds?: { [key: string]: SeedType };
+  visitorPlotAssetId?: string;
+  plotData?: VisitorWorldDataType;
+  decorations?: { [key: string]: EcosystemInventoryItemType };
+  seeds?: { [key: string]: EcosystemInventoryItemType };
+  tools?: { [key: string]: EcosystemInventoryItemType };
+  earnedMessage?: string;
 }
 
 export type ActionType = {
@@ -69,4 +72,5 @@ export type SelectedSquareDetails = {
   reward?: number;
   isReadyToWater?: boolean;
   isReadyToHarvest?: boolean;
+  appliedTools?: string[];
 };

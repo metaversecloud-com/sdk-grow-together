@@ -27,6 +27,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
 
     const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
+    const { decorations: visitorDecorations } = visitorInventory;
 
     // Get the plot asset and lock to prevent simultaneous placements
     const plotAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
@@ -63,18 +64,22 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     // Verify decoration exists
     if (!decoration) throw "Invalid decoration type";
 
-    const visitorPlotData = visitorData.worlds[urlSlug];
+    const plotData = visitorData.worlds[urlSlug];
 
-    // Check if visitor owns a plot
-    if (!visitorPlotData.plotAssetId) throw "You must claim a plot before placing decorations";
+    // Check if visitor owns this plot
+    if (plotData.plotAssetId !== assetId) throw "You must own this plot before placing decorations";
 
     // Check if visitor owns this decoration
-    if (!visitorInventory[decoration.name] || visitorInventory[decoration.name].quantity < 1) {
+    if (
+      !visitorDecorations?.[decoration.name] ||
+      !visitorDecorations?.[decoration.name] ||
+      visitorDecorations[decoration.name].quantity < 1
+    ) {
       throw "You must own this decoration before placing it";
     }
 
     // Check if the square is already occupied
-    if (visitorPlotData.plotSquares?.[squareId]) throw "This square is already occupied";
+    if (plotData.plotSquares?.[squareId]) throw "This square is already occupied";
 
     // Use the plot asset to determine position
     const position = calculateSquarePosition(plotAsset.position, squareId);
@@ -124,6 +129,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
 
     await decorationAsset.setDataObject({
       ...decorationData,
+      plotAssetId: assetId,
       ownerId: profileId,
       ownerName: displayName,
     });
@@ -140,7 +146,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
       visitorData.placedDecorations[decoration.name][urlSlug].push(decorationAsset.id);
     }
 
-    if (visitorInventory[decoration.name]) visitorInventory[decoration.name].availableQuantity -= 1;
+    if (visitorDecorations[decoration.name]) visitorDecorations[decoration.name].availableQuantity -= 1;
 
     await visitor.updateDataObject(visitorData, {
       analytics: [
@@ -161,7 +167,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
 
     return res.json({
       success: true,
-      visitorPlotData: visitorData.worlds[urlSlug],
+      plotData: visitorData.worlds[urlSlug],
       visitorInventory,
     });
   } catch (error) {

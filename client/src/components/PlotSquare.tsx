@@ -6,16 +6,33 @@ interface PlotSquareProps {
   squareId: number;
   itemType?: PlotSquareType;
   squareDetails: SelectedSquareDetails;
+  isOwnedByCurrentUser?: boolean;
   handleSquareClick: () => void;
 }
 
-export const PlotSquare = ({ squareId, itemType, squareDetails, handleSquareClick }: PlotSquareProps) => {
+export const PlotSquare = ({
+  squareId,
+  itemType,
+  squareDetails,
+  isOwnedByCurrentUser,
+  handleSquareClick,
+}: PlotSquareProps) => {
   const { isEmpty, icon, growLevel, harvestLevel, isReadyToWater, isReadyToHarvest } = squareDetails;
+
+  if (isEmpty && !isOwnedByCurrentUser) {
+    return (
+      <div
+        key={squareId}
+        className={`card small flex items-center justify-center ${itemType} readonly`}
+        style={{ height: "75px", width: "75px", border: "1px solid #000" }}
+      ></div>
+    );
+  }
 
   return (
     <div
       key={squareId}
-      className={`card small flex items-center justify-center cursor-pointer ${itemType}`}
+      className={`card small flex items-center justify-center cursor-pointer  ${itemType}`}
       style={{ height: "75px", width: "75px", border: "1px solid #000" }}
       onClick={() => handleSquareClick()}
     >

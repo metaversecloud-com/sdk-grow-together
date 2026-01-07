@@ -22,13 +22,16 @@ export const handleRemoveDecoration = async (req: Request, res: Response) => {
 
     const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
 
-    const visitorPlotData = visitorData.worlds[urlSlug];
-    const assetId = visitorPlotData.plotSquares[squareId];
+    const plotData = visitorData.worlds[urlSlug];
+    const assetId = plotData.plotSquares[squareId];
 
     if (!assetId) throw "No decoration found on the specified square";
 
+    // Check if visitor owns this plot
+    if (plotData.plotAssetId !== assetId) throw "You must own this plot before removing decorations";
+
     // Get decoration configuration
-    const decoration = visitorPlotData.decorations[assetId];
+    const decoration = plotData.decorations[assetId];
 
     const getInventoryItemsResponse = await getInventoryItems(credentials);
     if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
@@ -51,10 +54,10 @@ export const handleRemoveDecoration = async (req: Request, res: Response) => {
     }
     // Only increment availableQuantity if it does not exceed quantity
     if (
-      visitorInventory[decoration.decorationName].availableQuantity + 1 <=
-      visitorInventory[decoration.decorationName].quantity
+      visitorInventory.decorations?.[decoration.decorationName]?.availableQuantity + 1 <=
+      visitorInventory.decorations?.[decoration.decorationName]?.quantity
     ) {
-      visitorInventory[decoration.decorationName].availableQuantity += 1;
+      visitorInventory.decorations[decoration.decorationName].availableQuantity += 1;
     }
 
     await visitor.updateDataObject(visitorData, {
@@ -95,7 +98,7 @@ export const handleRemoveDecoration = async (req: Request, res: Response) => {
     return res.json({
       success: true,
       visitorData,
-      visitorPlotData: visitorData.worlds[urlSlug],
+      plotData: visitorData.worlds[urlSlug],
       visitorInventory,
     });
   } catch (error) {

@@ -66,7 +66,7 @@ export const handleGetPlotSquareInfo = async (req: Request, res: Response) => {
       success: true,
       squareData,
       visitorData,
-      visitorPlotData: visitorData.worlds[urlSlug],
+      plotData: visitorData.worlds[urlSlug],
       visitorInventory,
       decorations,
       seeds,
