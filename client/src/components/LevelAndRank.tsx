@@ -17,7 +17,7 @@ export const LevelAndRank = ({ xp = 0 }: { xp?: number }) => {
 
   return (
     <div className="flex grid-cols-2 gap-2">
-      <span className="btn btn-icon mr-2">{level}</span>
+      <span className="icon mr-2">{level}</span>
       <p className="pt-2">
         <strong>{rank}</strong>
       </p>

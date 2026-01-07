@@ -10,7 +10,12 @@ import {
   Asset,
   getQueryString,
 } from "../utils/index.js";
-import { PlotAssetDataObjectType, SeedType, VisitorInventoryItemType, WorldDataObjectType } from "../types/index.js";
+import {
+  PlotAssetDataObjectType,
+  EcosystemInventoryItemType,
+  VisitorInventoryItemType,
+  WorldDataObjectType,
+} from "../types/index.js";
 import { calculateNumberOfSquares, s3URL } from "../../shared/index.js";
 import { DroppedAssetClickType } from "@rtsdk/topia";
 
@@ -66,7 +71,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       plotSquares[i] = null;
     }
 
-    // Add free seed to visitor's inventory if they don't already have it
+    // Add free seed and starter tools to visitor's inventory if they don't already have it
     const name = "Carrots";
     if (!visitorInventory.seeds[name]) {
       const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
@@ -77,7 +82,23 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       });
       // Throw error if Carrots doesn't exist in inventory for Public Key - user will not be able to do anything with their garden if they don't have any seeds to start with
       if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
-      visitorInventory.seeds[name] = modifyInventoryItemResponse as SeedType & VisitorInventoryItemType;
+      visitorInventory.seeds[name] = modifyInventoryItemResponse as EcosystemInventoryItemType &
+        VisitorInventoryItemType;
+    }
+
+    if (Object.keys(visitorInventory.tools).length === 0) {
+      const starterTools = ["Basic Watering Can", "Basic Mulch", "Basic Compost"];
+      for (const name of starterTools) {
+        const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
+          credentials,
+          visitor,
+          name,
+          quantity: 1,
+        });
+        if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
+        visitorInventory.tools[name] = modifyInventoryItemResponse as EcosystemInventoryItemType &
+          VisitorInventoryItemType;
+      }
     }
 
     // Update plot asset's data object to mark ownership

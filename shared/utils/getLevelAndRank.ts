@@ -1,22 +1,17 @@
 const levels = [1, 2, 3, 4, 8, 10, 12, 15, 17, 20, 22, 25, 30, 32, 35, 40, 42, 45, 50, 52, 60, 67, 70, 80, 90, 100];
 
-const xpThresholds = [
-  52.3, 65.2, 78.7, 92.8, 107.5, 122.8, 138.7, 155.2, 172.3, 190, 208.3, 227.2, 246.7, 266.8, 287.5, 308.8, 330.7,
-  353.2, 376.3, 400, 424.3, 449.2, 474.7, 500.8, 527.5, 554.8, 582.7, 611.2, 640.3, 670, 700.3, 731.2, 762.7, 794.8,
-  827.5, 860.8, 894.7, 929.2, 964.3, 1000, 1036.3, 1073.2, 1110.7, 1148.8, 1187.5, 1226.8, 1266.7, 1307.2, 1348.3, 1390,
-  1432.3, 1475.2, 1518.7, 1562.8, 1607.5, 1652.8, 1698.7, 1745.2, 1792.3, 1840, 1888.3, 1937.2, 1986.7, 2036.8, 2087.5,
-  2138.8, 2190.7, 2243.2, 2296.3, 2350, 2404.3, 2459.2, 2514.7, 2570.8, 2627.5, 2684.8, 2742.7, 2801.2, 2860.3, 2920,
-  2980.3, 3041.2, 3102.7, 3164.8, 3227.5, 3290.8, 3354.7, 3419.2, 3484.3, 3550, 3616.3, 3683.2, 3750.7, 3818.8, 3887.5,
-  3956.8, 4026.7, 4097.2, 4168.3, 4240,
-];
-
 export const getLevel = async (xp: number) => {
+  // XP = 40 + (12 * level) + (0.3 * level^2)
   let level = 0;
-  for (let i = 0; i < xpThresholds.length; i++) {
-    if (xp > xpThresholds[i]) {
-      level = i + 1;
-    } else {
-      break;
+  if (xp > 40) {
+    // Use quadratic formula: 0.3*level^2 + 12*level + 40 - xp = 0
+    // level = (-12 + sqrt(12^2 - 4*0.3*(40-xp))) / (2*0.3)
+    const a = 0.3;
+    const b = 12;
+    const c = 40 - xp;
+    const discriminant = b * b - 4 * a * c;
+    if (discriminant >= 0) {
+      level = Math.floor((-b + Math.sqrt(discriminant)) / (2 * a));
     }
   }
   return level;
@@ -86,15 +81,15 @@ export const getRank = async (level: number) => {
 
 export const getPercentageOfCurrentLevelComplete = async (xp: number, currentLevel?: number) => {
   let level = currentLevel || 0;
-
   if (!currentLevel) level = await getLevel(xp);
 
-  const xpForNextLevel = xpThresholds[level] || xpThresholds[xpThresholds.length - 1];
+  // Calculate XP for current and next level
+  const xpForCurrentLevel = 40 + 12 * level + 0.3 * level * level;
+  const nextLevel = level + 1;
+  const xpForNextLevel = 40 + 12 * nextLevel + 0.3 * nextLevel * nextLevel;
 
   const percentageOfCurrentLevelComplete =
-    level === 0
-      ? (xp / xpThresholds[0]) * 100
-      : ((xp - xpThresholds[level - 1]) / (xpForNextLevel - xpThresholds[level - 1])) * 100;
+    level === 0 ? (xp / xpForNextLevel) * 100 : ((xp - xpForCurrentLevel) / (xpForNextLevel - xpForCurrentLevel)) * 100;
 
   return percentageOfCurrentLevelComplete;
 };

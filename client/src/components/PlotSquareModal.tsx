@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 
 // components
-import { ModalHeader, HarvestButton, WaterButton, UseToolModal } from "@/components";
+import { ModalHeader, HarvestButton, WaterButton, UseToolModal, AppliedToolIcons } from "@/components";
 
 // context
 import { GlobalDispatchContext } from "@/context/GlobalContext";
@@ -37,7 +37,8 @@ export const PlotSquareModal = ({
 }: PlotSquareModalProps) => {
   const dispatch = useContext(GlobalDispatchContext);
 
-  const { title, icon, growLevel, harvestLevel, reward, isReadyToWater, isReadyToHarvest } = selectedSquareDetails;
+  const { title, icon, growLevel, harvestLevel, reward, isReadyToWater, isReadyToHarvest, appliedTools } =
+    selectedSquareDetails;
 
   const [areButtonsDisabled, setAreButtonsDisabled] = useState(false);
   const [showToolModal, setShowToolModal] = useState(false);
@@ -87,90 +88,98 @@ export const PlotSquareModal = ({
   };
 
   return (
-    <div className="modal-container">
-      <div className="modal">
-        <ModalHeader
-          text={title || ""}
-          disabled={areButtonsDisabled}
-          handleOnClick={() => {
-            closeSquareModal();
-          }}
-        />
-        <div className="card menu-card m-auto" style={{ height: "95px", width: "95px" }}>
-          {itemType === "crop" ? (
-            <div>
-              <img className="m-auto" src={icon} />
-              <p className="p3">
-                lvl {growLevel}/{harvestLevel || 10}
-              </p>
-              {isReadyToWater && <p className="p4 water">Water!</p>}
-              {isReadyToHarvest && <p className="p4">Harvest!</p>}
+    <>
+      <div className="modal-container">
+        <div className="modal">
+          <ModalHeader
+            text={title || ""}
+            disabled={areButtonsDisabled}
+            handleOnClick={() => {
+              closeSquareModal();
+            }}
+          />
+          <div className="card menu-card m-auto" style={{ height: "95px", width: "95px", position: "relative" }}>
+            <div style={{ position: "absolute", top: "0px", left: "-35px" }}>
+              <AppliedToolIcons appliedTools={appliedTools} />
             </div>
-          ) : (
-            <img className="m-auto" src={icon} />
-          )}
-        </div>
+            {itemType === "crop" ? (
+              <div>
+                <img className="m-auto" src={icon} />
+                <p className="p3">
+                  lvl {growLevel}/{harvestLevel || 10}
+                </p>
+                {isReadyToWater && <p className="p4 water">Water!</p>}
+                {isReadyToHarvest && <p className="p4">Harvest!</p>}
+              </div>
+            ) : (
+              <img className="m-auto" src={icon} />
+            )}
+          </div>
 
-        {/* Actions */}
-        {/* {itemType === "crop" && !isReadyToWater && !isReadyToHarvest && ( */}
-        {itemType === "crop" && (
-          <button
-            id="useTool"
-            className="btn btn-outline"
-            onClick={() => setShowToolModal(true)}
-            disabled={areButtonsDisabled}
-          >
-            Use Tool
-          </button>
-        )}
-
-        {isReadyToWater && (
-          <WaterButton
-            cropAssetId={itemAssetId}
-            handleAfterWater={closeSquareModal}
-            setAreButtonsDisabled={setAreButtonsDisabled}
-          />
-        )}
-        {isReadyToHarvest && (
-          <HarvestButton
-            cropAssetId={itemAssetId}
-            handleAfterHarvest={closeSquareModal}
-            reward={reward || 0}
-            setAreButtonsDisabled={setAreButtonsDisabled}
-          />
-        )}
-        <div className="actions">
-          <button
-            id="viewSquare"
-            className="btn btn-outline"
-            onClick={() => handleViewSquare()}
-            disabled={areButtonsDisabled}
-          >
-            View Slot
-          </button>
-          {isOwnedByCurrentUser && (
+          {/* Action Buttons */}
+          {itemType === "crop" && (
             <button
-              className="btn btn-danger-outline"
-              onClick={() => handleClearSquare()}
+              id="useTool"
+              className="btn btn-outline tool"
+              onClick={() => setShowToolModal(true)}
               disabled={areButtonsDisabled}
             >
-              Remove
+              Use Tool
             </button>
           )}
-        </div>
 
-        {/* Tool Modal */}
-        {showToolModal && (
-          <UseToolModal
-            itemAssetId={itemAssetId}
-            selectedSquareId={selectedSquareId}
-            ownerId={ownerId}
-            closeToolModal={() => setShowToolModal(false)}
-            closeSquareModal={closeSquareModal}
-          />
-        )}
+          {isOwnedByCurrentUser && isReadyToWater && (
+            <WaterButton
+              cropAssetId={itemAssetId}
+              handleAfterWater={closeSquareModal}
+              setAreButtonsDisabled={setAreButtonsDisabled}
+            />
+          )}
+
+          {isOwnedByCurrentUser && isReadyToHarvest && (
+            <HarvestButton
+              cropAssetId={itemAssetId}
+              handleAfterHarvest={closeSquareModal}
+              reward={reward || 0}
+              setAreButtonsDisabled={setAreButtonsDisabled}
+            />
+          )}
+
+          <div className="actions">
+            <button
+              id="viewSquare"
+              className="btn btn-outline"
+              onClick={() => handleViewSquare()}
+              disabled={areButtonsDisabled}
+            >
+              View Slot
+            </button>
+            {isOwnedByCurrentUser && (
+              <button
+                className="btn btn-danger-outline"
+                onClick={() => handleClearSquare()}
+                disabled={areButtonsDisabled}
+              >
+                Remove
+              </button>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
+      {/* Tool Modal */}
+      {showToolModal && (
+        <UseToolModal
+          itemAssetId={itemAssetId}
+          selectedSquareId={selectedSquareId}
+          ownerId={ownerId}
+          isOwnedByCurrentUser={isOwnedByCurrentUser}
+          isReadyToWater={isReadyToWater}
+          appliedTools={appliedTools || []}
+          closeToolModal={() => setShowToolModal(false)}
+          closeSquareModal={closeSquareModal}
+        />
+      )}
+    </>
   );
 };
 

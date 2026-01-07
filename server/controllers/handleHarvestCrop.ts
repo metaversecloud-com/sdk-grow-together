@@ -6,8 +6,11 @@ import {
   DroppedAsset,
   World,
   modifyVisitorInventoryItem,
-  getInventoryItems,
   getAnalyticName,
+  getInventoryItems,
+  getCoinRewardAmount,
+  getXpRewardAmount,
+  getEarnedMessage,
 } from "../utils/index.js";
 
 /**
@@ -31,6 +34,8 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
     const crop = plotData.crops[assetId];
     if (!crop) throw "Crop not found";
 
+    const { seedId, growLevel, squareId, appliedTools = [] } = crop;
+
     // Lock to prevent simultaneous harvests
     try {
       await visitor.updateDataObject(
@@ -51,12 +56,12 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
     const { seeds } = getInventoryItemsResponse;
 
     // Get seed configuration for harvest level and reward calculation
-    const seedConfig = seeds[crop.seedId];
+    const seedConfig = seeds[seedId];
     if (!seedConfig) throw "Invalid crop type";
 
     // Check if crop is fully grown (at harvest level)
-    if (crop.growLevel < seedConfig.harvestLevel) {
-      throw `Crop is not ready for harvest. Current growth level: ${crop.growLevel}/${seedConfig.harvestLevel}`;
+    if (growLevel < seedConfig.harvestLevel) {
+      throw `Crop is not ready for harvest. Current growth level: ${growLevel}/${seedConfig.harvestLevel}`;
     }
 
     let cropAsset;
@@ -65,7 +70,7 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
     } catch (error) {
       console.error("Crop asset no longer in world. Continuing with harvest to clean up data object.");
 
-      visitorData.worlds[urlSlug].plotSquares[crop.squareId] = null;
+      visitorData.worlds[urlSlug].plotSquares[squareId] = null;
       delete visitorData.worlds[urlSlug].crops[assetId];
 
       await visitor.updateDataObject(visitorData, {});
@@ -75,25 +80,26 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
         visitorData,
         plotData: visitorData.worlds[urlSlug],
         visitorInventory,
-        earnedMessage: `You earned ${seedConfig.reward} Coins and ${seedConfig.xp} XP`,
       });
     }
 
-    // Grant coins and xp to visitor (modify quantity or add to inventory)
+    // Grant coins and xp to visitor
+    const { coinRewardAmount, coinMultiplier } = getCoinRewardAmount(appliedTools, seedConfig.reward);
     const modifyCoinsResponse = await modifyVisitorInventoryItem({
       credentials,
       visitor,
       name: "Coins",
-      quantity: seedConfig.reward,
+      quantity: coinRewardAmount,
     });
     if (modifyCoinsResponse instanceof Error) throw modifyCoinsResponse;
     visitorInventory.coins = modifyCoinsResponse.quantity;
 
+    const xpRewardAmount = await getXpRewardAmount(seedConfig, "Harvest");
     const modifyXpResponse = await modifyVisitorInventoryItem({
       credentials,
       visitor,
       name: "Experience Points",
-      quantity: seedConfig.xp,
+      quantity: xpRewardAmount,
     });
     if (modifyXpResponse instanceof Error) throw modifyXpResponse;
     visitorInventory.xp = modifyXpResponse.quantity;
@@ -105,7 +111,7 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
       lastDateCoinsEarned: new Date().toISOString(),
     };
 
-    updatedVisitorData.worlds[urlSlug].plotSquares[crop.squareId] = null;
+    updatedVisitorData.worlds[urlSlug].plotSquares[squareId] = null;
     delete updatedVisitorData.worlds[urlSlug].crops[assetId];
 
     const world = World.create(urlSlug, { credentials });
@@ -151,11 +157,14 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
       });
     });
 
+    const earnedMessage = await getEarnedMessage(coinRewardAmount, xpRewardAmount, coinMultiplier);
+
     return res.json({
       success: true,
       visitorData: updatedVisitorData,
       plotData: updatedVisitorData.worlds[urlSlug],
       visitorInventory,
+      earnedMessage,
     });
   } catch (error) {
     return errorHandler({

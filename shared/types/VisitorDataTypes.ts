@@ -56,6 +56,7 @@ export type VisitorInventoryType = {
 export type VisitorDataObjectType = {
   lastDateCoinsEarned: string; // ISO date string when the plot was claimed
   totalCoinsEarned: number; // Lifetime coins earned (for unlocks)
+  inventoryLastUpdated: string; // ISO date string of last inventory update
   placedDecorations: {
     [decorationId: string]: {
       [urlSlug: string]: string[]; // array of droppedAssetIds

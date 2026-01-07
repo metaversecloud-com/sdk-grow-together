@@ -17,7 +17,7 @@ export const Plot = () => {
   const {
     hasInteractiveParams,
     plotAssetData,
-    visitorInventory = { coins: 0 },
+    visitorInventory = { coins: 0, xp: 0 },
     plotData,
     xp,
   } = useContext(GlobalStateContext);
@@ -39,6 +39,7 @@ export const Plot = () => {
 
   const isOwnedByCurrentUser = profileId === ownerId;
   const isOwnedByOtherUser = ownerId && ownerId !== profileId;
+  const plotOwnerXp = isOwnedByOtherUser ? xp : visitorInventory.xp;
 
   let headerText = "Open Garden";
   if (isOwnedByOtherUser) {
@@ -76,7 +77,7 @@ export const Plot = () => {
   };
 
   return (
-    <PageContainer isLoading={isLoading} headerText={headerText} showInfoIcon={isOwnedByCurrentUser} xp={xp}>
+    <PageContainer isLoading={isLoading} headerText={headerText} showInfoIcon={isOwnedByCurrentUser} xp={plotOwnerXp}>
       <div className="container">
         {/* Current user's plot */}
         {isOwnedByCurrentUser && plotAssetId && (

@@ -48,7 +48,7 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isOwnedByCurre
     const crop = squareAssetId ? crops[squareAssetId] : null;
     const decoration = squareAssetId ? placedDecorations[squareAssetId] : null;
 
-    let title, icon, name, growLevel, harvestLevel, reward, isReadyToWater, isReadyToHarvest;
+    let title, icon, name, growLevel, harvestLevel, reward, isReadyToWater, isReadyToHarvest, appliedTools;
 
     if (crop) {
       name = seeds[crop.seedId].name;
@@ -57,11 +57,16 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isOwnedByCurre
       growLevel = crop.growLevel;
       harvestLevel = seeds[crop.seedId].harvestLevel || 10;
       reward = seeds[crop.seedId].reward;
+      appliedTools = crop.appliedTools || [];
 
       if (growLevel >= harvestLevel) {
         isReadyToHarvest = true;
       } else if (crop.lastWatered && !isReadyToWater) {
-        const remainingSeconds = getSecondsRemaining(crop.lastWatered, seeds[crop.seedId].growthTime);
+        const remainingSeconds = getSecondsRemaining(
+          crop.lastWatered,
+          seeds[crop.seedId].growthTime,
+          crop.appliedTools || [],
+        );
         if (remainingSeconds <= 0) {
           isReadyToWater = true;
         }
@@ -72,7 +77,7 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isOwnedByCurre
       icon = decorations[decoration.decorationId]?.icon;
     }
 
-    return { title, icon, name, growLevel, harvestLevel, reward, isReadyToWater, isReadyToHarvest };
+    return { title, icon, name, growLevel, harvestLevel, reward, isReadyToWater, isReadyToHarvest, appliedTools };
   };
 
   const closeSquareModal = () => {

@@ -10,6 +10,9 @@ import {
   getBaseUrl,
   getInventoryItems,
   getAnalyticName,
+  modifyVisitorInventoryItem,
+  getXpRewardAmount,
+  getEarnedMessage,
 } from "../utils/index.js";
 import { DroppedAssetClickType } from "@rtsdk/topia";
 import { calculateNumberOfSquares, getSeedImageVariation } from "../../shared/index.js";
@@ -116,40 +119,55 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
       seedId,
       growLevel: 0,
       squareId,
+      appliedTools: [],
     };
 
-    await cropAsset.setDataObject({
-      ...cropData,
-      plotAssetId: assetId,
-      ownerId: profileId,
-      ownerName: displayName,
-    });
-
-    // Update visitor's data object
     visitorData.worlds[urlSlug].plotSquares[squareId] = cropAsset.id!;
     visitorData.worlds[urlSlug].crops[cropAsset.id!] = cropData;
 
-    await visitor.updateDataObject(visitorData, {
-      analytics: [
-        {
-          analyticName: "cropsPlanted",
-          profileId,
-          urlSlug,
-          uniqueKey: profileId,
-        },
-        {
-          analyticName: `${getAnalyticName(seedConfig)}Planted`,
-          profileId,
-          urlSlug,
-          uniqueKey: profileId,
-        },
-      ],
-    });
+    const xpRewardAmount = await getXpRewardAmount(seedConfig, "Plant");
+
+    await Promise.all([
+      cropAsset.setDataObject({
+        ...cropData,
+        plotAssetId: assetId,
+        ownerId: profileId,
+        ownerName: displayName,
+      }),
+      visitor.updateDataObject(visitorData, {
+        analytics: [
+          {
+            analyticName: "cropsPlanted",
+            profileId,
+            urlSlug,
+            uniqueKey: profileId,
+          },
+          {
+            analyticName: `${getAnalyticName(seedConfig)}Planted`,
+            profileId,
+            urlSlug,
+            uniqueKey: profileId,
+          },
+        ],
+      }),
+      modifyVisitorInventoryItem({
+        credentials,
+        visitor,
+        name: "Experience Points",
+        quantity: xpRewardAmount,
+      }).then((modifyXpResponse) => {
+        if (modifyXpResponse instanceof Error) throw modifyXpResponse;
+        visitorInventory.xp = modifyXpResponse.quantity;
+      }),
+    ]);
+
+    const earnedMessage = await getEarnedMessage(0, xpRewardAmount);
 
     return res.json({
       success: true,
       visitorData,
       plotData: visitorData.worlds[urlSlug],
+      earnedMessage,
     });
   } catch (error) {
     return errorHandler({

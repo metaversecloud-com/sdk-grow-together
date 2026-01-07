@@ -5,10 +5,10 @@ import { ModalHeader } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
-import { ErrorType, SET_VISITOR_DATA, SET_VISITOR_PLOT_DATA } from "@/context/types";
+import { ErrorType } from "@/context/types";
 
 // utils
-import { backendAPI, setErrorMessage } from "@/utils";
+import { backendAPI, setErrorMessage, setGameState } from "@/utils";
 
 interface PlantSeedProps {
   selectedSquareId: number;
@@ -37,15 +37,7 @@ export const PlantSeed = ({ selectedSquareId, setSelectedSquareId }: PlantSeedPr
         plantAudio.volume = 0.8; // 80% volume
         plantAudio.play();
 
-        const { visitorData, plotData } = response.data;
-        dispatch!({
-          type: SET_VISITOR_DATA,
-          payload: { visitorData, error: "" },
-        });
-        dispatch!({
-          type: SET_VISITOR_PLOT_DATA,
-          payload: { plotData, error: "" },
-        });
+        setGameState(dispatch, response.data);
         setSelectedSquareId(null);
       })
       .catch((error) => {

@@ -1,5 +1,5 @@
-import { DecorationType, SeedType } from "../types";
+import { EcosystemInventoryItemType } from "../types";
 
-export const getAnalyticName = (config: SeedType | DecorationType): string => {
+export const getAnalyticName = (config: EcosystemInventoryItemType): string => {
   return config.name.replace(" ", "").toLowerCase();
 };

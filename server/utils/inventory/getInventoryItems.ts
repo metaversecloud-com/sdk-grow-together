@@ -1,8 +1,9 @@
 import { Ecosystem } from "../index.js";
-import { DecorationType, getRarity, SeedType } from "../../../shared/index.js";
+import { EcosystemInventoryItemType } from "../../../shared/index.js";
 import { Credentials } from "../../types/Credentials.js";
 import { EcosystemItemType } from "../../types/Types.js";
 import { standardizeError } from "../standardizeError.js";
+import { structureInventoryItemResponse } from "./structureInventoryItemResponse.js";
 
 export const getInventoryItems = async (credentials: Credentials) => {
   try {
@@ -11,28 +12,12 @@ export const getInventoryItems = async (credentials: Credentials) => {
 
     const allItems = ecosystem.inventoryItems as EcosystemItemType[];
 
-    let decorations: { [key: string]: DecorationType } = {};
-    let seeds: { [key: string]: SeedType } = {};
-    let tools: { [key: string]: DecorationType } = {};
+    let decorations: { [key: string]: EcosystemInventoryItemType } = {};
+    let seeds: { [key: string]: EcosystemInventoryItemType } = {};
+    let tools: { [key: string]: EcosystemInventoryItemType } = {};
 
     for (const item of allItems) {
-      const rarity = getRarity(item.metadata?.rarity || 0);
-
-      const data = {
-        id: item.id,
-        name: item.name || "Unknown",
-        icon: item.image_path || "",
-        cost: item.metadata?.cost || 0,
-        rarity,
-        description: item.description || "",
-        reward: item.metadata?.reward || 0,
-        xp: item.metadata?.xp || 0,
-        growthTime: item.metadata?.growthTime || 0,
-        harvestLevel: item.metadata?.harvestLevel || 0,
-        canBeUsedOnPlot: item.metadata?.canBeUsedOnPlot || false,
-        actionType: item.metadata?.actionType || undefined,
-        sortOrder: item.metadata?.sortOrder || 0,
-      };
+      const data = await structureInventoryItemResponse(item);
 
       if (item.metadata?.type === "decoration") decorations[item.id] = data;
       else if (item.metadata?.type === "seed") seeds[item.id] = data;
@@ -40,9 +25,9 @@ export const getInventoryItems = async (credentials: Credentials) => {
     }
 
     // Sort items by sortOrder while keeping them as objects
-    const sortedDecorations: { [key: string]: DecorationType } = {};
-    const sortedSeeds: { [key: string]: SeedType } = {};
-    const sortedTools: { [key: string]: DecorationType } = {};
+    const sortedDecorations: { [key: string]: EcosystemInventoryItemType } = {};
+    const sortedSeeds: { [key: string]: EcosystemInventoryItemType } = {};
+    const sortedTools: { [key: string]: EcosystemInventoryItemType } = {};
 
     // Sort decorations
     Object.values(decorations)

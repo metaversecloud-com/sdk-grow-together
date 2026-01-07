@@ -1,9 +1,8 @@
 import {
   CropDataObjectType,
-  DecorationType,
+  EcosystemInventoryItemType,
   PlacedDecorationDataObjectType,
   PlotAssetDataObjectType,
-  SeedType,
   VisitorDataObjectType,
   VisitorInventoryType,
   VisitorWorldDataType,
@@ -45,10 +44,9 @@ export interface InitialState {
   visitorData?: VisitorDataObjectType;
   visitorPlotAssetId?: string;
   plotData?: VisitorWorldDataType;
-  decorations?: { [key: string]: DecorationType };
-  seeds?: { [key: string]: SeedType };
-  tools?: { [key: string]: DecorationType };
-  xp?: number;
+  decorations?: { [key: string]: EcosystemInventoryItemType };
+  seeds?: { [key: string]: EcosystemInventoryItemType };
+  tools?: { [key: string]: EcosystemInventoryItemType };
   earnedMessage?: string;
 }
 
@@ -74,4 +72,5 @@ export type SelectedSquareDetails = {
   reward?: number;
   isReadyToWater?: boolean;
   isReadyToHarvest?: boolean;
+  appliedTools?: string[];
 };

@@ -9,6 +9,7 @@ import { GlobalStateContext } from "@/context/GlobalContext";
 export const InventoryTools = () => {
   const { visitorInventory } = useContext(GlobalStateContext);
 
+  console.log("🚀 ~ InventoryTools.tsx:12 ~ visitorInventory.tools:", visitorInventory?.tools);
   if (!visitorInventory || !visitorInventory.tools) {
     return (
       <>

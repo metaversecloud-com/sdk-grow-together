@@ -11,4 +11,5 @@ export type CropDataObjectType = {
   lastWatered: string;
   seedId: string;
   growLevel: number;
+  appliedTools: string[];
 };

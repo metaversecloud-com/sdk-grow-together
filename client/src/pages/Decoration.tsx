@@ -62,7 +62,7 @@ export const Decoration = () => {
 
   return (
     <PageContainer isLoading={isLoading} headerText={`Slot ${decorationData?.squareId || ""}`}>
-      {!isOwnedByCurrentUser && <div className="chip chip-muted mb-2">Owned by {ownerName}</div>}
+      {!isOwnedByCurrentUser && <div className="chip chip-muted mb-2 mr-auto">{ownerName}'s Garden</div>}
 
       <div className="grid gap-2">
         {isOwnedByCurrentUser && <YourMoney coinsAvailable={visitorInventory.coins || 0} />}

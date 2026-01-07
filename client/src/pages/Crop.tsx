@@ -48,20 +48,15 @@ export const Crop = () => {
     <PageContainer isLoading={isLoading} headerText={`Slot ${cropData?.squareId || ""}`}>
       <div className="container">
         {cropData ? (
-          <>
-            {/* Crop owned by another user */}
-            {!isOwnedByCurrentUser && (
-              <CropDetails crop={cropData} plotAssetId={plotData?.plotAssetId} isReadOnly={true} />
-            )}
-
-            {/* Current user's crop */}
-            {isOwnedByCurrentUser && (
-              <div className="grid gap-2">
-                <YourMoney coinsAvailable={visitorInventory.coins} />
-                <CropDetails crop={cropData} plotAssetId={plotData?.plotAssetId} isReadOnly={false} />
-              </div>
-            )}
-          </>
+          <div className="grid gap-2">
+            {isOwnedByCurrentUser && <YourMoney coinsAvailable={visitorInventory.coins} />}
+            <CropDetails
+              crop={cropData}
+              plotAssetId={plotData?.plotAssetId}
+              ownerId={ownerId}
+              isOwnedByCurrentUser={isOwnedByCurrentUser}
+            />
+          </div>
         ) : (
           <p className="p2">No crop data found.</p>
         )}

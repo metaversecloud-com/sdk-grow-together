@@ -3,14 +3,13 @@ import {
   errorHandler,
   getCredentials,
   initializeVisitorData,
-  DroppedAsset,
-  World,
-  getInventoryItems,
-  getAnalyticName,
   User,
   modifyVisitorInventoryItem,
+  DroppedAsset,
+  waterCrop,
+  getEarnedMessage,
 } from "../utils/index.js";
-import { CropDataObjectType, getSeedImageVariation, VisitorDataObjectType } from "../../shared/index.js";
+import { VisitorDataObjectType } from "../../shared/index.js";
 
 /**
  * Handle using a tool on a crop (e.g., watering with a watering can)
@@ -20,15 +19,18 @@ export const handleUseTool = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
     const { profileId, urlSlug } = credentials;
-    const { itemAssetId, squareId, toolName, ownerId } = req.body;
+    const { itemAssetId, tool, ownerId } = req.body;
     const assetId = itemAssetId || credentials.assetId;
+
+    const { actionType, name } = tool;
+    let earnedMessage;
 
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
 
     const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
 
-    let owner, ownerData, plotData, crop;
+    let owner, ownerData, plotData, result;
     if (profileId === ownerId) {
       owner = visitor;
       ownerData = visitorData;
@@ -41,138 +43,105 @@ export const handleUseTool = async (req: Request, res: Response) => {
 
     if (!owner) throw "Visitor or User (plot owner) not found";
 
-    crop = plotData.crops[assetId];
-    if (!crop) throw "Crop not found";
+    if (actionType === "Water") {
+      result = await waterCrop({
+        credentials,
+        owner,
+        ownerData,
+        assetId,
+      });
+      if (result instanceof Error) throw result;
 
-    // Lock to prevent simultaneously using tool
-    try {
-      await owner.updateDataObject(
-        {},
-        {
-          lock: {
-            lockId: `usingTool_${assetId}_${Math.round(Date.now() / 30000) * 30000}`,
-          },
-        },
-      );
-    } catch (error) {
-      return res.status(409).json({ message: "Crop is already being updated." });
-    }
+      // Determine coinReward and xpReward based on tool name
+      let coinReward = 0;
+      let xpReward = 0;
+      if (name === "Wooden Watering Can") {
+        xpReward = Math.floor(Math.random() * 2) + 1; // 1-2 XP
+        if (Math.random() < 0.25) {
+          coinReward = Math.floor(Math.random() * 3) + 1; // 1-3 coins
+        }
+      } else if (name === "Metal Watering Can") {
+        xpReward = Math.floor(Math.random() * 4) + 3; // 3-6 XP
+        if (Math.random() < 0.5) {
+          coinReward = Math.floor(Math.random() * 5) + 4; // 4-8 coins
+        }
+      } else if (name === "Gold Watering Can") {
+        xpReward = Math.floor(Math.random() * 8) + 7; // 7-14 XP
+        if (Math.random() < 0.8) {
+          coinReward = Math.floor(Math.random() * 11) + 10; // 10-20 coins
+        }
+      }
 
-    // Get ecosystem inventory items to access seed configurations
-    const getInventoryItemsResponse = await getInventoryItems(credentials);
-    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
-
-    const { seeds } = getInventoryItemsResponse;
-
-    const seedConfig = seeds[crop.seedId];
-    if (!seedConfig) throw "Invalid crop type";
-
-    const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
-      credentials,
-      visitor,
-      name: toolName,
-      quantity: -1,
-    });
-    if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
-
-    const availableQuantity = visitorInventory.tools[toolName]?.availableQuantity || 0;
-    visitorInventory.tools[toolName] = modifyInventoryItemResponse;
-    visitorInventory.tools[toolName].availableQuantity = availableQuantity - 1;
-
-    return res.json({
-      success: false,
-      visitorData: ownerData,
-      plotData: ownerData.worlds[urlSlug],
-      visitorInventory,
-    });
-
-    /* need to figure out how to apply tool effects before enabling this (below would work for basic watering)
-    try {
-      const cropAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
-
-      const cropData = {
-        ...crop,
-        growLevel: crop.growLevel + 1,
-        lastWatered: new Date().toISOString(),
-      };
-
-      // Update owner's data object
-      ownerData.worlds[urlSlug].crops[assetId] = cropData;
-
-      const world = World.create(urlSlug, { credentials });
-
-      await Promise.all([
-        owner.updateDataObject(ownerData, {
-          // analytics: [
-          //   {
-          //     analyticName: "cropsWatered",
-          //     profileId,
-          //     urlSlug,
-          //     uniqueKey: profileId,
-          //   },
-          //   {
-          //     analyticName: `${getAnalyticName(seedConfig)}Watered`,
-          //     profileId,
-          //     urlSlug,
-          //     uniqueKey: profileId,
-          //   },
-          // ],
-        }),
-        world
-          .triggerParticle({
-            name: "drop_grow_together",
-            duration: 1,
-            position: {
-              x: cropAsset.position.x - plotConfig.squareSpacing / 2,
-              y: cropAsset.position.y - 200,
-            },
-          })
-          .catch((error) => {
-            errorHandler({
-              error,
-              functionName: "handleUseTool",
-              message: `Failed to trigger particle effect: ${error}`,
-            });
-          }),
-        cropAsset.fetchDataObject(),
-      ]);
-
-      const cropAssetData = cropAsset.dataObject as CropDataObjectType;
-
-      // update the crop data on the asset
-      await cropAsset.updateDataObject({ ...cropAssetData, ...cropData });
-
-      // Update the crop asset image to reflect new growth level
-      const layer1 = getSeedImageVariation(seedConfig.name, crop.growLevel + 1);
-      await cropAsset.updateWebImageLayers("", layer1).catch((error) => {
-        errorHandler({
-          error,
-          functionName: "handleUseTool",
-          message: `Failed to update crop asset ${assetId}: ${error}`,
+      // Grant coins and xp to visitor if applicable
+      if (coinReward > 0) {
+        const modifyCoinsResponse = await modifyVisitorInventoryItem({
+          credentials,
+          visitor,
+          name: "Coins",
+          quantity: coinReward,
         });
-      });
+        if (modifyCoinsResponse instanceof Error) throw modifyCoinsResponse;
+        visitorInventory.coins = modifyCoinsResponse.quantity;
+      }
 
-      return res.json({
+      if (xpReward > 0) {
+        const modifyXpResponse = await modifyVisitorInventoryItem({
+          credentials,
+          visitor,
+          name: "Experience Points",
+          quantity: xpReward,
+        });
+        if (modifyXpResponse instanceof Error) throw modifyXpResponse;
+        visitorInventory.xp = modifyXpResponse.quantity;
+      }
+
+      earnedMessage = await getEarnedMessage(coinReward, xpReward);
+    } else {
+      const cropAsset = await DroppedAsset.create(assetId, urlSlug, { credentials });
+      await cropAsset.fetchDataObject();
+      let cropData = cropAsset.dataObject;
+
+      const appliedTools = plotData.crops[assetId]?.appliedTools || [];
+      if (appliedTools.length >= 3) {
+        throw "Maximum number of tools has already applied to this crop.";
+      } else {
+        appliedTools.push(name);
+        ownerData.worlds[urlSlug].crops[assetId].appliedTools = appliedTools;
+
+        cropData = { ...cropAsset.dataObject, ...ownerData.worlds[urlSlug].crops[assetId] };
+
+        const lockId = `applyingTool_${assetId}_${Math.round(Date.now() / 10000) * 10000}`;
+        await Promise.all([
+          owner.updateDataObject(ownerData, {
+            lock: { lockId, releaseLock: true },
+          }),
+          cropAsset.updateDataObject(cropData, {
+            lock: { lockId, releaseLock: true },
+          }),
+        ]);
+      }
+
+      result = {
         success: true,
-        cropData: { ...cropAssetData, ...cropData },
+        cropData,
         visitorData: ownerData,
         plotData: ownerData.worlds[urlSlug],
-      });
-    } catch (error) {
-      console.error("Crop asset no longer in world. Continuing to clean up data object.");
-
-      ownerData.worlds[urlSlug].plotSquares[crop.squareId] = null;
-      delete ownerData.worlds[urlSlug].crops[assetId];
-
-      await owner.updateDataObject(ownerData, {});
-
-      return res.json({
-        success: false,
-        visitorData: ownerData,
-        plotData: ownerData.worlds[urlSlug],
-      });
+      };
     }
-    */
+
+    if (result?.success) {
+      // Remove one tool from visitor's inventory
+      modifyVisitorInventoryItem({
+        credentials,
+        visitor,
+        name,
+        quantity: -1,
+      });
+      visitorInventory.tools[name].availableQuantity -= 1;
+      visitorInventory.tools[name].quantity -= 1;
+    }
+
+    return res.json({ ...result, visitorInventory, earnedMessage });
   } catch (error) {
     return errorHandler({
       error,

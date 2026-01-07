@@ -5,10 +5,10 @@ import { InventoryItem, ModalHeader } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
-import { ErrorType, SET_VISITOR_DATA, SET_VISITOR_INVENTORY, SET_VISITOR_PLOT_DATA } from "@/context/types";
+import { ErrorType } from "@/context/types";
 
 // utils
-import { backendAPI, setErrorMessage } from "@/utils";
+import { backendAPI, setErrorMessage, setGameState } from "@/utils";
 import { VisitorInventoryItemType } from "@shared/types";
 
 interface UsePlotToolModalProps {
@@ -42,25 +42,17 @@ export const UsePlotToolModal = ({ actionType, ownerId, closeToolModal }: UsePlo
         ownerId,
       })
       .then((response) => {
-        const { success, visitorInventory, visitorData, plotData } = response.data;
+        const { success } = response.data;
         if (success) {
-          const useToolAudio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/use_tool.mp3");
+          const useToolAudio =
+            tool.actionType === "Water"
+              ? new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/water_plant.mp3")
+              : new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/harvest_coins.mp3");
           useToolAudio.volume = 0.5; // 50% volume
           useToolAudio.play();
         }
 
-        dispatch!({
-          type: SET_VISITOR_DATA,
-          payload: { visitorData, error: "" },
-        });
-        dispatch!({
-          type: SET_VISITOR_PLOT_DATA,
-          payload: { plotData, error: "" },
-        });
-        dispatch!({
-          type: SET_VISITOR_INVENTORY,
-          payload: { visitorInventory, error: "" },
-        });
+        setGameState(dispatch, response.data);
       })
       .catch((error) => {
         setErrorMessage(dispatch, error as ErrorType);

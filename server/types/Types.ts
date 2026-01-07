@@ -24,6 +24,7 @@ export interface EcosystemItemType extends InventoryItemInterface {
     canBeUsedOnPlot?: boolean;
     actionType?: string;
     sortOrder?: number;
+    quantity?: number;
   };
 }
 

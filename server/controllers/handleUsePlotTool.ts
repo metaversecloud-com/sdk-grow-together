@@ -6,10 +6,14 @@ import {
   DroppedAsset,
   World,
   getInventoryItems,
+  getCoinRewardAmount,
+  getXpRewardAmount,
   User,
   modifyVisitorInventoryItem,
+  getEarnedMessage,
 } from "../utils/index.js";
 import { CropDataObjectType, getSeedImageVariation, VisitorDataObjectType, plotConfig } from "../../shared/index.js";
+import { DroppedAssetInterface } from "@rtsdk/topia";
 
 /**
  * Handle using a tool on an entire plot (e.g., watering all crops with a sprinkler)
@@ -20,13 +24,15 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
     const { assetId, profileId, urlSlug } = credentials;
     const { tool, ownerId } = req.body;
 
-    const { name, reward, xp, actionType } = tool;
+    const { actionType, name } = tool;
     const promises = [];
+    let totalCoinsRewardAmount = 0,
+      totalXpRewardAmount = 0;
 
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
 
-    const { visitor, visitorData } = initializeVisitorDataResponse;
+    const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
 
     let owner, ownerData, plotData;
     if (profileId === ownerId) {
@@ -61,6 +67,7 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
 
     const { seeds } = getInventoryItemsResponse;
 
+    const getDroppedAssetPromises = [];
     const updateCropAssetPromises = [];
     const updateWebImageLayerPromises = [];
     const triggerParticlePromises = [];
@@ -79,102 +86,120 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
         ((actionType === "Water" && crop.growLevel < seedConfig.harvestLevel) ||
           (actionType === "Harvest" && crop.growLevel >= seedConfig.harvestLevel))
       ) {
-        let cropAsset;
-        try {
-          cropAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
-          await cropAsset.fetchDataObject();
-        } catch (error) {
-          console.error("Crop asset no longer in world. Continuing to clean up data object.");
-          visitorData.worlds[urlSlug].plotSquares[crop.squareId] = null;
-          cropsToRemove.push(assetId);
-          continue;
-        }
+        getDroppedAssetPromises.push(
+          DroppedAsset.get(assetId, urlSlug, { credentials }).catch(() => {
+            console.error("Crop asset no longer in world. Continuing to clean up data object.");
+            ownerData.worlds[urlSlug].plotSquares[crop.squareId] = null;
+            cropsToRemove.push(assetId);
+          }),
+        );
+      }
+    }
 
-        if (actionType === "Water") {
-          const cropData = {
-            ...crop,
-            growLevel: crop.growLevel + 1,
-            lastWatered: now,
-          };
-          const cropAssetData = cropAsset.dataObject as CropDataObjectType;
-          visitorData.worlds[urlSlug].crops[assetId] = cropData;
+    const droppedAssets = await Promise.all(getDroppedAssetPromises);
 
-          const layer1 = getSeedImageVariation(seedConfig.name, crop.growLevel + 1);
+    for (let i = 0; i < droppedAssets.length; i++) {
+      const cropAsset = droppedAssets[i] as DroppedAssetInterface;
+      if (!cropAsset || !cropAsset.id) continue;
 
-          // Batch update promises
-          updateCropAssetPromises.push(cropAsset.updateDataObject({ ...cropAssetData, ...cropData }));
-          updateWebImageLayerPromises.push(
-            cropAsset.updateWebImageLayers("", layer1).catch((error) => {
+      const crop = plotData.crops[cropAsset.id];
+      const seedConfig = seeds[crop.seedId];
+
+      const xpRewardAmount = await getXpRewardAmount(seedConfig, actionType);
+      totalXpRewardAmount += xpRewardAmount;
+
+      if (actionType === "Water") {
+        const cropData = {
+          ...crop,
+          growLevel: crop.growLevel + 1,
+          lastWatered: now,
+        };
+        const cropAssetData = cropAsset.dataObject as CropDataObjectType;
+        ownerData.worlds[urlSlug].crops[cropAsset.id] = cropData;
+
+        const layer1 = getSeedImageVariation(seedConfig.name, crop.growLevel + 1);
+
+        // Batch update promises
+        updateCropAssetPromises.push(cropAsset.updateDataObject({ ...cropAssetData, ...cropData }, {}));
+        updateWebImageLayerPromises.push(
+          cropAsset.updateWebImageLayers("", layer1).catch((error) => {
+            errorHandler({
+              error,
+              functionName: "handleWaterCrop",
+              message: `Failed to update crop asset ${assetId}: ${error}`,
+            });
+          }),
+        );
+        triggerParticlePromises.push(
+          world
+            .triggerParticle({
+              name: "drop_grow_together",
+              duration: 1,
+              position: {
+                x: cropAsset.position.x - plotConfig.squareSpacing / 2,
+                y: cropAsset.position.y - 200,
+              },
+            })
+            .catch((error) => {
               errorHandler({
                 error,
                 functionName: "handleWaterCrop",
-                message: `Failed to update crop asset ${assetId}: ${error}`,
+                message: `Failed to trigger water particle effect: ${error}`,
               });
             }),
-          );
-          triggerParticlePromises.push(
-            world
-              .triggerParticle({
-                name: "drop_grow_together",
-                duration: 1,
-                position: {
-                  x: cropAsset.position.x - plotConfig.squareSpacing / 2,
-                  y: cropAsset.position.y - 200,
-                },
-              })
-              .catch((error) => {
-                errorHandler({
-                  error,
-                  functionName: "handleWaterCrop",
-                  message: `Failed to trigger water particle effect: ${error}`,
-                });
-              }),
-          );
-        } else if (actionType === "Harvest") {
-          // Grant coins and xp to visitor (modify quantity or add to inventory)
-          modifyInventoryPromises.push(
-            modifyVisitorInventoryItem({
-              credentials,
-              visitor,
-              name: "Coins",
-              quantity: seedConfig.reward,
+        );
+      } else if (actionType === "Harvest") {
+        const { coinRewardAmount } = getCoinRewardAmount(crop.appliedTools, seedConfig.reward);
+        totalCoinsRewardAmount += coinRewardAmount;
+
+        ownerData.worlds[urlSlug].plotSquares[crop.squareId] = null;
+
+        triggerParticlePromises.push(
+          world
+            .triggerParticle({
+              name: "coin_grow_together",
+              duration: 2,
+              position: cropAsset.position,
+            })
+            .catch((error) => {
+              errorHandler({
+                error,
+                functionName: "handleHarvestCrop",
+                message: `Failed to trigger harvest particle effect: ${error}`,
+              });
             }),
-          );
-          modifyInventoryPromises.push(
-            modifyVisitorInventoryItem({
-              credentials,
-              visitor,
-              name: "Experience Points",
-              quantity: seedConfig.xp,
-            }),
-          );
+        );
 
-          // Update visitor's data object
-          visitorData.totalCoinsEarned = visitorData.totalCoinsEarned + seedConfig.reward;
-          visitorData.lastDateCoinsEarned = now;
-          visitorData.worlds[urlSlug].plotSquares[crop.squareId] = null;
-
-          triggerParticlePromises.push(
-            world
-              .triggerParticle({
-                name: "coin_grow_together",
-                duration: 2,
-                position: cropAsset.position,
-              })
-              .catch((error) => {
-                errorHandler({
-                  error,
-                  functionName: "handleHarvestCrop",
-                  message: `Failed to trigger harvest particle effect: ${error}`,
-                });
-              }),
-          );
-
-          // Remove the crop asset from the world
-          cropsToRemove.push(assetId);
-        }
+        // Remove the crop asset from the world
+        cropsToRemove.push(cropAsset.id);
       }
     }
+
+    // Grant coins and xp to visitor
+    if (totalCoinsRewardAmount > 0) {
+      modifyInventoryPromises.push(
+        modifyVisitorInventoryItem({
+          credentials,
+          visitor,
+          name: "Coins",
+          quantity: totalCoinsRewardAmount,
+        }),
+      );
+    }
+    if (totalXpRewardAmount > 0) {
+      modifyInventoryPromises.push(
+        modifyVisitorInventoryItem({
+          credentials,
+          visitor,
+          name: "Experience Points",
+          quantity: totalXpRewardAmount,
+        }),
+      );
+    }
+
+    // Update visitor's data object
+    ownerData.totalCoinsEarned = ownerData.totalCoinsEarned + totalCoinsRewardAmount;
+    ownerData.lastDateCoinsEarned = now;
 
     // Remove one tool from visitor's inventory
     modifyInventoryPromises.push(
@@ -185,13 +210,15 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
         quantity: -1,
       }),
     );
+    visitorInventory.tools[name].availableQuantity -= 1;
+    visitorInventory.tools[name].quantity -= 1;
 
     // Remove crops that are no longer in the world
     const uniqueCropsToRemove = [...new Set(cropsToRemove)];
-    for (const assetId of uniqueCropsToRemove) delete visitorData.worlds[urlSlug].crops[assetId];
+    for (const assetId of uniqueCropsToRemove) delete ownerData.worlds[urlSlug].crops[assetId];
 
     // Only one updateDataObject for all crops
-    promises.push(visitor.updateDataObject(visitorData, {}));
+    promises.push(visitor.updateDataObject(ownerData, {}));
     promises.push(Promise.all(updateCropAssetPromises));
     promises.push(Promise.all(updateWebImageLayerPromises));
     promises.push(Promise.all(triggerParticlePromises));
@@ -199,20 +226,18 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
 
     await Promise.all(promises);
 
-    const refetchVisitorDataResponse = await initializeVisitorData(credentials);
-    if (refetchVisitorDataResponse instanceof Error) throw refetchVisitorDataResponse;
-
-    const { visitorInventory } = refetchVisitorDataResponse;
-
     if (actionType === "Harvest") {
       await World.deleteDroppedAssets(urlSlug, uniqueCropsToRemove, process.env.INTERACTIVE_SECRET!, credentials);
     }
+
+    const earnedMessage = await getEarnedMessage(totalCoinsRewardAmount, totalXpRewardAmount);
 
     return res.json({
       success: false,
       visitorData: ownerData,
       plotData: ownerData.worlds[urlSlug],
       visitorInventory,
+      earnedMessage,
     });
   } catch (error) {
     return errorHandler({

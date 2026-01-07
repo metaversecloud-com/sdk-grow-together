@@ -1,6 +1,7 @@
 export * from "./Accordion.js";
 export * from "./AdminView.js";
 export * from "./AdminIconButton.js";
+export * from "./AppliedToolIcons.js";
 export * from "./ConfirmationModal.js";
 export * from "./DecorationMenu.js";
 export * from "./GetStartedModal.js";

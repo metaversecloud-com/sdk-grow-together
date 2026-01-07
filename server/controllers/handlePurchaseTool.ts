@@ -51,7 +51,7 @@ export const handlePurchaseTool = async (req: Request, res: Response) => {
       credentials,
       visitor,
       name: toolConfig.name,
-      quantity: 1,
+      quantity: toolConfig.quantity,
     });
     if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
 

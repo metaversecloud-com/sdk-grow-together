@@ -9,13 +9,13 @@ import { ErrorType, SET_VISITOR_INVENTORY } from "@/context/types";
 
 // utils
 import { backendAPI, setErrorMessage } from "@/utils";
-import { SeedType } from "@shared/types";
+import { EcosystemInventoryItemType } from "@shared/types";
 
 export const SeedMenu = () => {
   const dispatch = useContext(GlobalDispatchContext);
   const { seeds, visitorInventory } = useContext(GlobalStateContext);
   const { coins, seeds: visitorSeeds } = visitorInventory as typeof visitorInventory & {
-    seeds: { [key: string]: SeedType };
+    seeds: { [key: string]: EcosystemInventoryItemType };
   };
 
   const availableSeeds = seeds && Object.values(seeds).filter((seed) => !visitorSeeds?.[seed.name]);
