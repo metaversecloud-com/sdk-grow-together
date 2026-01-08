@@ -42,16 +42,6 @@ export const UsePlotToolModal = ({ actionType, ownerId, closeToolModal }: UsePlo
         ownerId,
       })
       .then((response) => {
-        const { success } = response.data;
-        if (success) {
-          const useToolAudio =
-            tool.actionType === "Water"
-              ? new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/water_plant.mp3")
-              : new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/harvest_coins.mp3");
-          useToolAudio.volume = 0.5; // 50% volume
-          useToolAudio.play();
-        }
-
         setGameState(dispatch, response.data);
       })
       .catch((error) => {

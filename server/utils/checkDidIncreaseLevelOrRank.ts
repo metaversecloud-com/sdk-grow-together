@@ -51,5 +51,5 @@ export const checkDidIncreaseLevelOrRank = async (
       });
   }
 
-  return coinsEarnedForRankUp;
+  return { coinsEarnedForRankUp, didLevelUp };
 };

@@ -26,13 +26,6 @@ export const WaterButton = ({
     await backendAPI
       .post("/crop/water", { cropAssetId })
       .then((response) => {
-        const { success } = response.data;
-        if (success) {
-          const waterAudio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/water_plant.mp3");
-          waterAudio.volume = 0.5; // 50% volume
-          waterAudio.play();
-        }
-
         setGameState(dispatch, response.data);
       })
       .catch((error) => {

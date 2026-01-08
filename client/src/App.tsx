@@ -5,8 +5,8 @@ import { Route, Routes, useNavigate, useSearchParams } from "react-router-dom";
 import { Error, Home, Plot, Crop, Decoration, Teleport } from "./pages";
 
 // context
-import { GlobalDispatchContext } from "./context/GlobalContext";
-import { InteractiveParams, SET_HAS_INTERACTIVE_PARAMS } from "./context/types";
+import { GlobalDispatchContext, GlobalStateContext } from "./context/GlobalContext";
+import { InteractiveParams, SET_DID_LEVEL_UP, SET_HAS_INTERACTIVE_PARAMS, SET_SOUND_EFFECT } from "./context/types";
 
 // utils
 import { setupBackendAPI } from "./utils/backendAPI";
@@ -17,6 +17,7 @@ const App = () => {
   const [hasInitBackendAPI, setHasInitBackendAPI] = useState(false);
 
   const dispatch = useContext(GlobalDispatchContext);
+  const { soundEffect, didLevelUp } = useContext(GlobalStateContext);
 
   const interactiveParams: InteractiveParams = useMemo(() => {
     return {
@@ -46,6 +47,53 @@ const App = () => {
   useEffect(() => {
     if (!hasInitBackendAPI) setupBackend();
   }, [hasInitBackendAPI, interactiveParams]);
+
+  useEffect(() => {
+    let audio;
+    if (soundEffect === "sprinkler") {
+      audio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/sprinkler.mp3");
+      audio.volume = 0.7;
+    } else if (soundEffect === "harvest") {
+      audio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/harvest_coins.mp3");
+      audio.volume = 0.5;
+    } else if (soundEffect === "water") {
+      audio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/water_plant.mp3");
+      audio.volume = 0.5;
+    } else if (soundEffect === "plant") {
+      audio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/crop_planted.mp3");
+      audio.volume = 0.8;
+    } else if (soundEffect === "mulch") {
+      audio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/mulch.mp3");
+      audio.volume = 0.7;
+    } else if (soundEffect === "compost") {
+      audio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/compost.mp3");
+      audio.volume = 0.7;
+    }
+    if (audio) {
+      audio.play();
+
+      dispatch!({
+        type: SET_SOUND_EFFECT,
+        payload: { soundEffect: undefined },
+      });
+    }
+  }, [soundEffect]);
+
+  useEffect(() => {
+    if (didLevelUp) {
+      setTimeout(() => {
+        const audio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/newLevel.mp3");
+        audio.play();
+      }, 1000);
+
+      setTimeout(() => {
+        dispatch!({
+          type: SET_DID_LEVEL_UP,
+          payload: { didLevelUp: false },
+        });
+      }, 5000);
+    }
+  }, [didLevelUp]);
 
   const setupBackend = () => {
     setupBackendAPI(interactiveParams)

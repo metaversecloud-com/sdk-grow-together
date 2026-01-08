@@ -176,7 +176,6 @@ export const CropDetails = ({
             isReadyToWater={isReadyToWater}
             appliedTools={appliedTools}
             closeToolModal={() => setShowToolModal(false)}
-            handleAfterWater={() => setIsReadyForWater(false)}
           />
         )}
       </div>

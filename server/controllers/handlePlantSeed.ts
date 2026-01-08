@@ -127,7 +127,8 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     visitorData.worlds[urlSlug].crops[cropAsset.id!] = cropData;
 
     const xpRewardAmount = await getXpRewardAmount(seedConfig, "Plant");
-    let coinsEarnedForRankUp = 0;
+    let coinsEarnedForRankUp = 0,
+      didLevelUp = false;
 
     await Promise.all([
       cropAsset.setDataObject({
@@ -159,12 +160,14 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
         quantity: xpRewardAmount,
       }).then(async (modifyXpResponse) => {
         if (modifyXpResponse instanceof Error) throw modifyXpResponse;
-        coinsEarnedForRankUp = await checkDidIncreaseLevelOrRank(
+        const checkResult = await checkDidIncreaseLevelOrRank(
           credentials,
           visitor,
           visitorInventory.xp,
           xpRewardAmount,
         );
+        coinsEarnedForRankUp = checkResult.coinsEarnedForRankUp;
+        didLevelUp = checkResult.didLevelUp;
         visitorInventory.xp = modifyXpResponse.quantity;
       }),
     ]);
@@ -187,6 +190,8 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
       visitorData,
       plotData: visitorData.worlds[urlSlug],
       earnedMessage,
+      soundEffect: "plant",
+      didLevelUp,
     });
   } catch (error) {
     return errorHandler({

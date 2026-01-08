@@ -29,7 +29,8 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
     const { actionType, name } = tool;
     const promises = [];
     let totalCoinsRewardAmount = 0,
-      totalXpRewardAmount = 0;
+      totalXpRewardAmount = 0,
+      soundEffect = "sprinkler";
 
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
@@ -219,7 +220,7 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
 
     const updatedVisitorInventory = getVisitorInventoryResponse;
 
-    const coinsEarnedForRankUp = await checkDidIncreaseLevelOrRank(
+    const { coinsEarnedForRankUp, didLevelUp } = await checkDidIncreaseLevelOrRank(
       credentials,
       visitor,
       visitorInventory.xp,
@@ -244,6 +245,8 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
     await visitor.updateDataObject(ownerData, {});
 
     if (actionType === "Harvest") {
+      soundEffect = "harvest";
+
       await World.deleteDroppedAssets(urlSlug, uniqueCropsToRemove, process.env.INTERACTIVE_SECRET!, credentials);
     }
 
@@ -255,6 +258,8 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
       plotData: ownerData.worlds[urlSlug],
       visitorInventory: updatedVisitorInventory,
       earnedMessage,
+      soundEffect,
+      didLevelUp,
     });
   } catch (error) {
     return errorHandler({

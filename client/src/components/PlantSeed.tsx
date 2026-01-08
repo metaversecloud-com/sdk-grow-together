@@ -33,10 +33,6 @@ export const PlantSeed = ({ selectedSquareId, setSelectedSquareId }: PlantSeedPr
         squareId: selectedSquareId,
       })
       .then((response) => {
-        const plantAudio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/crop_planted.mp3");
-        plantAudio.volume = 0.8; // 80% volume
-        plantAudio.play();
-
         setGameState(dispatch, response.data);
         setSelectedSquareId(null);
       })

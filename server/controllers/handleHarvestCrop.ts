@@ -93,7 +93,7 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
       quantity: xpRewardAmount,
     });
     if (modifyXpResponse instanceof Error) throw modifyXpResponse;
-    const coinsEarnedForRankUp = await checkDidIncreaseLevelOrRank(
+    const { coinsEarnedForRankUp, didLevelUp } = await checkDidIncreaseLevelOrRank(
       credentials,
       visitor,
       visitorInventory.xp,
@@ -173,6 +173,7 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
       plotData: updatedVisitorData.worlds[urlSlug],
       visitorInventory,
       earnedMessage,
+      didLevelUp,
     });
   } catch (error) {
     return errorHandler({

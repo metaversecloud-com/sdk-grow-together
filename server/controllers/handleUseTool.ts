@@ -24,7 +24,8 @@ export const handleUseTool = async (req: Request, res: Response) => {
     const assetId = itemAssetId || credentials.assetId;
 
     const { actionType, name } = tool;
-    let earnedMessage;
+    let earnedMessage,
+      didLevelUp = false;
 
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
@@ -83,7 +84,11 @@ export const handleUseTool = async (req: Request, res: Response) => {
           quantity: xpReward,
         });
         if (modifyXpResponse instanceof Error) throw modifyXpResponse;
-        coinsEarnedForRankUp = await checkDidIncreaseLevelOrRank(credentials, visitor, visitorInventory.xp, xpReward);
+
+        const checkResult = await checkDidIncreaseLevelOrRank(credentials, visitor, visitorInventory.xp, xpReward);
+        coinsEarnedForRankUp = checkResult.coinsEarnedForRankUp;
+        didLevelUp = checkResult.didLevelUp;
+
         visitorInventory.xp = modifyXpResponse.quantity;
       }
 
@@ -145,7 +150,7 @@ export const handleUseTool = async (req: Request, res: Response) => {
       visitorInventory.tools[name].quantity -= 1;
     }
 
-    return res.json({ ...result, visitorInventory, earnedMessage });
+    return res.json({ ...result, visitorInventory, earnedMessage, soundEffect: actionType.toLowerCase(), didLevelUp });
   } catch (error) {
     return errorHandler({
       error,

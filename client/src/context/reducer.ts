@@ -10,6 +10,8 @@ import {
   SET_DECORATION_DATA,
   SET_VISITOR_INVENTORY,
   SET_EARNED_MESSAGE,
+  SET_SOUND_EFFECT,
+  SET_DID_LEVEL_UP,
 } from "./types";
 
 const globalReducer = (state: InitialState, action: ActionType) => {
@@ -60,6 +62,18 @@ const globalReducer = (state: InitialState, action: ActionType) => {
       return {
         ...state,
         earnedMessage: payload.earnedMessage,
+        error: "",
+      };
+    case SET_SOUND_EFFECT:
+      return {
+        ...state,
+        soundEffect: payload.soundEffect,
+        error: "",
+      };
+    case SET_DID_LEVEL_UP:
+      return {
+        ...state,
+        didLevelUp: payload.didLevelUp,
         error: "",
       };
     case SET_ERROR:

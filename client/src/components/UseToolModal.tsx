@@ -20,7 +20,6 @@ interface UseToolModalProps {
   appliedTools: string[];
   closeToolModal: () => void;
   closeSquareModal?: () => void;
-  handleAfterWater?: () => void;
 }
 
 export const UseToolModal = ({
@@ -32,7 +31,6 @@ export const UseToolModal = ({
   appliedTools,
   closeToolModal,
   closeSquareModal,
-  handleAfterWater,
 }: UseToolModalProps) => {
   const dispatch = useContext(GlobalDispatchContext);
   const { visitorInventory = { tools: {} } } = useContext(GlobalStateContext);
@@ -67,14 +65,6 @@ export const UseToolModal = ({
         ownerId,
       })
       .then((response) => {
-        const { success } = response.data;
-        if (success && tool.actionType === "Water") {
-          const useToolAudio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/water_plant.mp3");
-          useToolAudio.volume = 0.5; // 50% volume
-          useToolAudio.play();
-          handleAfterWater?.();
-        }
-
         setGameState(dispatch, response.data);
         closeToolModal();
         closeSquareModal?.();

@@ -31,15 +31,13 @@ export const handleWaterCrop = async (req: Request, res: Response) => {
     });
     if (waterCropResult instanceof Error) throw waterCropResult;
 
-    let earnedMessage;
+    let earnedMessage,
+      didLevelUp = false;
     const { xpRewardAmount, totalXp } = waterCropResult;
     if (totalXp) {
-      const coinsEarnedForRankUp = await checkDidIncreaseLevelOrRank(
-        credentials,
-        visitor,
-        visitorInventory.xp,
-        xpRewardAmount,
-      );
+      const checkResult = await checkDidIncreaseLevelOrRank(credentials, visitor, visitorInventory.xp, xpRewardAmount);
+      const coinsEarnedForRankUp = checkResult.coinsEarnedForRankUp;
+      didLevelUp = checkResult.didLevelUp;
       visitorInventory.xp = totalXp;
 
       if (coinsEarnedForRankUp > 0) {
@@ -56,7 +54,7 @@ export const handleWaterCrop = async (req: Request, res: Response) => {
       if (xpRewardAmount) earnedMessage = await getEarnedMessage(coinsEarnedForRankUp, xpRewardAmount);
     }
 
-    return res.json({ ...waterCropResult, visitorInventory, earnedMessage });
+    return res.json({ ...waterCropResult, visitorInventory, earnedMessage, soundEffect: "water", didLevelUp });
   } catch (error) {
     return errorHandler({
       error,
