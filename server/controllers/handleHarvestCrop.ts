@@ -11,6 +11,7 @@ import {
   getCoinRewardAmount,
   getXpRewardAmount,
   getEarnedMessage,
+  checkDidIncreaseLevelOrRank,
 } from "../utils/index.js";
 
 /**
@@ -84,16 +85,6 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
     }
 
     // Grant coins and xp to visitor
-    const { coinRewardAmount, coinMultiplier } = getCoinRewardAmount(appliedTools, seedConfig.reward);
-    const modifyCoinsResponse = await modifyVisitorInventoryItem({
-      credentials,
-      visitor,
-      name: "Coins",
-      quantity: coinRewardAmount,
-    });
-    if (modifyCoinsResponse instanceof Error) throw modifyCoinsResponse;
-    visitorInventory.coins = modifyCoinsResponse.quantity;
-
     const xpRewardAmount = await getXpRewardAmount(seedConfig, "Harvest");
     const modifyXpResponse = await modifyVisitorInventoryItem({
       credentials,
@@ -102,7 +93,24 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
       quantity: xpRewardAmount,
     });
     if (modifyXpResponse instanceof Error) throw modifyXpResponse;
+    const coinsEarnedForRankUp = await checkDidIncreaseLevelOrRank(
+      credentials,
+      visitor,
+      visitorInventory.xp,
+      xpRewardAmount,
+    );
     visitorInventory.xp = modifyXpResponse.quantity;
+
+    let { coinRewardAmount, coinMultiplier } = getCoinRewardAmount(appliedTools, seedConfig.reward);
+    coinRewardAmount += coinsEarnedForRankUp;
+    const modifyCoinsResponse = await modifyVisitorInventoryItem({
+      credentials,
+      visitor,
+      name: "Coins",
+      quantity: coinRewardAmount,
+    });
+    if (modifyCoinsResponse instanceof Error) throw modifyCoinsResponse;
+    visitorInventory.coins = modifyCoinsResponse.quantity;
 
     // Update visitor's data object
     const updatedVisitorData = {

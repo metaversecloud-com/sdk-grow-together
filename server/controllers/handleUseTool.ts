@@ -8,6 +8,7 @@ import {
   DroppedAsset,
   waterCrop,
   getEarnedMessage,
+  checkDidIncreaseLevelOrRank,
 } from "../utils/index.js";
 import { VisitorDataObjectType } from "../../shared/index.js";
 
@@ -73,6 +74,20 @@ export const handleUseTool = async (req: Request, res: Response) => {
       }
 
       // Grant coins and xp to visitor if applicable
+      let coinsEarnedForRankUp = 0;
+      if (xpReward > 0) {
+        const modifyXpResponse = await modifyVisitorInventoryItem({
+          credentials,
+          visitor,
+          name: "Experience Points",
+          quantity: xpReward,
+        });
+        if (modifyXpResponse instanceof Error) throw modifyXpResponse;
+        coinsEarnedForRankUp = await checkDidIncreaseLevelOrRank(credentials, visitor, visitorInventory.xp, xpReward);
+        visitorInventory.xp = modifyXpResponse.quantity;
+      }
+
+      coinReward += coinsEarnedForRankUp;
       if (coinReward > 0) {
         const modifyCoinsResponse = await modifyVisitorInventoryItem({
           credentials,
@@ -82,17 +97,6 @@ export const handleUseTool = async (req: Request, res: Response) => {
         });
         if (modifyCoinsResponse instanceof Error) throw modifyCoinsResponse;
         visitorInventory.coins = modifyCoinsResponse.quantity;
-      }
-
-      if (xpReward > 0) {
-        const modifyXpResponse = await modifyVisitorInventoryItem({
-          credentials,
-          visitor,
-          name: "Experience Points",
-          quantity: xpReward,
-        });
-        if (modifyXpResponse instanceof Error) throw modifyXpResponse;
-        visitorInventory.xp = modifyXpResponse.quantity;
       }
 
       earnedMessage = await getEarnedMessage(coinReward, xpReward);

@@ -15,7 +15,7 @@ import {
   VisitorDataObjectType,
   VisitorWorldDataType,
 } from "../../../shared/index.js";
-import { Credentials } from "../../types/Credentials";
+import { Credentials } from "../../types/index.js";
 import { UserInterface, VisitorInterface } from "@rtsdk/topia";
 
 /**

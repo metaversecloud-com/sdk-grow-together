@@ -37,8 +37,8 @@ export const CropDetails = ({
   if (isOwnedByCurrentUser && !cropPlotAssetId && visitorPlotAssetId) plotAssetId = visitorPlotAssetId;
 
   const [timeRemaining, setTimeRemaining] = useState<string | null>(null);
-  const [isReadyForWater, setIsReadyForWater] = useState(false);
-  const [isReadyForHarvest, setIsReadyForHarvest] = useState(false);
+  const [isReadyToWater, setIsReadyForWater] = useState(false);
+  const [isReadyToHarvest, setIsReadyForHarvest] = useState(false);
   const [wasHarvested, setWasHarvested] = useState(false);
   const [showToolModal, setShowToolModal] = useState(false);
 
@@ -47,7 +47,7 @@ export const CropDetails = ({
     if (!seedConfig || wasHarvested) return setTimeRemaining(null);
 
     const updateCountdown = () => {
-      if (isReadyForWater) return;
+      if (isReadyToWater) return;
       const remainingSeconds = getSecondsRemaining(lastWatered, growthTime, appliedTools);
 
       if (!wasHarvested) {
@@ -102,8 +102,8 @@ export const CropDetails = ({
 
   const getGrowthStatus = () => {
     if (wasHarvested) return "Harvested";
-    else if (isReadyForHarvest) return "Ready for Harvest!";
-    else if (isReadyForWater) return `Ready to Water!`;
+    else if (isReadyToHarvest) return "Ready for Harvest!";
+    else if (isReadyToWater) return `Ready to Water!`;
     else if (growLevel < harvestLevel) return `Ready to water in: ${timeRemaining}`;
     else if (growLevel >= harvestLevel) return `Ready to harvest in: ${timeRemaining}`;
 
@@ -130,7 +130,7 @@ export const CropDetails = ({
                 </i>
               </p>
               <p className="text-success">+{reward} Coins</p>
-              <div className={`chip my-4 ${isReadyForWater || isReadyForHarvest ? "chip-success" : ""}`}>
+              <div className={`chip my-4 ${isReadyToWater || isReadyToHarvest ? "chip-success" : ""}`}>
                 {getGrowthStatus()}
               </div>
             </div>
@@ -149,15 +149,15 @@ export const CropDetails = ({
         )}
 
         {/* Action Buttons */}
-        {!wasHarvested && appliedTools?.length < 3 && (
+        {!isReadyToHarvest && !wasHarvested && appliedTools?.length < 3 && (
           <button id="useTool" className="btn btn-outline tool" onClick={() => setShowToolModal(true)}>
             Use Tool
           </button>
         )}
 
-        {isOwnedByCurrentUser && isReadyForWater && <WaterButton handleAfterWater={() => setIsReadyForWater(false)} />}
+        {isOwnedByCurrentUser && isReadyToWater && <WaterButton handleAfterWater={() => setIsReadyForWater(false)} />}
 
-        {isOwnedByCurrentUser && isReadyForHarvest && (
+        {isOwnedByCurrentUser && isReadyToHarvest && (
           <HarvestButton handleAfterHarvest={handleAfterHarvest} reward={reward} />
         )}
 
@@ -173,7 +173,7 @@ export const CropDetails = ({
             selectedSquareId={crop.squareId}
             ownerId={ownerId}
             isOwnedByCurrentUser={isOwnedByCurrentUser}
-            isReadyToWater={isReadyForWater}
+            isReadyToWater={isReadyToWater}
             appliedTools={appliedTools}
             closeToolModal={() => setShowToolModal(false)}
             handleAfterWater={() => setIsReadyForWater(false)}

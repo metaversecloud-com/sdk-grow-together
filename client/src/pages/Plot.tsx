@@ -104,7 +104,7 @@ export const Plot = () => {
                 View Backpack
               </button>
             </div>
-            <div className="flex py-6">
+            <div className="flex pt-6">
               <h4 className="pr-4 pt-2">Garden Plot</h4>
               <button className="btn btn-icon mr-2" onClick={() => setShowWaterPlotModal(!showWaterPlotModal)}>
                 💦

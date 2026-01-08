@@ -8,7 +8,7 @@ export const LevelAndRank = ({ xp = 0 }: { xp?: number }) => {
   useEffect(() => {
     const getInfo = async () => {
       const level = await getLevel(xp);
-      const rank = await getRank(level);
+      const { rank } = await getRank(level);
       setLevel(level);
       setRank(rank);
     };
@@ -16,9 +16,9 @@ export const LevelAndRank = ({ xp = 0 }: { xp?: number }) => {
   }, [xp]);
 
   return (
-    <div className="flex grid-cols-2 gap-2">
-      <span className="icon mr-2">{level}</span>
-      <p className="pt-2">
+    <div className="flex grid-cols-2">
+      <span className="icon icon-sm mr-2">{level}</span>
+      <p className="pt-1">
         <strong>{rank}</strong>
       </p>
     </div>

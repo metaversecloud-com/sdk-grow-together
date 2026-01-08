@@ -13,6 +13,7 @@ import {
   modifyVisitorInventoryItem,
   getXpRewardAmount,
   getEarnedMessage,
+  checkDidIncreaseLevelOrRank,
 } from "../utils/index.js";
 import { DroppedAssetClickType } from "@rtsdk/topia";
 import { calculateNumberOfSquares, getSeedImageVariation } from "../../shared/index.js";
@@ -126,6 +127,7 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     visitorData.worlds[urlSlug].crops[cropAsset.id!] = cropData;
 
     const xpRewardAmount = await getXpRewardAmount(seedConfig, "Plant");
+    let coinsEarnedForRankUp = 0;
 
     await Promise.all([
       cropAsset.setDataObject({
@@ -155,13 +157,30 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
         visitor,
         name: "Experience Points",
         quantity: xpRewardAmount,
-      }).then((modifyXpResponse) => {
+      }).then(async (modifyXpResponse) => {
         if (modifyXpResponse instanceof Error) throw modifyXpResponse;
+        coinsEarnedForRankUp = await checkDidIncreaseLevelOrRank(
+          credentials,
+          visitor,
+          visitorInventory.xp,
+          xpRewardAmount,
+        );
         visitorInventory.xp = modifyXpResponse.quantity;
       }),
     ]);
 
-    const earnedMessage = await getEarnedMessage(0, xpRewardAmount);
+    if (coinsEarnedForRankUp > 0) {
+      const modifyCoinsResponse = await modifyVisitorInventoryItem({
+        credentials,
+        visitor,
+        name: "Coins",
+        quantity: coinsEarnedForRankUp,
+      });
+      if (modifyCoinsResponse instanceof Error) throw modifyCoinsResponse;
+      visitorInventory.coins = modifyCoinsResponse.quantity;
+    }
+
+    const earnedMessage = await getEarnedMessage(coinsEarnedForRankUp, xpRewardAmount);
 
     return res.json({
       success: true,

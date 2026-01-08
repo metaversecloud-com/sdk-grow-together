@@ -2,6 +2,7 @@ export * from "../constants.js";
 export * from "./crops/index.js";
 export * from "./inventory/index.js";
 export * from "./calculateSquarePosition.js";
+export * from "./checkDidIncreaseLevelOrRank.js";
 export * from "./cleanReturnPayload.js";
 export * from "./errorHandler.js";
 export * from "./getAnalyticName.js";

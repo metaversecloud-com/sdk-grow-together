@@ -117,7 +117,7 @@ export const PlotSquareModal = ({
           </div>
 
           {/* Action Buttons */}
-          {itemType === "crop" && (
+          {itemType === "crop" && !isReadyToHarvest && (
             <button
               id="useTool"
               className="btn btn-outline tool"

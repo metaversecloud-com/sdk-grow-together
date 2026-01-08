@@ -5,7 +5,9 @@ import { getAllLevelsAndRanks, getPercentageOfCurrentLevelComplete } from "@shar
 export const InfoModal = ({ xp = 0, setShowInfoModal }: { xp?: number; setShowInfoModal: () => void }) => {
   const [activeTab, setActiveTab] = useState(xp > 0 ? "rank" : "instructions");
   const [percentageOfCurrentLevelComplete, setPercentageOfCurrentLevelComplete] = useState(0);
-  const [allLevelsAndRanks, setAllLevelsAndRanks] = useState<{ level: number; rank: string }[]>([]);
+  const [allLevelsAndRanks, setAllLevelsAndRanks] = useState<{ level: number; rank: string; coinsEarned: number }[]>(
+    [],
+  );
 
   useEffect(() => {
     const getInfo = async () => {
@@ -62,11 +64,19 @@ export const InfoModal = ({ xp = 0, setShowInfoModal }: { xp?: number; setShowIn
                 </div>
 
                 <Accordion title="All Ranks">
-                  {Object.values(allLevelsAndRanks).map(({ level, rank }, index) => (
-                    <div key={index} className="flex grid-cols-2 gap-2">
-                      <span className="btn btn-icon mr-2">{level}</span>
-                      <p className="pt-2">
+                  {Object.values(allLevelsAndRanks).map(({ level, rank, coinsEarned }, index) => (
+                    <div
+                      key={index}
+                      className="flex grid-cols-2"
+                      style={{
+                        width: "100%",
+                        marginLeft: "-4px",
+                      }}
+                    >
+                      <span className="icon icon-sm mr-2">{level}</span>
+                      <p className="p2 pt-1">
                         <strong>{rank}</strong>
+                        {coinsEarned > 0 ? ` (+${coinsEarned} coins)` : ""}
                       </p>
                     </div>
                   ))}

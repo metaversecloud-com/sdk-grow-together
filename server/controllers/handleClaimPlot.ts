@@ -87,13 +87,13 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
     }
 
     if (Object.keys(visitorInventory.tools).length === 0) {
-      const starterTools = ["Basic Watering Can", "Basic Mulch", "Basic Compost"];
+      const starterTools = ["Wooden Watering Can", "Basic Mulch", "Basic Compost"];
       for (const name of starterTools) {
         const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
           credentials,
           visitor,
           name,
-          quantity: 1,
+          quantity: 5,
         });
         if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
         visitorInventory.tools[name] = modifyInventoryItemResponse as EcosystemInventoryItemType &

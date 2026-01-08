@@ -112,7 +112,7 @@ export const UseToolModal = ({
                 (isReadyToWater && actionType === "Water");
               const tooltipText =
                 actionType === "Water" && !isReadyToWater
-                  ? "Crop is not ready to be watered."
+                  ? "Crop not ready to be watered yet."
                   : actionType && appliedTools?.some((tool) => tool.includes(actionType))
                     ? "Tool already used."
                     : null;

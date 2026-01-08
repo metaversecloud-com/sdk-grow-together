@@ -22,61 +22,61 @@ export const getRank = async (level: number) => {
     if (level >= levels[i]) {
       switch (levels[i]) {
         case 1:
-          return "New Gardener";
+          return { rank: "New Gardener", coinsEarned: 0 };
         case 2:
-          return "Beginner Gardener";
+          return { rank: "Beginner Gardener", coinsEarned: 10 };
         case 3:
-          return "Bronze Gardener";
+          return { rank: "Bronze Gardener", coinsEarned: 15 };
         case 4:
-          return "Budding Gardener";
+          return { rank: "Budding Gardener", coinsEarned: 20 };
         case 8:
-          return "Sprout Scout";
+          return { rank: "Sprout Scout", coinsEarned: 40 };
         case 10:
-          return "Able Gardener";
+          return { rank: "Able Gardener", coinsEarned: 50 };
         case 12:
-          return "Silver Gardener";
+          return { rank: "Silver Gardener", coinsEarned: 65 };
         case 15:
-          return "Fancy Gardener";
+          return { rank: "Fancy Gardener", coinsEarned: 75 };
         case 17:
-          return "Skilled Gardener";
+          return { rank: "Skilled Gardener", coinsEarned: 85 };
         case 20:
-          return "Certified Green Thumb";
+          return { rank: "Certified Green Thumb", coinsEarned: 100 };
         case 22:
-          return "Gold Gardener";
+          return { rank: "Gold Gardener", coinsEarned: 110 };
         case 25:
-          return "Splendid Gardener";
+          return { rank: "Splendid Gardener", coinsEarned: 125 };
         case 30:
-          return "Expert Gardener";
+          return { rank: "Expert Gardener", coinsEarned: 150 };
         case 32:
-          return "Platinum Gardener";
+          return { rank: "Platinum Gardener", coinsEarned: 160 };
         case 35:
-          return "Flourishing Gardener";
+          return { rank: "Flourishing Gardener", coinsEarned: 175 };
         case 40:
-          return "Hot Shot Gardener";
+          return { rank: "Hot Shot Gardener", coinsEarned: 200 };
         case 42:
-          return "Diamond Gardener";
+          return { rank: "Diamond Gardener", coinsEarned: 210 };
         case 45:
-          return "Genius Gardener";
+          return { rank: "Genius Gardener", coinsEarned: 225 };
         case 50:
-          return "Rockstar Gardener";
+          return { rank: "Rockstar Gardener", coinsEarned: 250 };
         case 52:
-          return "Emerald Gardener";
+          return { rank: "Emerald Gardener", coinsEarned: 260 };
         case 60:
-          return "Harvest Hero";
+          return { rank: "Harvest Hero", coinsEarned: 300 };
         case 67:
-          return "Six Seven Gardener";
+          return { rank: "Six Seven Gardener", coinsEarned: 335 };
         case 70:
-          return "Leaf Legend";
+          return { rank: "Leaf Legend", coinsEarned: 350 };
         case 80:
-          return "Crop Whisperer";
+          return { rank: "Crop Whisperer", coinsEarned: 400 };
         case 90:
-          return "Mythical Gardener";
+          return { rank: "Mythical Gardener", coinsEarned: 450 };
         case 100:
-          return "Legendary Gardener";
+          return { rank: "Legendary Gardener", coinsEarned: 500 };
       }
     }
   }
-  return "New Gardener";
+  return { rank: "New Gardener", coinsEarned: 0 };
 };
 
 export const getPercentageOfCurrentLevelComplete = async (xp: number, currentLevel?: number) => {
@@ -96,7 +96,7 @@ export const getPercentageOfCurrentLevelComplete = async (xp: number, currentLev
 
 export const getAllProgressInfo = async (xp: number) => {
   const level = await getLevel(xp);
-  const rank = await getRank(level);
+  const { rank } = await getRank(level);
   const percentage = await getPercentageOfCurrentLevelComplete(xp);
 
   return { level, rank, percentageOfCurrentLevelComplete: percentage };
@@ -107,8 +107,8 @@ export const getAllLevelsAndRanks = async () => {
 
   for (let i = 0; i < levels.length; i++) {
     const level = levels[i];
-    const rank = await getRank(levels[i]);
-    allLevelsAndRanks.push({ level, rank });
+    const { rank, coinsEarned } = await getRank(levels[i]);
+    allLevelsAndRanks.push({ level, rank, coinsEarned });
   }
 
   return allLevelsAndRanks;

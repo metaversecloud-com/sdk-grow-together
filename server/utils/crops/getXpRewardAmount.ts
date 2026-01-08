@@ -1,4 +1,4 @@
-import { EcosystemInventoryItemType } from "../../types";
+import { EcosystemInventoryItemType } from "../../types/index.js";
 
 const rarityLevels = ["Common", "Uncommon", "Rare", "Epic", "Legendary"];
 

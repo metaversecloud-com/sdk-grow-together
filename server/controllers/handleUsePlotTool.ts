@@ -11,6 +11,8 @@ import {
   User,
   modifyVisitorInventoryItem,
   getEarnedMessage,
+  getVisitorInventory,
+  checkDidIncreaseLevelOrRank,
 } from "../utils/index.js";
 import { CropDataObjectType, getSeedImageVariation, VisitorDataObjectType, plotConfig } from "../../shared/index.js";
 import { DroppedAssetInterface } from "@rtsdk/topia";
@@ -175,17 +177,7 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
       }
     }
 
-    // Grant coins and xp to visitor
-    if (totalCoinsRewardAmount > 0) {
-      modifyInventoryPromises.push(
-        modifyVisitorInventoryItem({
-          credentials,
-          visitor,
-          name: "Coins",
-          quantity: totalCoinsRewardAmount,
-        }),
-      );
-    }
+    // Grant xp to visitor
     if (totalXpRewardAmount > 0) {
       modifyInventoryPromises.push(
         modifyVisitorInventoryItem({
@@ -196,10 +188,6 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
         }),
       );
     }
-
-    // Update visitor's data object
-    ownerData.totalCoinsEarned = ownerData.totalCoinsEarned + totalCoinsRewardAmount;
-    ownerData.lastDateCoinsEarned = now;
 
     // Remove one tool from visitor's inventory
     modifyInventoryPromises.push(
@@ -218,13 +206,42 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
     for (const assetId of uniqueCropsToRemove) delete ownerData.worlds[urlSlug].crops[assetId];
 
     // Only one updateDataObject for all crops
-    promises.push(visitor.updateDataObject(ownerData, {}));
     promises.push(Promise.all(updateCropAssetPromises));
     promises.push(Promise.all(updateWebImageLayerPromises));
     promises.push(Promise.all(triggerParticlePromises));
     promises.push(Promise.all(modifyInventoryPromises));
 
     await Promise.all(promises);
+
+    // get updated visitor inventory and check for level/rank up
+    const getVisitorInventoryResponse = await getVisitorInventory(credentials);
+    if (getVisitorInventoryResponse instanceof Error) throw getVisitorInventoryResponse;
+
+    const updatedVisitorInventory = getVisitorInventoryResponse;
+
+    const coinsEarnedForRankUp = await checkDidIncreaseLevelOrRank(
+      credentials,
+      visitor,
+      visitorInventory.xp,
+      totalXpRewardAmount,
+    );
+    totalCoinsRewardAmount += coinsEarnedForRankUp;
+
+    if (totalCoinsRewardAmount > 0) {
+      const modifyCoinsResponse = await modifyVisitorInventoryItem({
+        credentials,
+        visitor,
+        name: "Coins",
+        quantity: totalCoinsRewardAmount,
+      });
+      if (modifyCoinsResponse instanceof Error) throw modifyCoinsResponse;
+      updatedVisitorInventory.coins = modifyCoinsResponse.quantity;
+    }
+
+    // Update visitor's data object
+    ownerData.totalCoinsEarned = ownerData.totalCoinsEarned + totalCoinsRewardAmount;
+    ownerData.lastDateCoinsEarned = now;
+    await visitor.updateDataObject(ownerData, {});
 
     if (actionType === "Harvest") {
       await World.deleteDroppedAssets(urlSlug, uniqueCropsToRemove, process.env.INTERACTIVE_SECRET!, credentials);
@@ -236,7 +253,7 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
       success: false,
       visitorData: ownerData,
       plotData: ownerData.worlds[urlSlug],
-      visitorInventory,
+      visitorInventory: updatedVisitorInventory,
       earnedMessage,
     });
   } catch (error) {
