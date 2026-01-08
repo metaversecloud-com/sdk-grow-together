@@ -1,4 +1,4 @@
-import { getRarity } from "../utils";
+import { getRarity } from "../utils/index.js";
 
 export const defaultVisitorInventoryItem = {
   id: "",
