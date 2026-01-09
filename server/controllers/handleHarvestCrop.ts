@@ -173,6 +173,7 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
       plotData: updatedVisitorData.worlds[urlSlug],
       visitorInventory,
       earnedMessage,
+      soundEffect: "harvest",
       didLevelUp,
     });
   } catch (error) {

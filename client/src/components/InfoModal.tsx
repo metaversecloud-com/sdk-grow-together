@@ -24,7 +24,7 @@ export const InfoModal = ({ xp = 0, setShowInfoModal }: { xp?: number; setShowIn
   return (
     <div className="modal-container">
       <div className="modal">
-        <ModalHeader text="Learn how to Play" disabled={false} handleOnClick={setShowInfoModal} />
+        <ModalHeader text="Garden Details" disabled={false} handleOnClick={setShowInfoModal} />
 
         {xp > 0 ? (
           <div className="tab-text-container">
@@ -48,11 +48,6 @@ export const InfoModal = ({ xp = 0, setShowInfoModal }: { xp?: number; setShowIn
             {xp > 0 && (
               <div className="grid gap-4 text-left">
                 <div className="grid gap-2">
-                  <h4>Your Rank</h4>
-                  <LevelAndRank xp={xp} />
-                </div>
-
-                <div className="grid gap-2">
                   <h4>Next Level</h4>
                   <div className="h-5 overflow-hidden box-content rounded-full border border-gray-400">
                     <div
@@ -64,20 +59,20 @@ export const InfoModal = ({ xp = 0, setShowInfoModal }: { xp?: number; setShowIn
                 </div>
 
                 <Accordion title="All Ranks">
+                  <div
+                    className="grid gap-2 py-2"
+                    style={{ marginLeft: "-7px", borderTop: "1px solid #ccc", borderBottom: "1px solid #ccc" }}
+                  >
+                    <h5>Your Rank</h5>
+                    <LevelAndRank xp={xp} />
+                  </div>
                   {Object.values(allLevelsAndRanks).map(({ level, rank, coinsEarned }, index) => (
-                    <div
-                      key={index}
-                      className="flex grid-cols-2"
-                      style={{
-                        width: "100%",
-                        marginLeft: "-4px",
-                      }}
-                    >
-                      <span className="icon icon-sm mr-2">{level}</span>
-                      <p className="p2 pt-1">
+                    <div key={index} className="flex gap-2 items-center text-left" style={{ marginLeft: "-7px" }}>
+                      <div className="icon icon-sm shrink">{level}</div>
+                      <div className="p2 pt-1 stretch whitespace-nowrap">
                         <strong>{rank}</strong>
-                        {coinsEarned > 0 ? ` (+${coinsEarned} coins)` : ""}
-                      </p>
+                      </div>
+                      {coinsEarned > 0 && <div className="p3 pt-1 truncate">+{coinsEarned} coins</div>}
                     </div>
                   ))}
                 </Accordion>

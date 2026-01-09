@@ -1,8 +1,8 @@
 import { VisitorInterface, WorldActivityType } from "@rtsdk/topia";
-import { getLevel, getRank } from "../../shared/index.js";
 import { World } from "./topiaInit.js";
 import { Credentials } from "../types/Credentials.js";
 import { standardizeError } from "./standardizeError.js";
+import { getLevelsAndRanks } from "../../shared/index.js";
 
 export const checkDidIncreaseLevelOrRank = async (
   credentials: Credentials,
@@ -14,10 +14,8 @@ export const checkDidIncreaseLevelOrRank = async (
 
   let coinsEarnedForRankUp = 0;
 
-  const previousLevel = await getLevel(previousXp);
-  const currentLevel = await getLevel(previousXp + xpRewardAmount);
-  const { rank: previousRank } = await getRank(previousLevel);
-  const { rank: currentRank, coinsEarned } = await getRank(currentLevel);
+  const { level: previousLevel, rank: previousRank } = await getLevelsAndRanks(previousXp);
+  const { level: currentLevel, rank: currentRank, coinsEarned } = await getLevelsAndRanks(previousXp + xpRewardAmount);
 
   const didLevelUp = currentLevel > previousLevel;
   const didRankUp = currentRank !== previousRank;

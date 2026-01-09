@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 // components
-import { GetStartedModal, InventoryModal, PageContainer, PlotGrid, UsePlotToolModal, YourMoney } from "@/components";
+import { GetStartedModal, InventoryModal, PageContainer, PlotGrid, YourMoney } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
@@ -32,8 +32,6 @@ export const Plot = () => {
   const [showInventoryModal, setShowInventoryModal] = useState(false);
   const [showVisitorInventoryOnly, setShowVisitorInventoryOnly] = useState(false);
   const [showGetStartedModal, setShowGetStartedModal] = useState(searchParams.get("isFirstTimeOpen") === "true");
-  const [showWaterPlotModal, setShowWaterPlotModal] = useState(false);
-  const [showHarvestPlotModal, setShowHarvestPlotModal] = useState(false);
 
   const profileId = searchParams.get("profileId");
 
@@ -77,7 +75,12 @@ export const Plot = () => {
   };
 
   return (
-    <PageContainer isLoading={isLoading} headerText={headerText} showInfoIcon={isOwnedByCurrentUser} xp={plotOwnerXp}>
+    <PageContainer
+      isLoading={isLoading}
+      headerText={headerText}
+      isOwnedByCurrentUser={isOwnedByCurrentUser}
+      xp={plotOwnerXp}
+    >
       <div className="container">
         {/* Current user's plot */}
         {isOwnedByCurrentUser && plotAssetId && (
@@ -102,15 +105,6 @@ export const Plot = () => {
                 }}
               >
                 View Backpack
-              </button>
-            </div>
-            <div className="flex pt-6">
-              <h4 className="pr-4 pt-2">Garden Plot</h4>
-              <button className="btn btn-icon mr-2" onClick={() => setShowWaterPlotModal(!showWaterPlotModal)}>
-                💦
-              </button>
-              <button className="btn btn-icon mr-2" onClick={() => setShowHarvestPlotModal(!showHarvestPlotModal)}>
-                🧺
               </button>
             </div>
             <PlotGrid
@@ -185,16 +179,6 @@ export const Plot = () => {
       )}
       {showGetStartedModal && (
         <GetStartedModal setShowGetStartedModal={() => setShowGetStartedModal(!showGetStartedModal)} />
-      )}
-      {showWaterPlotModal && (
-        <UsePlotToolModal actionType="Water" ownerId={ownerId} closeToolModal={() => setShowWaterPlotModal(false)} />
-      )}
-      {showHarvestPlotModal && (
-        <UsePlotToolModal
-          actionType="Harvest"
-          ownerId={ownerId}
-          closeToolModal={() => setShowHarvestPlotModal(false)}
-        />
       )}
     </PageContainer>
   );

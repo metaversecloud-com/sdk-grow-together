@@ -64,10 +64,10 @@ const App = () => {
       audio.volume = 0.8;
     } else if (soundEffect === "mulch") {
       audio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/mulch.mp3");
-      audio.volume = 0.7;
+      audio.volume = 0.9;
     } else if (soundEffect === "compost") {
       audio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/compost.mp3");
-      audio.volume = 0.7;
+      audio.volume = 0.9;
     }
     if (audio) {
       audio.play();

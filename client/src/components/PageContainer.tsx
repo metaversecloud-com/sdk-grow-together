@@ -10,13 +10,13 @@ export const PageContainer = ({
   children,
   isLoading,
   headerText,
-  showInfoIcon,
+  isOwnedByCurrentUser,
   xp,
 }: {
   children: ReactNode;
   isLoading: boolean;
   headerText?: string;
-  showInfoIcon?: boolean;
+  isOwnedByCurrentUser?: boolean;
   xp?: number;
 }) => {
   const { error, isAdmin } = useContext(GlobalStateContext);
@@ -34,13 +34,13 @@ export const PageContainer = ({
         <div className="pb-6">
           <div className="flex">
             <h2 className="pr-4">{headerText}</h2>
-            {showInfoIcon && (
+            {isOwnedByCurrentUser && (
               <button className="btn btn-icon mr-2" onClick={() => setShowInfoModal(!showInfoModal)}>
                 <img src={`https://sdk-style.s3.amazonaws.com/icons/info.svg`} />
               </button>
             )}
           </div>
-          {xp !== undefined && <LevelAndRank xp={xp} />}
+          {isOwnedByCurrentUser && xp !== undefined && <LevelAndRank xp={xp} />}
         </div>
       )}
 

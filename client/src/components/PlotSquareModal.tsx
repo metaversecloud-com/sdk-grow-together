@@ -117,16 +117,18 @@ export const PlotSquareModal = ({
           </div>
 
           {/* Action Buttons */}
-          {itemType === "crop" && !isReadyToHarvest && (
-            <button
-              id="useTool"
-              className="btn btn-outline tool"
-              onClick={() => setShowToolModal(true)}
-              disabled={areButtonsDisabled}
-            >
-              Use Tool
-            </button>
-          )}
+          {itemType === "crop" &&
+            ((!isOwnedByCurrentUser && isReadyToWater) || !isReadyToWater) &&
+            !isReadyToHarvest && (
+              <button
+                id="useTool"
+                className="btn btn-outline tool"
+                onClick={() => setShowToolModal(true)}
+                disabled={areButtonsDisabled}
+              >
+                Use Tool
+              </button>
+            )}
 
           {isOwnedByCurrentUser && isReadyToWater && (
             <WaterButton

@@ -28,26 +28,33 @@ export const InventoryModal = ({
 
   return (
     <div className="modal-container">
-      <div className="modal">
-        <ModalHeader text="Garden Store" disabled={false} handleOnClick={onClose} />
+      <div className="modal" style={{ height: "70vh" }}>
+        <ModalHeader
+          text={`${showVisitorInventoryOnly ? "Your Backpack" : "Garden Store"}`}
+          disabled={false}
+          handleOnClick={onClose}
+        />
 
         <YourMoney coinsAvailable={visitorInventory.coins} />
 
         <div className="tab-text-container">
           <button
             className={`btn btn-text ${activeTab === "seeds" ? "active" : ""}`}
+            style={{ width: "auto" }}
             onClick={() => setActiveTab("seeds")}
           >
             Seeds
           </button>
           <button
             className={`btn btn-text ${activeTab === "tools" ? "active" : ""}`}
+            style={{ width: "auto" }}
             onClick={() => setActiveTab("tools")}
           >
             Tools
           </button>
           <button
             className={`btn btn-text ${activeTab === "decorations" ? "active" : ""}`}
+            style={{ width: "auto" }}
             onClick={() => setActiveTab("decorations")}
           >
             Decorations

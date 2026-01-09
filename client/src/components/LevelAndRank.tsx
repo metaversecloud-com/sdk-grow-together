@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getLevel, getRank } from "@shared/index";
+import { getLevelsAndRanks } from "@shared/index";
 
 export const LevelAndRank = ({ xp = 0 }: { xp?: number }) => {
   const [level, setLevel] = useState(0);
@@ -7,8 +7,8 @@ export const LevelAndRank = ({ xp = 0 }: { xp?: number }) => {
 
   useEffect(() => {
     const getInfo = async () => {
-      const level = await getLevel(xp);
-      const { rank } = await getRank(level);
+      const { level, rank } = await getLevelsAndRanks(xp);
+
       setLevel(level);
       setRank(rank);
     };
@@ -18,7 +18,7 @@ export const LevelAndRank = ({ xp = 0 }: { xp?: number }) => {
   return (
     <div className="flex grid-cols-2">
       <span className="icon icon-sm mr-2">{level}</span>
-      <p className="pt-1">
+      <p className="p2 pt-1">
         <strong>{rank}</strong>
       </p>
     </div>

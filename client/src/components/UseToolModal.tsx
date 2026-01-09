@@ -96,7 +96,7 @@ export const UseToolModal = ({
         ) : (
           <div className="grid gap-2 grid-cols-2">
             {availableTools.map((tool) => {
-              const { id, name, rarity, quantity, icon, actionType } = tool;
+              const { id, name, description, rarity, quantity, icon, actionType } = tool;
               const canUse =
                 (actionType && actionType !== "Water" && !appliedTools?.some((tool) => tool.includes(actionType))) ||
                 (isReadyToWater && actionType === "Water");
@@ -119,10 +119,12 @@ export const UseToolModal = ({
                       id={id}
                       icon={icon}
                       name={name}
+                      description={description}
                       rarity={rarity}
                       value={quantity}
                       valueText="Owned"
                       isReadyOnly={true}
+                      showDescriptionTooltip={true}
                     />
                   </div>
                 </div>

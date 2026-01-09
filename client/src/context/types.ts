@@ -50,7 +50,7 @@ export interface InitialState {
   seeds?: { [key: string]: EcosystemInventoryItemType };
   tools?: { [key: string]: EcosystemInventoryItemType };
   xp?: number;
-  earnedMessage?: string;
+  earnedMessage?: { message?: string; multiplier?: string };
   soundEffect?: string;
   didLevelUp?: boolean;
 }

@@ -1,17 +1,16 @@
 import { useContext, useState } from "react";
 
 // components
-import { PlaceDecoration, PlantSeed, PlotSquare, PlotSquareModal } from "@/components";
+import { PlaceDecoration, PlantSeed, PlotSquare, PlotSquareModal, UsePlotToolModal } from "@/components";
 
 // context
 import { GlobalStateContext } from "@/context/GlobalContext";
 import { SelectedSquareDetails } from "@/context/types";
 
 // types
-import { plotConfig, VisitorInventoryType, VisitorWorldDataType } from "@shared/index.js";
+import { getSecondsRemaining, plotConfig, VisitorInventoryType, VisitorWorldDataType } from "@shared/index.js";
 
 // utils
-import { getSecondsRemaining } from "@/utils";
 
 interface PlotGridProps {
   plotSquares: { [key: number]: string | null };
@@ -29,9 +28,12 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isOwnedByCurre
 
   const [selectedSquareId, setSelectedSquareId] = useState<number | null>(null);
   const [selectedSquareType, setSelectedSquareIdType] = useState<PlotSquareType>("crop");
-
+  const [noOfCropsReadyToWater, setNoOfCropsReadyToWater] = useState<number>(0);
+  const [noOfCropsReadyToHarvest, setNoOfCropsReadyToHarvest] = useState<number>(0);
   const [selectedSquareDetails, setSelectedSquareDetails] = useState<SelectedSquareDetails>({ title: "" });
   const [showSquareModal, setShowSquareModal] = useState(false);
+  const [showUsePlotToolModal, setShowUsePlotToolModal] = useState(false);
+  const [actionType, setActionType] = useState<"Water" | "Harvest" | null>(null);
 
   const handleSquareClick = (squareId: number, itemType: PlotSquareType) => {
     setSelectedSquareId(squareId);
@@ -80,6 +82,30 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isOwnedByCurre
     return { title, icon, name, growLevel, harvestLevel, reward, isReadyToWater, isReadyToHarvest, appliedTools };
   };
 
+  const handleShowUsePlotToolModal = (actionType: "Water" | "Harvest") => {
+    let noOfCropsReadyToWater = 0;
+    let noOfCropsReadyToHarvest = 0;
+
+    for (const crop in crops) {
+      const { seedId, growLevel, lastWatered, appliedTools } = crops[crop];
+      const harvestLevel = seeds[seedId].harvestLevel || 10;
+
+      if (growLevel >= harvestLevel) {
+        noOfCropsReadyToHarvest += 1;
+      } else if (lastWatered) {
+        const remainingSeconds = getSecondsRemaining(lastWatered, seeds[seedId].growthTime, appliedTools || []);
+        if (remainingSeconds <= 0) {
+          noOfCropsReadyToWater += 1;
+        }
+      }
+    }
+
+    setNoOfCropsReadyToWater(noOfCropsReadyToWater);
+    setNoOfCropsReadyToHarvest(noOfCropsReadyToHarvest);
+    setActionType(actionType);
+    setShowUsePlotToolModal(true);
+  };
+
   const closeSquareModal = () => {
     setShowSquareModal(false);
     setSelectedSquareId(null);
@@ -87,6 +113,18 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isOwnedByCurre
 
   return (
     <div>
+      {isOwnedByCurrentUser && (
+        <div className="flex pt-6">
+          <h4 className="pr-4 pt-2">Garden Plot</h4>
+          <button className="btn btn-icon mr-2" onClick={() => handleShowUsePlotToolModal("Water")}>
+            💦
+          </button>
+          <button className="btn btn-icon mr-2" onClick={() => handleShowUsePlotToolModal("Harvest")}>
+            🧺
+          </button>
+        </div>
+      )}
+
       {/* Decorations Grid */}
       {isOwnedByCurrentUser && (
         <div className="mb-4">
@@ -148,6 +186,16 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isOwnedByCurre
           isOwnedByCurrentUser={isOwnedByCurrentUser}
           ownerId={ownerId}
           closeSquareModal={closeSquareModal}
+        />
+      )}
+
+      {showUsePlotToolModal && actionType && (
+        <UsePlotToolModal
+          actionType={actionType}
+          ownerId={ownerId}
+          numberOfCropsReadyToWater={noOfCropsReadyToWater}
+          numberOfCropsReadyToHarvest={noOfCropsReadyToHarvest}
+          closeToolModal={() => setShowUsePlotToolModal(false)}
         />
       )}
     </div>

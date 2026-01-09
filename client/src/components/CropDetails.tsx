@@ -8,10 +8,8 @@ import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalConte
 import { ErrorType, SET_EARNED_MESSAGE } from "@/context/types";
 
 // utils
-import { backendAPI, getSecondsRemaining, setErrorMessage } from "@/utils";
-
-// types
-import { CropDataObjectType } from "@shared/index.js";
+import { backendAPI, setErrorMessage } from "@/utils";
+import { CropDataObjectType, getSecondsRemaining } from "@shared/index.js";
 
 interface CropDetailsProps {
   crop: CropDataObjectType;
@@ -65,17 +63,17 @@ export const CropDetails = ({
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
-  }, [lastWatered, growLevel, seedConfig, harvestLevel, growthTime, wasHarvested]);
+  }, [lastWatered, growLevel, seedConfig, harvestLevel, growthTime, wasHarvested, appliedTools]);
 
   useEffect(() => {
     if (earnedMessage) {
-      // Clear the earned message after displaying it for 10 seconds
+      // Clear the earned message after displaying it for 8 seconds
       setTimeout(() => {
         dispatch!({
           type: SET_EARNED_MESSAGE,
           payload: { earnedMessage: undefined },
         });
-      }, 10000);
+      }, 8000);
     }
   }, [earnedMessage]);
 
@@ -141,19 +139,23 @@ export const CropDetails = ({
         {!isOwnedByCurrentUser && earnedMessage && (
           <>
             <div className="card success">
-              <div className="card-details">
-                <p className="text-center text-success">{earnedMessage}</p>
+              <div className="card-details text-center">
+                {earnedMessage.multiplier && <strong>{earnedMessage.multiplier} </strong>}
+                <span className="text-success">{earnedMessage.message}</span>
               </div>
             </div>
           </>
         )}
 
         {/* Action Buttons */}
-        {!isReadyToHarvest && !wasHarvested && appliedTools?.length < 3 && (
-          <button id="useTool" className="btn btn-outline tool" onClick={() => setShowToolModal(true)}>
-            Use Tool
-          </button>
-        )}
+        {((!isOwnedByCurrentUser && isReadyToWater) || !isReadyToWater) &&
+          !isReadyToHarvest &&
+          !wasHarvested &&
+          appliedTools?.length < 3 && (
+            <button id="useTool" className="btn btn-outline tool" onClick={() => setShowToolModal(true)}>
+              Use Tool
+            </button>
+          )}
 
         {isOwnedByCurrentUser && isReadyToWater && <WaterButton handleAfterWater={() => setIsReadyForWater(false)} />}
 

@@ -1,12 +1,14 @@
 export const getEarnedMessage = (coinRewardAmount: number, xpRewardAmount: number, multiplier?: number) => {
-  let earnedMessage;
+  let message;
   if (coinRewardAmount > 0) {
-    earnedMessage = `+${coinRewardAmount} Coins`;
-    if (multiplier && multiplier > 1) earnedMessage += ` (${multiplier}X Profit)`;
+    message = `+${coinRewardAmount} Coins`;
   }
   if (xpRewardAmount > 0) {
-    earnedMessage = earnedMessage ? `${earnedMessage} and +${xpRewardAmount} XP` : `+${xpRewardAmount} XP`;
+    message = message ? `${message}, +${xpRewardAmount} XP` : `+${xpRewardAmount} XP`;
   }
 
-  return earnedMessage;
+  return {
+    message,
+    multiplier: multiplier === 2 ? "Double profit!" : multiplier === 3 ? "Triple profit!" : undefined,
+  };
 };

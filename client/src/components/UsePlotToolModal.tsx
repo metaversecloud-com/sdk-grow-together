@@ -14,12 +14,20 @@ import { VisitorInventoryItemType } from "@shared/types";
 interface UsePlotToolModalProps {
   actionType: string;
   ownerId?: string;
+  numberOfCropsReadyToWater: number;
+  numberOfCropsReadyToHarvest: number;
   closeToolModal: () => void;
 }
 
-export const UsePlotToolModal = ({ actionType, ownerId, closeToolModal }: UsePlotToolModalProps) => {
+export const UsePlotToolModal = ({
+  actionType,
+  ownerId,
+  numberOfCropsReadyToWater,
+  numberOfCropsReadyToHarvest,
+  closeToolModal,
+}: UsePlotToolModalProps) => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { plotData = { crops: {} }, visitorInventory = { tools: {} } } = useContext(GlobalStateContext);
+  const { visitorInventory = { tools: {} } } = useContext(GlobalStateContext);
   const tools = visitorInventory.tools as Record<string, VisitorInventoryItemType>;
 
   const [hasTools, setHasTools] = useState(false);
@@ -57,7 +65,7 @@ export const UsePlotToolModal = ({ actionType, ownerId, closeToolModal }: UsePlo
     <div className="modal-container">
       <div className="modal">
         <ModalHeader
-          text={`${actionType} ${Object.keys(plotData.crops).length} crops?`}
+          text={`${actionType} ${actionType === "Water" ? numberOfCropsReadyToWater : numberOfCropsReadyToHarvest} crops?`}
           disabled={areButtonsDisabled}
           handleOnClick={() => {
             closeToolModal();
@@ -78,23 +86,26 @@ export const UsePlotToolModal = ({ actionType, ownerId, closeToolModal }: UsePlo
                 );
               })
               .map((tool) => {
-                const { id, name, rarity, quantity, icon } = tool;
+                const { id, name, description, rarity, quantity, icon } = tool;
+                const canUse = actionType === "Water" ? numberOfCropsReadyToWater > 0 : numberOfCropsReadyToHarvest > 0;
 
                 return (
                   <div
                     key={id}
-                    className={areButtonsDisabled ? "opacity-50" : "cursor-pointer"}
-                    onClick={() => handleUseTool(tool)}
+                    className={areButtonsDisabled || !canUse ? "opacity-50" : "cursor-pointer"}
+                    onClick={() => canUse && handleUseTool(tool)}
                   >
                     <InventoryItem
                       key={id}
                       id={id}
                       icon={icon}
                       name={name}
+                      description={description}
                       rarity={rarity}
                       value={quantity}
                       valueText="Owned"
                       isReadyOnly={true}
+                      showDescriptionTooltip={true}
                     />
                   </div>
                 );

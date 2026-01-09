@@ -51,7 +51,9 @@ export const handleWaterCrop = async (req: Request, res: Response) => {
         visitorInventory.coins = modifyCoinsResponse.quantity;
       }
 
-      if (xpRewardAmount) earnedMessage = await getEarnedMessage(coinsEarnedForRankUp, xpRewardAmount);
+      if (xpRewardAmount) {
+        earnedMessage = await getEarnedMessage(coinsEarnedForRankUp, xpRewardAmount);
+      }
     }
 
     return res.json({ ...waterCropResult, visitorInventory, earnedMessage, soundEffect: "water", didLevelUp });

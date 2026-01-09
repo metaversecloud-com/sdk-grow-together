@@ -14,7 +14,13 @@ import {
   getVisitorInventory,
   checkDidIncreaseLevelOrRank,
 } from "../utils/index.js";
-import { CropDataObjectType, getSeedImageVariation, VisitorDataObjectType, plotConfig } from "../../shared/index.js";
+import {
+  CropDataObjectType,
+  getSeedImageVariation,
+  VisitorDataObjectType,
+  plotConfig,
+  getSecondsRemaining,
+} from "../../shared/index.js";
 import { DroppedAssetInterface } from "@rtsdk/topia";
 
 /**
@@ -106,21 +112,27 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
       if (!cropAsset || !cropAsset.id) continue;
 
       const crop = plotData.crops[cropAsset.id];
-      const seedConfig = seeds[crop.seedId];
+      const { seedId, growLevel, lastWatered, appliedTools } = crop;
+      const seedConfig = seeds[seedId];
 
       const xpRewardAmount = await getXpRewardAmount(seedConfig, actionType);
       totalXpRewardAmount += xpRewardAmount;
 
       if (actionType === "Water") {
+        if (growLevel >= seedConfig.harvestLevel) continue; // Skip watering if already at max level
+
+        const remainingSeconds = getSecondsRemaining(lastWatered, seedConfig.growthTime, appliedTools || []);
+        if (remainingSeconds > 0) continue; // Skip watering if not ready
+
         const cropData = {
           ...crop,
-          growLevel: crop.growLevel + 1,
+          growLevel: growLevel + 1,
           lastWatered: now,
         };
         const cropAssetData = cropAsset.dataObject as CropDataObjectType;
         ownerData.worlds[urlSlug].crops[cropAsset.id] = cropData;
 
-        const layer1 = getSeedImageVariation(seedConfig.name, crop.growLevel + 1);
+        const layer1 = getSeedImageVariation(seedConfig.name, growLevel + 1);
 
         // Batch update promises
         updateCropAssetPromises.push(cropAsset.updateDataObject({ ...cropAssetData, ...cropData }, {}));
@@ -152,7 +164,9 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
             }),
         );
       } else if (actionType === "Harvest") {
-        const { coinRewardAmount } = getCoinRewardAmount(crop.appliedTools, seedConfig.reward);
+        if (growLevel < seedConfig.harvestLevel) continue; // Skip harvesting if not ready
+
+        const { coinRewardAmount } = getCoinRewardAmount(appliedTools, seedConfig.reward);
         totalCoinsRewardAmount += coinRewardAmount;
 
         ownerData.worlds[urlSlug].plotSquares[crop.squareId] = null;

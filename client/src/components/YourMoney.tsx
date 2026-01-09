@@ -13,14 +13,14 @@ export const YourMoney = ({ coinsAvailable }: { coinsAvailable: number }) => {
   useEffect(() => {
     if (earnedMessage) {
       setShowEarnedMessage(true);
-      // Clear the earned message after displaying it for 10 seconds
+      // Clear the earned message after displaying it for 8 seconds
       setTimeout(() => {
         setShowEarnedMessage(false);
         dispatch!({
           type: SET_EARNED_MESSAGE,
           payload: { earnedMessage: undefined },
         });
-      }, 10000);
+      }, 8000);
     }
   }, [earnedMessage]);
 
@@ -29,7 +29,10 @@ export const YourMoney = ({ coinsAvailable }: { coinsAvailable: number }) => {
       <div className="card-details text-center">
         <p className="card-title">
           {showEarnedMessage && earnedMessage ? (
-            <span className="text-success">{earnedMessage}</span>
+            <>
+              {earnedMessage.multiplier && <strong>{earnedMessage.multiplier} </strong>}
+              <span className="text-success">{earnedMessage.message}</span>
+            </>
           ) : (
             <>
               {" "}
