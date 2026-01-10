@@ -103,7 +103,7 @@ export const PlotSquareModal = ({
               <AppliedToolIcons appliedTools={appliedTools} />
             </div>
             {itemType === "crop" ? (
-              <div>
+              <div className="m-auto">
                 <img className="m-auto" src={icon} />
                 <p className="p3">
                   lvl {growLevel}/{harvestLevel || 10}

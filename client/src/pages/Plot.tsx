@@ -17,6 +17,7 @@ export const Plot = () => {
   const {
     hasInteractiveParams,
     plotAssetData,
+    visitorPlotAssetId,
     visitorInventory = { coins: 0, xp: 0 },
     plotData,
     xp,
@@ -151,7 +152,7 @@ export const Plot = () => {
         )}
 
         {/* Current user already owns a different plot */}
-        {plotAssetId && !isOwnedByCurrentUser && (
+        {visitorPlotAssetId && !isOwnedByCurrentUser && (
           <div className="grid gap-2 mb-10">
             <h4>Are you looking for your garden?</h4>
             <p>Click the button below to teleport to it.</p>

@@ -55,7 +55,7 @@ export const InventoryItem = ({
           <p className={`p3 ${rarity.toLowerCase()}`}>
             <i>{rarity}</i>
           </p>
-          {description && <p className="p3 truncate">{description}</p>}
+          {!showDescriptionTooltip && description && <p className="p3 truncate">{description}</p>}
           {value && valueText && (
             <p className="p3">
               {valueText}: <span className="text-success">{value}</span>

@@ -45,7 +45,7 @@ export const PlotSquare = ({
             <p className="p3">
               lvl {growLevel}/{harvestLevel}
             </p>
-            {isReadyToWater && <p className="p4 text-success">Water!</p>}
+            {isReadyToWater && <p className="p4 water">Water!</p>}
             {isReadyToHarvest && <p className="p4">Harvest!</p>}
           </>
         ) : (
