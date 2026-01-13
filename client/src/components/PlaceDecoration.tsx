@@ -5,7 +5,7 @@ import { ModalHeader } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
-import { ErrorType, SET_VISITOR_INVENTORY, SET_VISITOR_PLOT_DATA } from "@/context/types";
+import { ErrorType, SET_SOUND_EFFECT, SET_VISITOR_INVENTORY, SET_VISITOR_PLOT_DATA } from "@/context/types";
 
 // utils
 import { backendAPI, setErrorMessage } from "@/utils";
@@ -46,10 +46,14 @@ export const PlaceDecoration = ({ selectedSquareId, setSelectedSquareId }: Place
         squareId: selectedSquareId,
       })
       .then((response) => {
-        const { visitorInventory, plotData } = response.data;
+        const { visitorInventory, plotData, soundEffect } = response.data;
         dispatch!({
           type: SET_VISITOR_INVENTORY,
           payload: { visitorInventory, error: "" },
+        });
+        dispatch!({
+          type: SET_SOUND_EFFECT,
+          payload: { soundEffect },
         });
         dispatch!({
           type: SET_VISITOR_PLOT_DATA,

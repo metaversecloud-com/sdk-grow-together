@@ -26,7 +26,7 @@ export const YourMoney = ({ coinsAvailable }: { coinsAvailable: number }) => {
 
   return (
     <div className="card small">
-      <div className="card-details text-center">
+      <div className="card-details text-center m-auto">
         <p className="card-title">
           {showEarnedMessage && earnedMessage ? (
             <>

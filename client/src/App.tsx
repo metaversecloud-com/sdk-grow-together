@@ -68,6 +68,8 @@ const App = () => {
     } else if (soundEffect === "compost") {
       audio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/compost.mp3");
       audio.volume = 0.9;
+    } else if (soundEffect === "placeDecoration") {
+      audio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/decoration_placed.mp3");
     }
     if (audio) {
       audio.play();

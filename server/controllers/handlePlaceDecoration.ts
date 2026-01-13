@@ -169,6 +169,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
       success: true,
       plotData: visitorData.worlds[urlSlug],
       visitorInventory,
+      soundEffect: "placeDecoration",
     });
   } catch (error) {
     return errorHandler({

@@ -23,6 +23,8 @@ export const handleUseTool = async (req: Request, res: Response) => {
     const { itemAssetId, tool, ownerId } = req.body;
     const assetId = itemAssetId || credentials.assetId;
 
+    if (!tool) throw "A selected tool is required";
+
     const { actionType, name } = tool;
     let earnedMessage,
       didLevelUp = false;

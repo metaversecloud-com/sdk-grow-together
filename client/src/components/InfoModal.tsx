@@ -23,19 +23,19 @@ export const InfoModal = ({ xp = 0, setShowInfoModal }: { xp?: number; setShowIn
 
   return (
     <div className="modal-container">
-      <div className="modal">
+      <div className="modal" style={{ height: "70vh" }}>
         <ModalHeader text="Garden Details" disabled={false} handleOnClick={setShowInfoModal} />
 
         {xp > 0 ? (
           <div className="tab-text-container">
             <button
-              className={`btn btn-text ${activeTab === "rank" ? "active" : ""}`}
+              className={`btn btn-text whitespace-nowrap ${activeTab === "rank" ? "active" : ""}`}
               onClick={() => setActiveTab("rank")}
             >
               Garden Rank
             </button>
             <button
-              className={`btn btn-text ${activeTab === "instructions" ? "active" : ""}`}
+              className={`btn btn-text whitespace-nowrap ${activeTab === "instructions" ? "active" : ""}`}
               onClick={() => setActiveTab("instructions")}
             >
               How To Play
@@ -47,6 +47,10 @@ export const InfoModal = ({ xp = 0, setShowInfoModal }: { xp?: number; setShowIn
           <>
             {xp > 0 && (
               <div className="grid gap-4 text-left">
+                <div className="grid gap-2 py-2">
+                  <h4>Your Rank</h4>
+                  <LevelAndRank xp={xp} />
+                </div>
                 <div className="grid gap-2">
                   <h4>Next Level</h4>
                   <div className="h-5 overflow-hidden box-content rounded-full border border-gray-400">
@@ -59,13 +63,6 @@ export const InfoModal = ({ xp = 0, setShowInfoModal }: { xp?: number; setShowIn
                 </div>
 
                 <Accordion title="All Ranks">
-                  <div
-                    className="grid gap-2 py-2"
-                    style={{ marginLeft: "-7px", borderTop: "1px solid #ccc", borderBottom: "1px solid #ccc" }}
-                  >
-                    <h5>Your Rank</h5>
-                    <LevelAndRank xp={xp} />
-                  </div>
                   {Object.values(allLevelsAndRanks).map(({ level, rank, coinsEarned }, index) => (
                     <div key={index} className="flex gap-2 items-center text-left" style={{ marginLeft: "-7px" }}>
                       <div className="icon icon-sm shrink">{level}</div>

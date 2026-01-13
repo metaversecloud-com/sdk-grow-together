@@ -41,7 +41,7 @@ export const ToolMenu = () => {
       <div className="grid grid-cols-2 gap-2">
         {tools &&
           Object.values(tools).map((tool) => {
-            const { id, name, rarity, cost, quantity, icon } = tool;
+            const { id, name, description, rarity, cost, quantity, icon } = tool;
 
             return (
               <InventoryItem
@@ -50,12 +50,14 @@ export const ToolMenu = () => {
                 id={id}
                 icon={icon}
                 name={name}
+                description={description}
                 rarity={rarity}
                 cost={cost}
                 quantity={quantity}
                 isPurchasing={purchasingTools.has(id)}
                 handlePurchase={() => handlePurchaseTool(id)}
                 isReadyOnly={false}
+                showDescriptionTooltip={true}
               />
             );
           })}

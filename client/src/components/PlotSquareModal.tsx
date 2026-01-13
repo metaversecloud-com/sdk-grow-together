@@ -47,7 +47,7 @@ export const PlotSquareModal = ({
     setAreButtonsDisabled(true);
     await backendAPI
       .post(`/square/view`, {
-        squareId: selectedSquareId,
+        itemAssetId,
         type: itemType,
       })
       .catch((error) => {

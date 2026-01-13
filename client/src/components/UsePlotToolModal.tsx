@@ -14,16 +14,14 @@ import { VisitorInventoryItemType } from "@shared/types";
 interface UsePlotToolModalProps {
   actionType: string;
   ownerId?: string;
-  numberOfCropsReadyToWater: number;
-  numberOfCropsReadyToHarvest: number;
+  numberOfCropsReady: number;
   closeToolModal: () => void;
 }
 
 export const UsePlotToolModal = ({
   actionType,
   ownerId,
-  numberOfCropsReadyToWater,
-  numberOfCropsReadyToHarvest,
+  numberOfCropsReady,
   closeToolModal,
 }: UsePlotToolModalProps) => {
   const dispatch = useContext(GlobalDispatchContext);
@@ -65,7 +63,11 @@ export const UsePlotToolModal = ({
     <div className="modal-container">
       <div className="modal">
         <ModalHeader
-          text={`${actionType} ${actionType === "Water" ? numberOfCropsReadyToWater : numberOfCropsReadyToHarvest} crops?`}
+          text={
+            !numberOfCropsReady || numberOfCropsReady <= 0
+              ? `No crops ready to ${actionType.toLowerCase()}`
+              : `${actionType} ${numberOfCropsReady} crops?`
+          }
           disabled={areButtonsDisabled}
           handleOnClick={() => {
             closeToolModal();
@@ -87,7 +89,7 @@ export const UsePlotToolModal = ({
               })
               .map((tool) => {
                 const { id, name, description, rarity, quantity, icon } = tool;
-                const canUse = actionType === "Water" ? numberOfCropsReadyToWater > 0 : numberOfCropsReadyToHarvest > 0;
+                const canUse = numberOfCropsReady > 0;
 
                 return (
                   <div
