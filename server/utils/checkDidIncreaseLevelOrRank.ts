@@ -13,7 +13,8 @@ export const checkDidIncreaseLevelOrRank = async (
   const { assetId, profileId, urlSlug } = credentials;
 
   let coinsEarnedForRankUp = 0,
-    analytics = [];
+    analytics = [],
+    promises = [];
 
   const { level: previousLevel, rank: previousRank } = await getLevelsAndRanks(previousXp);
   const { level: currentLevel, rank: currentRank, coinsEarned } = await getLevelsAndRanks(previousXp + xpRewardAmount);
@@ -51,24 +52,38 @@ export const checkDidIncreaseLevelOrRank = async (
       if (coinsEarnedForRankUp > 0) title += `. You earned ${coinsEarnedForRankUp} coins for your new rank!`;
 
       const world = await World.create(urlSlug, { credentials });
-      await world
-        .triggerActivity({ type: WorldActivityType.GAME_HIGH_SCORE, assetId })
-        .catch((error) =>
-          console.error(
-            "Error triggering GAME_HIGH_SCORE activity in checkDidIncreaseLevelOrRank:",
-            standardizeError(error),
+      promises.push(
+        world
+          .triggerActivity({ type: WorldActivityType.GAME_HIGH_SCORE, assetId })
+          .catch((error) =>
+            console.error(
+              "Error triggering GAME_HIGH_SCORE activity in checkDidIncreaseLevelOrRank:",
+              standardizeError(error),
+            ),
           ),
-        );
+      );
     }
 
-    await visitor
-      .fireToast({
-        groupId: "handlePurchaseTool",
-        title,
-      })
-      .catch((error) => {
-        console.error("Error firing toast in checkDidIncreaseLevelOrRank:", standardizeError(error));
-      });
+    promises.push(
+      visitor
+        .fireToast({
+          groupId: "handlePurchaseTool",
+          title,
+        })
+        .catch((error) => {
+          console.error("Error firing toast in checkDidIncreaseLevelOrRank:", standardizeError(error));
+        }),
+    );
+
+    if (analytics.length > 0) {
+      promises.push(
+        visitor.updateDataObject({}, { analytics }).catch((error) => {
+          console.error("Error updating data object in checkDidIncreaseLevelOrRank:", standardizeError(error));
+        }),
+      );
+    }
+
+    await Promise.all(promises);
   }
 
   return { coinsEarnedForRankUp, didLevelUp };

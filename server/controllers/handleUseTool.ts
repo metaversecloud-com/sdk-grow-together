@@ -63,11 +63,18 @@ export const handleUseTool = async (req: Request, res: Response) => {
     if (!owner) throw "Visitor or User (plot owner) not found";
 
     if (actionType === "Water") {
+      analytics.push({
+        analyticName: "wateringCansUsed",
+        profileId,
+        uniqueKey: profileId,
+      });
+
       result = await waterCrop({
         credentials,
         owner,
         ownerData,
         assetId,
+        analytics,
       });
       if (result instanceof Error) throw result;
 
@@ -122,8 +129,6 @@ export const handleUseTool = async (req: Request, res: Response) => {
       }
 
       earnedMessage = await getEarnedMessage(coinReward, xpReward);
-
-      await owner.updateDataObject({}, { analytics });
     } else {
       const cropAsset = await DroppedAsset.create(assetId, urlSlug, { credentials });
       await cropAsset.fetchDataObject();
@@ -137,6 +142,12 @@ export const handleUseTool = async (req: Request, res: Response) => {
         ownerData.worlds[urlSlug].crops[assetId].appliedTools = appliedTools;
 
         cropData = { ...cropAsset.dataObject, ...ownerData.worlds[urlSlug].crops[assetId] };
+
+        analytics.push({
+          analyticName: `${actionType.toLowerCase()}Used`,
+          profileId,
+          uniqueKey: profileId,
+        });
 
         const lockId = `applyingTool_${assetId}_${Math.round(Date.now() / 10000) * 10000}`;
         await Promise.all([

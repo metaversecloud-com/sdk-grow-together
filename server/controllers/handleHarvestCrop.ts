@@ -93,6 +93,7 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
       quantity: xpRewardAmount,
     });
     if (modifyXpResponse instanceof Error) throw modifyXpResponse;
+
     const { coinsEarnedForRankUp, didLevelUp } = await checkDidIncreaseLevelOrRank(
       credentials,
       visitor,

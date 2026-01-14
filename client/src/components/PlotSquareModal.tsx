@@ -86,7 +86,7 @@ export const PlotSquareModal = ({
             </div>
             {itemType === "crop" ? (
               <div className="m-auto">
-                <img className="m-auto" src={icon} />
+                <img className="m-auto" src={icon} style={{ maxHeight: "35px" }} />
                 <p className="p3">
                   lvl {growLevel}/{harvestLevel || 10}
                 </p>
@@ -94,7 +94,7 @@ export const PlotSquareModal = ({
                 {isReadyToHarvest && <p className="p4">Harvest!</p>}
               </div>
             ) : (
-              <img className="m-auto" src={icon} />
+              <img className="m-auto" src={icon} style={{ maxHeight: "35px" }} />
             )}
           </div>
 

@@ -27,12 +27,14 @@ export const waterCrop = async ({
   ownerData,
   assetId,
   shouldReward = false,
+  analytics = [],
 }: {
   credentials: Credentials;
   owner: VisitorInterface | UserInterface;
   ownerData: VisitorDataObjectType;
   assetId: string;
   shouldReward?: boolean;
+  analytics?: Array<{ analyticName: string; profileId: string; urlSlug?: string; uniqueKey: string }>;
 }): Promise<
   | {
       success: boolean;
@@ -106,22 +108,23 @@ export const waterCrop = async ({
 
     const world = World.create(urlSlug, { credentials });
 
+    analytics.push(
+      {
+        analyticName: "cropsWatered",
+        profileId,
+        urlSlug,
+        uniqueKey: profileId,
+      },
+      {
+        analyticName: `${getAnalyticName(seedConfig)}Watered`,
+        profileId,
+        urlSlug,
+        uniqueKey: profileId,
+      },
+    );
     await Promise.all([
       owner.updateDataObject(ownerData, {
-        analytics: [
-          {
-            analyticName: "cropsWatered",
-            profileId,
-            urlSlug,
-            uniqueKey: profileId,
-          },
-          {
-            analyticName: `${getAnalyticName(seedConfig)}Watered`,
-            profileId,
-            urlSlug,
-            uniqueKey: profileId,
-          },
-        ],
+        analytics,
       }),
       world
         .triggerParticle({
