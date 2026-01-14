@@ -83,10 +83,15 @@ body {
   align-items: center;
 }
 
+.btn-icon-sm {
+  padding: 8px !important;
+}
+
 .icon-sm {
   width: 26px;
   height: 26px;
   font-size: 0.7em;
+  padding: 5px !important;
 }
 
 .tooltip-secondary {

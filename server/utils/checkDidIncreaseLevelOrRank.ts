@@ -10,9 +10,10 @@ export const checkDidIncreaseLevelOrRank = async (
   previousXp: number = 0,
   xpRewardAmount: number = 0,
 ) => {
-  const { assetId, urlSlug } = credentials;
+  const { assetId, profileId, urlSlug } = credentials;
 
-  let coinsEarnedForRankUp = 0;
+  let coinsEarnedForRankUp = 0,
+    analytics = [];
 
   const { level: previousLevel, rank: previousRank } = await getLevelsAndRanks(previousXp);
   const { level: currentLevel, rank: currentRank, coinsEarned } = await getLevelsAndRanks(previousXp + xpRewardAmount);
@@ -21,8 +22,29 @@ export const checkDidIncreaseLevelOrRank = async (
   const didRankUp = currentRank !== previousRank;
 
   if (didLevelUp || didRankUp) {
+    analytics.push({
+      analyticName: "levelsGained",
+      profileId,
+      uniqueKey: profileId,
+    });
+
+    if ([5, 10, 25, 50, 75, 100].includes(currentLevel)) {
+      analytics.push({
+        analyticName: `level${currentLevel}Reached`,
+        profileId,
+        uniqueKey: profileId,
+      });
+    }
+
     let title = `Congrats! Your garden is level ${currentLevel}`;
+
     if (didRankUp) {
+      analytics.push({
+        analyticName: "ranksGained",
+        profileId,
+        uniqueKey: profileId,
+      });
+
       title += `  and your rank is now ${currentRank}`;
 
       coinsEarnedForRankUp = coinsEarned;

@@ -20,6 +20,7 @@ interface UseToolModalProps {
   appliedTools: string[];
   closeToolModal: () => void;
   closeSquareModal?: () => void;
+  handleAfterUseTool?: () => void;
 }
 
 export const UseToolModal = ({
@@ -31,6 +32,7 @@ export const UseToolModal = ({
   appliedTools,
   closeToolModal,
   closeSquareModal,
+  handleAfterUseTool,
 }: UseToolModalProps) => {
   const dispatch = useContext(GlobalDispatchContext);
   const { visitorInventory = { tools: {} } } = useContext(GlobalStateContext);
@@ -66,14 +68,15 @@ export const UseToolModal = ({
       })
       .then((response) => {
         setGameState(dispatch, response.data);
-        closeToolModal();
-        closeSquareModal?.();
       })
       .catch((error) => {
         setErrorMessage(dispatch, error as ErrorType);
       })
       .finally(() => {
         setAreButtonsDisabled(false);
+        closeToolModal();
+        closeSquareModal?.();
+        handleAfterUseTool?.();
       });
   };
 

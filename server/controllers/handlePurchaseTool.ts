@@ -65,12 +65,12 @@ export const handlePurchaseTool = async (req: Request, res: Response) => {
       {
         analytics: [
           {
-            analyticName: "toolsUnlocked",
+            analyticName: "toolsPurchased",
             profileId,
             uniqueKey: profileId,
           },
           {
-            analyticName: `${getAnalyticName(toolConfig)}Unlocked`,
+            analyticName: `${getAnalyticName(toolConfig)}Purchased`,
             profileId,
             urlSlug,
             uniqueKey: profileId,

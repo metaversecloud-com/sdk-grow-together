@@ -1,12 +1,5 @@
 import { Request, Response } from "express";
-import {
-  errorHandler,
-  getBaseUrl,
-  getCredentials,
-  getQueryString,
-  initializeVisitorData,
-  Visitor,
-} from "../utils/index.js";
+import { errorHandler, getBaseUrl, getCredentials, getQueryString, Visitor } from "../utils/index.js";
 
 export const handleOpenPlotSquareIframe = async (req: Request, res: Response) => {
   try {

@@ -9,6 +9,7 @@ import {
   waterCrop,
   getEarnedMessage,
   checkDidIncreaseLevelOrRank,
+  getAnalyticName,
 } from "../utils/index.js";
 import { VisitorDataObjectType } from "../../shared/index.js";
 
@@ -28,6 +29,20 @@ export const handleUseTool = async (req: Request, res: Response) => {
     const { actionType, name } = tool;
     let earnedMessage,
       didLevelUp = false;
+
+    const analytics = [
+      {
+        analyticName: "toolsUsed",
+        profileId,
+        uniqueKey: profileId,
+      },
+      {
+        analyticName: `${getAnalyticName(tool)}Used`,
+        profileId,
+        urlSlug,
+        uniqueKey: profileId,
+      },
+    ];
 
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
@@ -107,6 +122,8 @@ export const handleUseTool = async (req: Request, res: Response) => {
       }
 
       earnedMessage = await getEarnedMessage(coinReward, xpReward);
+
+      await owner.updateDataObject({}, { analytics });
     } else {
       const cropAsset = await DroppedAsset.create(assetId, urlSlug, { credentials });
       await cropAsset.fetchDataObject();
@@ -124,6 +141,7 @@ export const handleUseTool = async (req: Request, res: Response) => {
         const lockId = `applyingTool_${assetId}_${Math.round(Date.now() / 10000) * 10000}`;
         await Promise.all([
           owner.updateDataObject(ownerData, {
+            analytics,
             lock: { lockId, releaseLock: true },
           }),
           cropAsset.updateDataObject(cropData, {

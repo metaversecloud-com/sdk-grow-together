@@ -46,7 +46,7 @@ export const handleGetPlotSquareInfo = async (req: Request, res: Response) => {
     const getInventoryItemsResponse = await getInventoryItems(credentials);
     if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
 
-    const { decorations, seeds } = getInventoryItemsResponse;
+    const { decorations, seeds, tools } = getInventoryItemsResponse;
 
     await visitor.updateDataObject(
       {},
@@ -70,6 +70,7 @@ export const handleGetPlotSquareInfo = async (req: Request, res: Response) => {
       visitorInventory,
       decorations,
       seeds,
+      tools,
     });
   } catch (error) {
     return errorHandler({

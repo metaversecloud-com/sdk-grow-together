@@ -13,6 +13,7 @@ import {
   getEarnedMessage,
   getVisitorInventory,
   checkDidIncreaseLevelOrRank,
+  getAnalyticName,
 } from "../utils/index.js";
 import {
   CropDataObjectType,
@@ -256,7 +257,21 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
     // Update visitor's data object
     ownerData.totalCoinsEarned = ownerData.totalCoinsEarned + totalCoinsRewardAmount;
     ownerData.lastDateCoinsEarned = now;
-    await visitor.updateDataObject(ownerData, {});
+    await visitor.updateDataObject(ownerData, {
+      analytics: [
+        {
+          analyticName: "toolsUsed",
+          profileId,
+          uniqueKey: profileId,
+        },
+        {
+          analyticName: `${getAnalyticName(tool)}Used`,
+          profileId,
+          urlSlug,
+          uniqueKey: profileId,
+        },
+      ],
+    });
 
     if (actionType === "Harvest") {
       soundEffect = "harvest";

@@ -75,11 +75,16 @@ export const PlantSeed = ({ selectedSquareId, setSelectedSquareId }: PlantSeedPr
                     onClick={() => isAvailable && !isPlanting && handlePlantSeed(seed.id)}
                     style={{ gap: "0px" }}
                   >
-                    <img className="mb-2 m-auto" src={seed.icon} style={{ opacity: !isAvailable ? 0.5 : 1 }} />
+                    <img
+                      className="m-auto"
+                      src={seed.icon}
+                      style={{ width: "40px", opacity: !isAvailable ? 0.5 : 1 }}
+                    />
 
-                    <p className="p3">
-                      <strong>{seed.name}</strong>
-                    </p>
+                    <div className="tooltip" style={{ maxWidth: "100%" }}>
+                      <span className="tooltip-content">{seed.name}</span>
+                      <h6 className="card-title ellipsis bold">{seed.name}</h6>
+                    </div>
                     <p className="p4 text-muted">
                       {growthTimeInMinutes} min{growthTimeInMinutes > 1 ? "s" : ""}
                     </p>

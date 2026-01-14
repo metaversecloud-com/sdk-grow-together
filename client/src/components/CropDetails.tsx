@@ -35,8 +35,8 @@ export const CropDetails = ({
   if (isOwnedByCurrentUser && !cropPlotAssetId && visitorPlotAssetId) plotAssetId = visitorPlotAssetId;
 
   const [timeRemaining, setTimeRemaining] = useState<string | null>(null);
-  const [isReadyToWater, setIsReadyForWater] = useState(false);
-  const [isReadyToHarvest, setIsReadyForHarvest] = useState(false);
+  const [isReadyToWater, setIsReadyToWater] = useState(false);
+  const [isReadyToHarvest, setIsReadyToHarvest] = useState(false);
   const [wasHarvested, setWasHarvested] = useState(false);
   const [showToolModal, setShowToolModal] = useState(false);
 
@@ -49,8 +49,8 @@ export const CropDetails = ({
       const remainingSeconds = getSecondsRemaining(lastWatered, growthTime, appliedTools);
 
       if (!wasHarvested) {
-        if (growLevel >= harvestLevel) setIsReadyForHarvest(true);
-        else if (remainingSeconds <= 0) setIsReadyForWater(true);
+        if (growLevel >= harvestLevel) setIsReadyToHarvest(true);
+        else if (remainingSeconds <= 0) setIsReadyToWater(true);
       }
 
       if (remainingSeconds <= 0) return setTimeRemaining(null);
@@ -77,6 +77,10 @@ export const CropDetails = ({
     }
   }, [earnedMessage]);
 
+  const handleAfterUseTool = () => {
+    setIsReadyToWater(false);
+  };
+
   if (!seedConfig) {
     return (
       <div className="card danger">
@@ -89,7 +93,7 @@ export const CropDetails = ({
 
   const handleAfterHarvest = () => {
     setWasHarvested(true);
-    setIsReadyForHarvest(false);
+    setIsReadyToHarvest(false);
   };
 
   const handleOpenPlotIframe = async () => {
@@ -157,7 +161,7 @@ export const CropDetails = ({
             </button>
           )}
 
-        {isOwnedByCurrentUser && isReadyToWater && <WaterButton handleAfterWater={() => setIsReadyForWater(false)} />}
+        {isOwnedByCurrentUser && isReadyToWater && <WaterButton handleAfterWater={() => setIsReadyToWater(false)} />}
 
         {isOwnedByCurrentUser && isReadyToHarvest && (
           <HarvestButton handleAfterHarvest={handleAfterHarvest} reward={reward} />
@@ -178,6 +182,7 @@ export const CropDetails = ({
             isReadyToWater={isReadyToWater}
             appliedTools={appliedTools}
             closeToolModal={() => setShowToolModal(false)}
+            handleAfterUseTool={() => handleAfterUseTool()}
           />
         )}
       </div>

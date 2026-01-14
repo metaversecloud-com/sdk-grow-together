@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { errorHandler, getCredentials, initializeVisitorData, DroppedAsset, World } from "../utils/index.js";
+import { CropDataObjectType } from "../types/SharedTypes.js";
 
 /**
  * Handle crop removal - removes crop from world and frees up the plot square
@@ -20,25 +21,27 @@ export const handleRemoveCrop = async (req: Request, res: Response) => {
 
     if (!assetId) throw "No crop found on the specified square";
 
-    // Check if visitor owns this plot
-    if (plotData.plotAssetId !== assetId) throw "You must own this plot before removing crops";
-
-    visitorData.worlds[urlSlug].plotSquares[squareId] = null;
-    delete visitorData.worlds[urlSlug].crops[assetId];
-
-    await visitor.updateDataObject(visitorData, {
-      analytics: [
-        {
-          analyticName: "cropsRemoved",
-          profileId,
-          urlSlug,
-          uniqueKey: profileId,
-        },
-      ],
-    });
-
     try {
       const droppedAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
+
+      const dataObject = droppedAsset.dataObject as CropDataObjectType;
+
+      // Check if visitor owns this asset
+      if (dataObject?.ownerId !== profileId) throw "You must own this plot before removing crops";
+
+      visitorData.worlds[urlSlug].plotSquares[squareId] = null;
+      delete visitorData.worlds[urlSlug].crops[assetId];
+
+      await visitor.updateDataObject(visitorData, {
+        analytics: [
+          {
+            analyticName: "cropsRemoved",
+            profileId,
+            urlSlug,
+            uniqueKey: profileId,
+          },
+        ],
+      });
 
       const world = World.create(urlSlug, { credentials });
       await world

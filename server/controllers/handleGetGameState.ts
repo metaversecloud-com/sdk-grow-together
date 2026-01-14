@@ -36,13 +36,15 @@ export const handleGetGameState = async (req: Request, res: Response) => {
 
     const promises = [];
 
-    if (plotData.plotAssetId === assetId) {
+    if (plotData?.plotAssetId === assetId) {
       const droppedAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
       promises.push(droppedAsset.updateDataObject({ lastInteractionDate: new Date().toISOString() }));
     } else if (plotAssetData.ownerId) {
       const plotOwner = await User.create({ credentials, profileId: plotAssetData.ownerId });
+
       const plotOwnerData = (await plotOwner.fetchDataObject()) as VisitorDataObjectType;
-      plotData = plotOwnerData.worlds[urlSlug];
+      plotData = plotOwnerData?.worlds?.[urlSlug];
+      if (!plotData) throw new Error("Plot data not found for the owner");
       await plotOwner.fetchInventoryItems();
       xp = plotOwner.inventoryItems.find((item) => item.name === "Experience Points")?.quantity || 0;
     }

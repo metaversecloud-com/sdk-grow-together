@@ -5,16 +5,10 @@ import { ModalHeader, HarvestButton, WaterButton, UseToolModal, AppliedToolIcons
 
 // context
 import { GlobalDispatchContext } from "@/context/GlobalContext";
-import {
-  ErrorType,
-  SelectedSquareDetails,
-  SET_VISITOR_DATA,
-  SET_VISITOR_INVENTORY,
-  SET_VISITOR_PLOT_DATA,
-} from "@/context/types";
+import { ErrorType, SelectedSquareDetails } from "@/context/types";
 
 // utils
-import { backendAPI, setErrorMessage } from "@/utils";
+import { backendAPI, setErrorMessage, setGameState } from "@/utils";
 
 interface PlotSquareModalProps {
   selectedSquareId: number;
@@ -65,19 +59,7 @@ export const PlotSquareModal = ({
         squareId: selectedSquareId,
       })
       .then((response) => {
-        const { visitorInventory, visitorData, plotData } = response.data;
-        dispatch!({
-          type: SET_VISITOR_INVENTORY,
-          payload: { visitorInventory, error: "" },
-        });
-        dispatch!({
-          type: SET_VISITOR_DATA,
-          payload: { visitorData, error: "" },
-        });
-        dispatch!({
-          type: SET_VISITOR_PLOT_DATA,
-          payload: { plotData, error: "" },
-        });
+        setGameState(dispatch, response.data);
       })
       .catch((error) => {
         setErrorMessage(dispatch, error as ErrorType);

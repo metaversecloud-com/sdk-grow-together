@@ -8,7 +8,13 @@ import { GlobalStateContext } from "@/context/GlobalContext";
 import { SelectedSquareDetails } from "@/context/types";
 
 // types
-import { getSecondsRemaining, plotConfig, VisitorInventoryType, VisitorWorldDataType } from "@shared/index.js";
+import {
+  EcosystemInventoryItemType,
+  getSecondsRemaining,
+  plotConfig,
+  VisitorInventoryType,
+  VisitorWorldDataType,
+} from "@shared/index.js";
 
 // utils
 
@@ -24,7 +30,14 @@ interface PlotGridProps {
 type PlotSquareType = "crop" | "decoration";
 
 export const PlotGrid = ({ plotSquares, crops, placedDecorations, isOwnedByCurrentUser, ownerId }: PlotGridProps) => {
-  const { decorations = {}, seeds = {} } = useContext(GlobalStateContext);
+  const { decorations = {}, seeds = {}, tools = {} } = useContext(GlobalStateContext);
+
+  const sprinklerIcon = Object.values(tools).find(
+    (item: EcosystemInventoryItemType) => item.name === "Basic Sprinkler",
+  )?.icon;
+  const harvestIcon = Object.values(tools).find(
+    (item: EcosystemInventoryItemType) => item.name === "Basic Harvest Basket",
+  )?.icon;
 
   const [selectedSquareId, setSelectedSquareId] = useState<number | null>(null);
   const [selectedSquareType, setSelectedSquareIdType] = useState<PlotSquareType>("crop");
@@ -116,12 +129,12 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isOwnedByCurre
       {isOwnedByCurrentUser && (
         <div className="flex pt-6">
           <h4 className="pr-4 pt-2">Garden Plot</h4>
-          <button className="btn btn-icon mr-2" onClick={() => handleShowUsePlotToolModal("Water")}>
-            💦
-          </button>
-          <button className="btn btn-icon mr-2" onClick={() => handleShowUsePlotToolModal("Harvest")}>
-            🧺
-          </button>
+          <div className="btn btn-icon btn-icon-sm mr-2" onClick={() => handleShowUsePlotToolModal("Water")}>
+            {sprinklerIcon ? <img src={sprinklerIcon} alt="Basic Sprinkler" /> : "💦"}
+          </div>
+          <div className="btn btn-icon btn-icon-sm mr-2" onClick={() => handleShowUsePlotToolModal("Harvest")}>
+            {harvestIcon ? <img src={harvestIcon} alt="Basic Harvest Basket" /> : "🧺"}
+          </div>
         </div>
       )}
 
