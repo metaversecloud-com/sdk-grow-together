@@ -13,17 +13,11 @@ import { VisitorInventoryItemType } from "@shared/types";
 
 interface UsePlotToolModalProps {
   actionType: string;
-  ownerId?: string;
   numberOfCropsReady: number;
   closeToolModal: () => void;
 }
 
-export const UsePlotToolModal = ({
-  actionType,
-  ownerId,
-  numberOfCropsReady,
-  closeToolModal,
-}: UsePlotToolModalProps) => {
+export const UsePlotToolModal = ({ actionType, numberOfCropsReady, closeToolModal }: UsePlotToolModalProps) => {
   const dispatch = useContext(GlobalDispatchContext);
   const { visitorInventory = { tools: {} } } = useContext(GlobalStateContext);
   const tools = visitorInventory.tools as Record<string, VisitorInventoryItemType>;
@@ -43,10 +37,7 @@ export const UsePlotToolModal = ({
   const handleUseTool = async (tool: VisitorInventoryItemType) => {
     setAreButtonsDisabled(true);
     await backendAPI
-      .post(`/plot/use-tool`, {
-        tool,
-        ownerId,
-      })
+      .post(`/plot/use-tool`, { tool })
       .then((response) => {
         setGameState(dispatch, response.data);
       })

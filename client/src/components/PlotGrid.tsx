@@ -205,7 +205,6 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isOwnedByCurre
       {showUsePlotToolModal && actionType && (
         <UsePlotToolModal
           actionType={actionType}
-          ownerId={ownerId}
           numberOfCropsReady={actionType === "Water" ? noOfCropsReadyToWater : noOfCropsReadyToHarvest}
           closeToolModal={() => setShowUsePlotToolModal(false)}
         />

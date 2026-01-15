@@ -60,7 +60,7 @@ export const handleUseTool = async (req: Request, res: Response) => {
       plotData = ownerData.worlds[urlSlug];
     }
 
-    if (!owner) throw "Visitor or User (plot owner) not found";
+    if (!owner || !ownerData || !plotData) throw "Visitor or User (plot owner) data not found";
 
     if (actionType === "Water") {
       analytics.push({

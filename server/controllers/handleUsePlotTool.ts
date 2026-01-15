@@ -8,20 +8,13 @@ import {
   getInventoryItems,
   getCoinRewardAmount,
   getXpRewardAmount,
-  User,
   modifyVisitorInventoryItem,
   getEarnedMessage,
   getVisitorInventory,
   checkDidIncreaseLevelOrRank,
   getAnalyticName,
 } from "../utils/index.js";
-import {
-  CropDataObjectType,
-  getSeedImageVariation,
-  VisitorDataObjectType,
-  plotConfig,
-  getSecondsRemaining,
-} from "../../shared/index.js";
+import { CropDataObjectType, getSeedImageVariation, plotConfig, getSecondsRemaining } from "../../shared/index.js";
 import { DroppedAssetInterface } from "@rtsdk/topia";
 
 /**
@@ -31,7 +24,7 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
     const { assetId, profileId, urlSlug } = credentials;
-    const { tool, ownerId } = req.body;
+    const { tool } = req.body;
 
     const { actionType, name } = tool;
     const promises = [];
@@ -44,22 +37,14 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
 
     const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
 
-    let owner, ownerData, plotData;
-    if (profileId === ownerId) {
-      owner = visitor;
-      ownerData = visitorData;
-      plotData = visitorData.worlds[urlSlug];
-    } else {
-      owner = await User.create({ credentials, profileId: ownerId });
-      ownerData = (await owner.fetchDataObject()) as VisitorDataObjectType;
-      plotData = ownerData.worlds[urlSlug];
-    }
+    const plotData = visitorData.worlds[urlSlug];
 
-    if (!owner) throw "Visitor or User (plot owner) not found";
+    // Check if visitor owns this plot
+    if (plotData.plotAssetId !== assetId) throw "You must own this plot before using plot tools";
 
     // Lock to prevent simultaneous plot tool usage
     try {
-      await owner.updateDataObject(
+      await visitor.updateDataObject(
         {},
         {
           lock: {
@@ -99,7 +84,7 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
         getDroppedAssetPromises.push(
           DroppedAsset.get(assetId, urlSlug, { credentials }).catch(() => {
             console.error("Crop asset no longer in world. Continuing to clean up data object.");
-            ownerData.worlds[urlSlug].plotSquares[crop.squareId] = null;
+            visitorData.worlds[urlSlug].plotSquares[crop.squareId] = null;
             cropsToRemove.push(assetId);
           }),
         );
@@ -131,7 +116,7 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
           lastWatered: now,
         };
         const cropAssetData = cropAsset.dataObject as CropDataObjectType;
-        ownerData.worlds[urlSlug].crops[cropAsset.id] = cropData;
+        visitorData.worlds[urlSlug].crops[cropAsset.id] = cropData;
 
         const layer1 = getSeedImageVariation(seedConfig.name, growLevel + 1);
 
@@ -170,7 +155,7 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
         const { coinRewardAmount } = getCoinRewardAmount(appliedTools, seedConfig.reward);
         totalCoinsRewardAmount += coinRewardAmount;
 
-        ownerData.worlds[urlSlug].plotSquares[crop.squareId] = null;
+        visitorData.worlds[urlSlug].plotSquares[crop.squareId] = null;
 
         triggerParticlePromises.push(
           world
@@ -219,7 +204,7 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
 
     // Remove crops that are no longer in the world
     const uniqueCropsToRemove = [...new Set(cropsToRemove)];
-    for (const assetId of uniqueCropsToRemove) delete ownerData.worlds[urlSlug].crops[assetId];
+    for (const assetId of uniqueCropsToRemove) delete visitorData.worlds[urlSlug].crops[assetId];
 
     // Only one updateDataObject for all crops
     promises.push(Promise.all(updateCropAssetPromises));
@@ -255,9 +240,9 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
     }
 
     // Update visitor's data object
-    ownerData.totalCoinsEarned = ownerData.totalCoinsEarned + totalCoinsRewardAmount;
-    ownerData.lastDateCoinsEarned = now;
-    await visitor.updateDataObject(ownerData, {
+    visitorData.totalCoinsEarned = visitorData.totalCoinsEarned + totalCoinsRewardAmount;
+    visitorData.lastDateCoinsEarned = now;
+    await visitor.updateDataObject(visitorData, {
       analytics: [
         {
           analyticName: "toolsUsed",
@@ -283,8 +268,8 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
 
     return res.json({
       success: false,
-      visitorData: ownerData,
-      plotData: ownerData.worlds[urlSlug],
+      visitorData,
+      plotData: visitorData.worlds[urlSlug],
       visitorInventory: updatedVisitorInventory,
       earnedMessage,
       soundEffect,
