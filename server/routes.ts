@@ -17,8 +17,11 @@ import {
   handleClearPlot,
   handleClearAllPlots,
   handleTeleportToOpenPlot,
+  handleUseTool,
+  handlePurchaseTool,
 } from "./controllers/index.js";
 import { getVersion } from "./utils/getVersion.js";
+import { handleUsePlotTool } from "./controllers/handleUsePlotTool.js";
 
 const router = express.Router();
 const SERVER_START_DATE = new Date();
@@ -52,6 +55,7 @@ router.post("/admin/clear-all-plots", handleClearAllPlots);
 router.post("/plot/claim", handleClaimPlot);
 router.post("/plot/teleport", handleTeleportToPlot);
 router.post("/plot/view", handleOpenPlotIframe);
+router.post("/plot/use-tool", handleUsePlotTool);
 router.post("/square/view", handleOpenPlotSquareIframe);
 router.get("/square", handleGetPlotSquareInfo);
 
@@ -60,11 +64,15 @@ router.post("/seed/purchase", handlePurchaseSeed);
 router.post("/crop/drop", handlePlantSeed);
 router.post("/crop/water", handleWaterCrop);
 router.post("/crop/harvest", handleHarvestCrop);
+router.post("/crop/use-tool", handleUseTool);
 router.post("/crop/remove", handleRemoveCrop);
 
 // decoration routes
 router.post("/decoration/purchase", handlePurchaseDecoration);
 router.post("/decoration/drop", handlePlaceDecoration);
 router.post("/decoration/remove", handleRemoveDecoration);
+
+// tool routes
+router.post("/tool/purchase", handlePurchaseTool);
 
 export default router;

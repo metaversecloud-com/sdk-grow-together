@@ -1,48 +1,56 @@
 import { useContext, useState, useEffect } from "react";
 
 // components
-import { HarvestButton, WaterButton } from "@/components";
+import { AppliedToolIcons, HarvestButton, UseToolModal, WaterButton } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
-import { ErrorType } from "@/context/types";
+import { ErrorType, SET_EARNED_MESSAGE } from "@/context/types";
 
 // utils
-import { backendAPI, getSecondsRemaining, setErrorMessage } from "@/utils";
-
-// types
-import { CropDataObjectType } from "@shared/index.js";
+import { backendAPI, setErrorMessage } from "@/utils";
+import { CropDataObjectType, getSecondsRemaining } from "@shared/index.js";
 
 interface CropDetailsProps {
   crop: CropDataObjectType;
   plotAssetId?: string | null;
-  isReadOnly: boolean;
+  ownerId?: string;
+  isOwnedByCurrentUser: boolean;
 }
 
-export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps) => {
+export const CropDetails = ({
+  crop,
+  plotAssetId: visitorPlotAssetId,
+  ownerId,
+  isOwnedByCurrentUser,
+}: CropDetailsProps) => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { seeds = {} } = useContext(GlobalStateContext);
+  const { seeds = {}, earnedMessage } = useContext(GlobalStateContext);
 
-  const { lastWatered, growLevel, ownerName, seedId } = crop;
+  const { plotAssetId: cropPlotAssetId, lastWatered, growLevel, ownerName, seedId, appliedTools = [] } = crop;
   const seedConfig = seeds[seedId];
   const { name, reward, growthTime, harvestLevel, rarity } = seedConfig;
 
+  let plotAssetId = cropPlotAssetId;
+  if (isOwnedByCurrentUser && !cropPlotAssetId && visitorPlotAssetId) plotAssetId = visitorPlotAssetId;
+
   const [timeRemaining, setTimeRemaining] = useState<string | null>(null);
-  const [readyForWater, setReadyForWater] = useState(false);
-  const [readyForHarvest, setReadyForHarvest] = useState(false);
+  const [isReadyToWater, setIsReadyToWater] = useState(false);
+  const [isReadyToHarvest, setIsReadyToHarvest] = useState(false);
   const [wasHarvested, setWasHarvested] = useState(false);
+  const [showToolModal, setShowToolModal] = useState(false);
 
   // Update timeRemaining every second until ready for harvest or harvested
   useEffect(() => {
     if (!seedConfig || wasHarvested) return setTimeRemaining(null);
 
     const updateCountdown = () => {
-      if (readyForWater) return;
-      const remainingSeconds = getSecondsRemaining(lastWatered, growthTime);
+      if (isReadyToWater) return;
+      const remainingSeconds = getSecondsRemaining(lastWatered, growthTime, appliedTools);
 
       if (!wasHarvested) {
-        if (growLevel >= harvestLevel) setReadyForHarvest(true);
-        else if (remainingSeconds <= 0) setReadyForWater(true);
+        if (growLevel >= harvestLevel) setIsReadyToHarvest(true);
+        else if (remainingSeconds <= 0) setIsReadyToWater(true);
       }
 
       if (remainingSeconds <= 0) return setTimeRemaining(null);
@@ -55,7 +63,23 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
-  }, [lastWatered, growLevel, seedConfig, harvestLevel, growthTime, wasHarvested]);
+  }, [lastWatered, growLevel, seedConfig, harvestLevel, growthTime, wasHarvested, appliedTools]);
+
+  useEffect(() => {
+    if (earnedMessage) {
+      // Clear the earned message after displaying it for 8 seconds
+      setTimeout(() => {
+        dispatch!({
+          type: SET_EARNED_MESSAGE,
+          payload: { earnedMessage: undefined },
+        });
+      }, 8000);
+    }
+  }, [earnedMessage]);
+
+  const handleAfterUseTool = () => {
+    setIsReadyToWater(false);
+  };
 
   if (!seedConfig) {
     return (
@@ -69,7 +93,7 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
 
   const handleAfterHarvest = () => {
     setWasHarvested(true);
-    setReadyForHarvest(false);
+    setIsReadyToHarvest(false);
   };
 
   const handleOpenPlotIframe = async () => {
@@ -79,65 +103,90 @@ export const CropDetails = ({ crop, plotAssetId, isReadOnly }: CropDetailsProps)
   };
 
   const getGrowthStatus = () => {
-    if (isReadOnly) return `Owned by ${ownerName}`;
-    else if (wasHarvested) return "Harvested";
-    else if (readyForHarvest) return "Ready for Harvest!";
-    else if (readyForWater) return `Ready to Water!`;
+    if (wasHarvested) return "Harvested";
+    else if (isReadyToHarvest) return "Ready for Harvest!";
+    else if (isReadyToWater) return `Ready to Water!`;
     else if (growLevel < harvestLevel) return `Ready to water in: ${timeRemaining}`;
     else if (growLevel >= harvestLevel) return `Ready to harvest in: ${timeRemaining}`;
 
     return `Growing... (Level ${growLevel}/${harvestLevel})`;
   };
 
-  const getGrowthColor = () => {
-    if (isReadOnly) return "chip-muted";
-    if (readyForWater || readyForHarvest) return "chip-success";
-  };
-
   return (
-    <div className="grid gap-2">
-      <div className="card small">
-        <div className="card-details" style={{ maxWidth: "100%" }}>
-          <img className="m-auto" src={seeds[seedId].icon} style={{ width: "40px", height: "40px" }} />
-          <div className="text-center">
-            <h3 className="card-title bold">{name}</h3>
-            <p className="text-muted">
-              <i>{rarity}</i>
-            </p>
-            <p>
-              <i>
-                Lvl {growLevel}/{harvestLevel}
-              </i>
-            </p>
-            <p className="text-success">+{reward} Coins</p>
-            <div className={`chip my-4 ${getGrowthColor()}`}>{getGrowthStatus()}</div>
-          </div>
-        </div>
-      </div>
+    <>
+      {!isOwnedByCurrentUser && <div className="chip chip-muted mb-2 mr-auto">{`${ownerName}'s Garden`}</div>}
 
-      {/* Water */}
-      {!isReadOnly && readyForWater && <WaterButton handleAfterWater={() => setReadyForWater(false)} />}
-
-      {/* Harvest */}
-      {!isReadOnly && readyForHarvest && <HarvestButton handleAfterHarvest={handleAfterHarvest} reward={reward} />}
-
-      {/* Already harvested */}
-      {wasHarvested && (
-        <>
-          <div className="card success">
-            <div className="card-details">
-              <p className="text-center">Earned {reward} coins</p>
+      <div className="grid gap-2">
+        <div className="card small">
+          <AppliedToolIcons appliedTools={appliedTools} />
+          <div className="card-details" style={{ maxWidth: "100%", marginLeft: "-30px" }}>
+            <img className="m-auto" src={seeds[seedId].icon} style={{ width: "40px", height: "40px" }} />
+            <div className="text-center">
+              <h3 className="card-title bold">{name}</h3>
+              <p className="text-muted">
+                <i>{rarity}</i>
+              </p>
+              <p>
+                <i>
+                  Lvl {growLevel}/{harvestLevel}
+                </i>
+              </p>
+              <p className="text-success">+{reward} Coins</p>
+              <div className={`chip my-4 ${isReadyToWater || isReadyToHarvest ? "chip-success" : ""}`}>
+                {getGrowthStatus()}
+              </div>
             </div>
           </div>
-        </>
-      )}
+        </div>
 
-      {plotAssetId && (
-        <button className="btn btn-outline" onClick={handleOpenPlotIframe}>
-          View Plot
-        </button>
-      )}
-    </div>
+        {/* Rewards Earned (by non-owners) */}
+        {!isOwnedByCurrentUser && earnedMessage && (
+          <>
+            <div className="card success">
+              <div className="card-details text-center">
+                {earnedMessage.multiplier && <strong>{earnedMessage.multiplier} </strong>}
+                <span className="text-success">{earnedMessage.message}</span>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Action Buttons */}
+        {((!isOwnedByCurrentUser && isReadyToWater) || !isReadyToWater) &&
+          !isReadyToHarvest &&
+          !wasHarvested &&
+          appliedTools?.length < 3 && (
+            <button id="useTool" className="btn btn-outline tool" onClick={() => setShowToolModal(true)}>
+              Use Tool
+            </button>
+          )}
+
+        {isOwnedByCurrentUser && isReadyToWater && <WaterButton handleAfterWater={() => setIsReadyToWater(false)} />}
+
+        {isOwnedByCurrentUser && isReadyToHarvest && (
+          <HarvestButton handleAfterHarvest={handleAfterHarvest} reward={reward} />
+        )}
+
+        {plotAssetId && (
+          <button className="btn btn-outline" onClick={handleOpenPlotIframe}>
+            View Plot
+          </button>
+        )}
+
+        {/* Tool Modal */}
+        {showToolModal && (
+          <UseToolModal
+            selectedSquareId={crop.squareId}
+            ownerId={ownerId}
+            isOwnedByCurrentUser={isOwnedByCurrentUser}
+            isReadyToWater={isReadyToWater}
+            appliedTools={appliedTools}
+            closeToolModal={() => setShowToolModal(false)}
+            handleAfterUseTool={() => handleAfterUseTool()}
+          />
+        )}
+      </div>
+    </>
   );
 };
 

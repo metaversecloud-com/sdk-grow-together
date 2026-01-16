@@ -6,8 +6,9 @@ import {
   DroppedAsset,
   getPlotAssets,
   getInventoryItems,
+  User,
 } from "../utils/index.js";
-import { PlotAssetDataObjectType } from "../types/index.js";
+import { PlotAssetDataObjectType, VisitorDataObjectType } from "../types/index.js";
 
 /**
  * Get the current game state for a visitor including their plot, crops, and coin balance
@@ -29,13 +30,23 @@ export const handleGetGameState = async (req: Request, res: Response) => {
 
     const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
 
-    const visitorPlotData = visitorData.worlds[urlSlug];
+    let plotData = visitorData.worlds[urlSlug],
+      xp = visitorInventory.xp || 0;
+    const visitorPlotAssetId = plotData.plotAssetId;
 
     const promises = [];
 
-    if (visitorPlotData.plotAssetId === assetId) {
+    if (plotData?.plotAssetId === assetId) {
       const droppedAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
       promises.push(droppedAsset.updateDataObject({ lastInteractionDate: new Date().toISOString() }));
+    } else if (plotAssetData.ownerId) {
+      const plotOwner = await User.create({ credentials, profileId: plotAssetData.ownerId });
+
+      const plotOwnerData = (await plotOwner.fetchDataObject()) as VisitorDataObjectType;
+      plotData = plotOwnerData?.worlds?.[urlSlug];
+      if (!plotData) throw new Error("Plot data not found for the owner");
+      await plotOwner.fetchInventoryItems();
+      xp = plotOwner.inventoryItems.find((item) => item.name === "Experience Points")?.quantity || 0;
     }
 
     promises.push(
@@ -44,7 +55,7 @@ export const handleGetGameState = async (req: Request, res: Response) => {
         {
           analytics: [
             {
-              analyticName: `plotDrawerViews-${visitorPlotData.plotAssetId === assetId ? "self" : "non-self"}`,
+              analyticName: `plotDrawerViews-${plotData.plotAssetId === assetId ? "self" : "non-self"}`,
               profileId,
               urlSlug,
               uniqueKey: profileId,
@@ -58,7 +69,7 @@ export const handleGetGameState = async (req: Request, res: Response) => {
     const getInventoryItemsResponse = await getInventoryItems(credentials);
     if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
 
-    const { decorations, seeds } = getInventoryItemsResponse;
+    const { decorations, seeds, tools } = getInventoryItemsResponse;
 
     // Fetch visitor details to get isAdmin status
     promises.push(visitor.fetchVisitor());
@@ -70,11 +81,14 @@ export const handleGetGameState = async (req: Request, res: Response) => {
       isAdmin: visitor.isAdmin,
       plotAssetData,
       visitorData,
-      visitorPlotData: visitorData.worlds[urlSlug],
+      visitorPlotAssetId,
+      plotData,
       visitorInventory,
       decorations,
       seeds,
+      tools,
       noOfAvailablePlots: getPlotAssetsResult.availablePlotAssetIds.length,
+      xp,
     });
   } catch (error) {
     return errorHandler({

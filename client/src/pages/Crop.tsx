@@ -14,7 +14,7 @@ import { backendAPI, setErrorMessage, setGameState } from "@/utils";
 
 export const Crop = () => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { hasInteractiveParams, cropData, visitorPlotData, visitorInventory = {} } = useContext(GlobalStateContext);
+  const { hasInteractiveParams, cropData, plotData, visitorInventory = { coins: 0 } } = useContext(GlobalStateContext);
   const { ownerId } = cropData || {};
 
   const [searchParams] = useSearchParams();
@@ -28,7 +28,7 @@ export const Crop = () => {
   useEffect(() => {
     if (hasInteractiveParams) {
       backendAPI
-        .get(`/square${visitorPlotData?.plotAssetId ? `?plotAssetId=${visitorPlotData.plotAssetId}` : ""}`)
+        .get(`/square${plotData?.plotAssetId ? `?plotAssetId=${plotData.plotAssetId}` : ""}`)
         .then((response) => {
           const { success, squareData } = response.data;
           if (success) {
@@ -48,20 +48,15 @@ export const Crop = () => {
     <PageContainer isLoading={isLoading} headerText={`Slot ${cropData?.squareId || ""}`}>
       <div className="container">
         {cropData ? (
-          <>
-            {/* Crop owned by another user */}
-            {!isOwnedByCurrentUser && (
-              <CropDetails crop={cropData} plotAssetId={visitorPlotData?.plotAssetId} isReadOnly={true} />
-            )}
-
-            {/* Current user's crop */}
-            {isOwnedByCurrentUser && (
-              <div className="grid gap-2">
-                <YourMoney coinsAvailable={visitorInventory["Coins"]?.quantity || 0} />
-                <CropDetails crop={cropData} plotAssetId={visitorPlotData?.plotAssetId} isReadOnly={false} />
-              </div>
-            )}
-          </>
+          <div className="grid gap-2">
+            {isOwnedByCurrentUser && <YourMoney coinsAvailable={visitorInventory.coins} />}
+            <CropDetails
+              crop={cropData}
+              plotAssetId={plotData?.plotAssetId}
+              ownerId={ownerId}
+              isOwnedByCurrentUser={isOwnedByCurrentUser}
+            />
+          </div>
         ) : (
           <p className="p2">No crop data found.</p>
         )}

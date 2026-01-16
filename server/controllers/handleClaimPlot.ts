@@ -10,7 +10,12 @@ import {
   Asset,
   getQueryString,
 } from "../utils/index.js";
-import { PlotAssetDataObjectType, WorldDataObjectType } from "../types/index.js";
+import {
+  PlotAssetDataObjectType,
+  EcosystemInventoryItemType,
+  VisitorInventoryItemType,
+  WorldDataObjectType,
+} from "../types/index.js";
 import { calculateNumberOfSquares, s3URL } from "../../shared/index.js";
 import { DroppedAssetClickType } from "@rtsdk/topia";
 
@@ -66,9 +71,9 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       plotSquares[i] = null;
     }
 
-    // Add free seed to visitor's inventory if they don't already have it
+    // Add free seed and starter tools to visitor's inventory if they don't already have it
     const name = "Carrots";
-    if (!visitorInventory[name]) {
+    if (!visitorInventory.seeds[name]) {
       const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
         credentials,
         visitor,
@@ -77,15 +82,28 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       });
       // Throw error if Carrots doesn't exist in inventory for Public Key - user will not be able to do anything with their garden if they don't have any seeds to start with
       if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
-      visitorInventory[name] = {
-        id: name,
-        quantity: modifyInventoryItemResponse,
-        availableQuantity: modifyInventoryItemResponse,
-      };
+      visitorInventory.seeds[name] = modifyInventoryItemResponse as EcosystemInventoryItemType &
+        VisitorInventoryItemType;
+    }
+
+    if (Object.keys(visitorInventory.tools).length === 0) {
+      const starterTools = ["Wooden Watering Can", "Basic Mulch", "Basic Compost"];
+      for (const name of starterTools) {
+        const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
+          credentials,
+          visitor,
+          name,
+          quantity: 5,
+        });
+        if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
+        visitorInventory.tools[name] = modifyInventoryItemResponse as EcosystemInventoryItemType &
+          VisitorInventoryItemType;
+      }
     }
 
     // Update plot asset's data object to mark ownership
     plotAssetData = {
+      plotAssetId: assetId,
       ownerId: profileId,
       ownerName: displayName,
       claimedDate,
@@ -94,7 +112,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
     promises.push(plotAsset.setDataObject(plotAssetData));
 
     // Update visitor's data object
-    const visitorPlotData = {
+    const plotData = {
       plotAssetId: plotAsset.id,
       claimedDate,
       plotSquares,
@@ -106,7 +124,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       ...visitorData,
       worlds: {
         ...visitorData.worlds,
-        [urlSlug]: visitorPlotData,
+        [urlSlug]: plotData,
       },
     };
 
@@ -171,7 +189,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       success: true,
       plotAssetData,
       visitorData: updatedVisitorData,
-      visitorPlotData,
+      plotData,
       visitorInventory,
     });
   } catch (error) {

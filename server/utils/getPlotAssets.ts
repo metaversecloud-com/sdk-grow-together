@@ -1,5 +1,5 @@
 import { DroppedAssetInterface } from "@rtsdk/topia";
-import { DroppedAsset, World, standardizedError } from "./index.js";
+import { DroppedAsset, World, standardizeError } from "./index.js";
 import { Credentials } from "../types/Credentials.js";
 import { PlotAssetDataObjectType, WorldDataObjectType } from "../types/index.js";
 
@@ -74,6 +74,6 @@ export const getPlotAssets = async (
 
     return { availablePlotAssetIds, claimedPlotAssetIds };
   } catch (error: any) {
-    return standardizedError(error);
+    return standardizeError(error);
   }
 };

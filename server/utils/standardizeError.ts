@@ -2,7 +2,7 @@
  * Creates a standardized error object from various error types
  * This helps provide consistent error formatting across the application
  */
-export const standardizedError = (error: unknown): Error => {
+export const standardizeError = (error: unknown): Error => {
   // If error is already an Error instance, return it directly
   if (error instanceof Error) {
     return error;

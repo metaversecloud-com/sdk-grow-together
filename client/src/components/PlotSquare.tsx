@@ -6,16 +6,33 @@ interface PlotSquareProps {
   squareId: number;
   itemType?: PlotSquareType;
   squareDetails: SelectedSquareDetails;
+  isOwnedByCurrentUser?: boolean;
   handleSquareClick: () => void;
 }
 
-export const PlotSquare = ({ squareId, itemType, squareDetails, handleSquareClick }: PlotSquareProps) => {
+export const PlotSquare = ({
+  squareId,
+  itemType,
+  squareDetails,
+  isOwnedByCurrentUser,
+  handleSquareClick,
+}: PlotSquareProps) => {
   const { isEmpty, icon, growLevel, harvestLevel, isReadyToWater, isReadyToHarvest } = squareDetails;
+
+  if (isEmpty && !isOwnedByCurrentUser) {
+    return (
+      <div
+        key={squareId}
+        className={`card small flex items-center justify-center ${itemType} readonly`}
+        style={{ height: "75px", width: "75px", border: "1px solid #000" }}
+      ></div>
+    );
+  }
 
   return (
     <div
       key={squareId}
-      className={`card small flex items-center justify-center cursor-pointer ${itemType}`}
+      className={`card small flex items-center justify-center cursor-pointer  ${itemType}`}
       style={{ height: "75px", width: "75px", border: "1px solid #000" }}
       onClick={() => handleSquareClick()}
     >
@@ -28,7 +45,7 @@ export const PlotSquare = ({ squareId, itemType, squareDetails, handleSquareClic
             <p className="p3">
               lvl {growLevel}/{harvestLevel}
             </p>
-            {isReadyToWater && <p className="p4 text-success">Water!</p>}
+            {isReadyToWater && <p className="p4 water">Water!</p>}
             {isReadyToHarvest && <p className="p4">Harvest!</p>}
           </>
         ) : (

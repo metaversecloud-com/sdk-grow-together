@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 
 // components
-import { ModalHeader, PurchaseItem, YourMoney } from "@/components";
+import { InventoryItem } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
@@ -10,16 +10,14 @@ import { ErrorType, SET_VISITOR_INVENTORY } from "@/context/types";
 // utils
 import { backendAPI, setErrorMessage } from "@/utils";
 
-export const DecorationMenu = ({ onClose }: { onClose: () => void }) => {
+export const DecorationMenu = () => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { decorations, visitorInventory = {} } = useContext(GlobalStateContext);
+  const { decorations, visitorInventory = { coins: 0 } } = useContext(GlobalStateContext);
 
   const [purchasingDecorations, setPurchasingDecorations] = useState<Set<string>>(new Set());
-  const [isPurchasing, setIsPurchasing] = useState(false);
 
   const handlePurchaseDecoration = async (decorationId: string) => {
     setPurchasingDecorations((prev) => new Set([...prev, decorationId]));
-    setIsPurchasing(true);
     await backendAPI
       .post("/decoration/purchase", { decorationId })
       .then((response) => {
@@ -35,37 +33,31 @@ export const DecorationMenu = ({ onClose }: { onClose: () => void }) => {
           updated.delete(decorationId);
           return updated;
         });
-        setIsPurchasing(false);
       });
   };
 
   return (
-    <div className="modal-container">
-      <div className="modal">
-        <ModalHeader text="Buy Decorations" disabled={isPurchasing} handleOnClick={onClose} />
+    <div>
+      <div className="grid grid-cols-2 gap-2">
+        {decorations &&
+          Object.values(decorations).map((decoration) => {
+            const { id, name, rarity, cost, icon } = decoration;
 
-        <YourMoney coinsAvailable={visitorInventory["Coins"]?.quantity || 0} />
-
-        <div className="grid grid-cols-2 gap-2">
-          {decorations &&
-            Object.values(decorations).map((decoration) => {
-              const { id, name, rarity, cost, icon } = decoration;
-
-              return (
-                <PurchaseItem
-                  key={id}
-                  coinsAvailable={visitorInventory["Coins"]?.quantity || 0}
-                  id={id}
-                  icon={icon}
-                  name={name}
-                  rarity={rarity}
-                  cost={cost}
-                  isPurchasing={purchasingDecorations.has(id)}
-                  handlePurchase={() => handlePurchaseDecoration(id)}
-                />
-              );
-            })}
-        </div>
+            return (
+              <InventoryItem
+                key={id}
+                coinsAvailable={visitorInventory.coins}
+                id={id}
+                icon={icon}
+                name={name}
+                rarity={rarity}
+                cost={cost}
+                isPurchasing={purchasingDecorations.has(id)}
+                handlePurchase={() => handlePurchaseDecoration(id)}
+                isReadyOnly={false}
+              />
+            );
+          })}
       </div>
     </div>
   );

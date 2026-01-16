@@ -2,15 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 // components
-import {
-  PlotGrid,
-  SeedMenu,
-  PageContainer,
-  DecorationMenu,
-  YourMoney,
-  NewUserInfo,
-  GetStartedModal,
-} from "@/components";
+import { GetStartedModal, InventoryModal, PageContainer, PlotGrid, YourMoney } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
@@ -24,25 +16,29 @@ export const Plot = () => {
   const dispatch = useContext(GlobalDispatchContext);
   const {
     hasInteractiveParams,
-    noOfAvailablePlots,
     plotAssetData,
-    visitorInventory = {},
-    visitorPlotData,
+    visitorPlotAssetId,
+    visitorInventory = { coins: 0, xp: 0 },
+    plotData,
+    xp,
   } = useContext(GlobalStateContext);
   const { claimedDate, ownerId, ownerName } = plotAssetData || {};
-  const { plotAssetId, plotSquares, crops, decorations } = visitorPlotData || { plotSquares: {} };
+  const { plotAssetId, plotSquares, crops, decorations } = plotData || { plotSquares: {} };
+  const { coins } = visitorInventory;
+
   const [searchParams] = useSearchParams();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isClaiming, setIsClaiming] = useState(false);
-  const [showSeedMenu, setShowSeedMenu] = useState(false);
-  const [showDecorationMenu, setShowDecorationMenu] = useState(false);
+  const [showInventoryModal, setShowInventoryModal] = useState(false);
+  const [showVisitorInventoryOnly, setShowVisitorInventoryOnly] = useState(false);
   const [showGetStartedModal, setShowGetStartedModal] = useState(searchParams.get("isFirstTimeOpen") === "true");
 
   const profileId = searchParams.get("profileId");
 
   const isOwnedByCurrentUser = profileId === ownerId;
   const isOwnedByOtherUser = ownerId && ownerId !== profileId;
+  const plotOwnerXp = isOwnedByOtherUser ? xp : visitorInventory.xp;
 
   let headerText = "Open Garden";
   if (isOwnedByOtherUser) {
@@ -80,33 +76,58 @@ export const Plot = () => {
   };
 
   return (
-    <PageContainer isLoading={isLoading} headerText={headerText} showInfoIcon={isOwnedByCurrentUser}>
+    <PageContainer
+      isLoading={isLoading}
+      headerText={headerText}
+      isOwnedByCurrentUser={isOwnedByCurrentUser}
+      xp={plotOwnerXp}
+    >
       <div className="container">
         {/* Current user's plot */}
         {isOwnedByCurrentUser && plotAssetId && (
           <div className="grid gap-2">
-            <h4>Garden Store</h4>
-            <YourMoney coinsAvailable={visitorInventory["Coins"]?.quantity || 0} />
+            <YourMoney coinsAvailable={coins || 0} />
 
             <div className="grid gap-2 grid-cols-2">
-              <button className="btn btn-outline p2 crop" onClick={() => setShowSeedMenu(true)}>
-                Buy Seeds
+              <button
+                className="btn btn-outline p2 crop"
+                onClick={() => {
+                  setShowInventoryModal(true);
+                  setShowVisitorInventoryOnly(false);
+                }}
+              >
+                View Store
               </button>
-              <button className="btn btn-outline p2 decoration" onClick={() => setShowDecorationMenu(true)}>
-                Buy Decorations
+              <button
+                className="btn btn-outline p2 decoration"
+                onClick={() => {
+                  setShowInventoryModal(true);
+                  setShowVisitorInventoryOnly(true);
+                }}
+              >
+                View Backpack
               </button>
             </div>
-            <hr className="my-2" />
-            <h4>Garden Plot</h4>
-            <PlotGrid plotSquares={plotSquares} crops={crops || {}} placedDecorations={decorations || {}} />
+            <PlotGrid
+              plotSquares={plotSquares}
+              crops={crops || {}}
+              placedDecorations={decorations || {}}
+              isOwnedByCurrentUser={isOwnedByCurrentUser}
+              ownerId={ownerId}
+            />
           </div>
         )}
 
         {/* Plot owned by another user */}
         {isOwnedByOtherUser && (
-          <div className="grid gap-2 mb-10">
+          <div className="grid gap-4 mb-10">
             {claimedDate && <p>Garden Started: {new Date(claimedDate).toLocaleDateString()}</p>}
-            <NewUserInfo plotAssetId={plotAssetId} noOfAvailablePlots={noOfAvailablePlots} showHeaders={true} />
+            <PlotGrid
+              plotSquares={plotSquares}
+              crops={crops || {}}
+              placedDecorations={decorations || {}}
+              ownerId={ownerId}
+            />
           </div>
         )}
 
@@ -131,7 +152,7 @@ export const Plot = () => {
         )}
 
         {/* Current user already owns a different plot */}
-        {plotAssetId && !isOwnedByCurrentUser && (
+        {visitorPlotAssetId && !isOwnedByCurrentUser && (
           <div className="grid gap-2 mb-10">
             <h4>Are you looking for your garden?</h4>
             <p>Click the button below to teleport to it.</p>
@@ -149,8 +170,14 @@ export const Plot = () => {
           </div>
         )}
       </div>
-      {showSeedMenu && <SeedMenu onClose={() => setShowSeedMenu(false)} />}
-      {showDecorationMenu && <DecorationMenu onClose={() => setShowDecorationMenu(false)} />}
+
+      {/* Modals */}
+      {showInventoryModal && (
+        <InventoryModal
+          showVisitorInventoryOnly={showVisitorInventoryOnly}
+          onClose={() => setShowInventoryModal(false)}
+        />
+      )}
       {showGetStartedModal && (
         <GetStartedModal setShowGetStartedModal={() => setShowGetStartedModal(!showGetStartedModal)} />
       )}

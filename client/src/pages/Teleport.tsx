@@ -12,8 +12,7 @@ import { backendAPI, setErrorMessage, setGameState } from "@/utils";
 
 export const Teleport = () => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { hasInteractiveParams, noOfAvailablePlots, visitorPlotData } = useContext(GlobalStateContext);
-  const { plotAssetId } = visitorPlotData || { plotSquares: {} };
+  const { hasInteractiveParams, noOfAvailablePlots, visitorPlotAssetId } = useContext(GlobalStateContext);
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -47,9 +46,13 @@ export const Teleport = () => {
           <div className="flex-grow" />
         </div>
 
-        <NewUserInfo plotAssetId={plotAssetId} noOfAvailablePlots={noOfAvailablePlots} showHeaders={true} />
+        <NewUserInfo
+          visitorPlotAssetId={visitorPlotAssetId}
+          noOfAvailablePlots={noOfAvailablePlots}
+          showHeaders={true}
+        />
 
-        {plotAssetId && (
+        {visitorPlotAssetId && (
           <>
             <h4>Looking for your garden?</h4>
             <p className="p2">Howdy, gardener! You already have a garden. Click the button below to teleport to it.</p>

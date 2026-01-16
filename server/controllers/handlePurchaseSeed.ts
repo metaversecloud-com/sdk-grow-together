@@ -35,11 +35,11 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
     const { visitor, visitorInventory } = initializeVisitorDataResponse;
 
     // Check if seed is already purchased (for paid seeds)
-    if (seedConfig.cost > 0 && visitorInventory[seedId]) throw "Seed already purchased";
+    if (seedConfig.cost > 0 && visitorInventory.seeds[seedId]) throw "Seed already purchased";
 
     // Check if visitor has enough coins
-    if (visitorInventory["Coins"].quantity < seedConfig.cost) {
-      throw `Not enough coins. Need ${seedConfig.cost}, have ${visitorInventory["Coins"].quantity}`;
+    if (visitorInventory.coins < seedConfig.cost) {
+      throw `Not enough coins. Need ${seedConfig.cost}, have ${visitorInventory.coins}`;
     }
 
     // Purchase the seed (modify quantity in inventory)
@@ -50,7 +50,7 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
       quantity: -seedConfig.cost,
     });
     if (modifyCoinsResponse instanceof Error) throw modifyCoinsResponse;
-    visitorInventory["Coins"].quantity = modifyCoinsResponse;
+    visitorInventory.coins = modifyCoinsResponse.quantity;
 
     const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
       credentials,
@@ -58,16 +58,12 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
       name: seedConfig.name,
       quantity: 1,
     });
-    if (typeof modifyInventoryItemResponse === "number") {
-      const availableQuantity = visitorInventory[seedConfig.name]?.availableQuantity || 0;
-      visitorInventory[seedConfig.name] = {
-        id: seedConfig.name,
-        quantity: modifyInventoryItemResponse,
-        availableQuantity: availableQuantity + 1,
-      };
-    } else {
-      console.log("Error while modifying inventory item:", modifyInventoryItemResponse);
-    }
+    if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
+
+    visitorInventory.seeds[seedConfig.name] = {
+      ...visitorInventory.seeds[seedConfig.name],
+      ...modifyInventoryItemResponse,
+    };
 
     await visitor.updateDataObject(
       {},

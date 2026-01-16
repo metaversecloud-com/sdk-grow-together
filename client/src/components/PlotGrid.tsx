@@ -1,35 +1,52 @@
 import { useContext, useState } from "react";
 
 // components
-import { PlaceDecoration, PlantSeed, PlotSquare, PlotSquareModal } from "@/components";
+import { PlaceDecoration, PlantSeed, PlotSquare, PlotSquareModal, UsePlotToolModal } from "@/components";
 
 // context
 import { GlobalStateContext } from "@/context/GlobalContext";
 import { SelectedSquareDetails } from "@/context/types";
 
 // types
-import { plotConfig, VisitorInventoryType, VisitorWorldDataType } from "@shared/index.js";
+import {
+  EcosystemInventoryItemType,
+  getSecondsRemaining,
+  plotConfig,
+  VisitorInventoryType,
+  VisitorWorldDataType,
+} from "@shared/index.js";
 
 // utils
-import { getSecondsRemaining } from "@/utils";
 
 interface PlotGridProps {
   plotSquares: { [key: number]: string | null };
   crops: VisitorWorldDataType["crops"];
   placedDecorations: VisitorWorldDataType["decorations"];
   visitorInventory?: VisitorInventoryType;
+  isOwnedByCurrentUser?: boolean;
+  ownerId?: string;
 }
 
 type PlotSquareType = "crop" | "decoration";
 
-export const PlotGrid = ({ plotSquares, crops, placedDecorations }: PlotGridProps) => {
-  const { decorations = {}, seeds = {} } = useContext(GlobalStateContext);
+export const PlotGrid = ({ plotSquares, crops, placedDecorations, isOwnedByCurrentUser, ownerId }: PlotGridProps) => {
+  const { decorations = {}, seeds = {}, tools = {} } = useContext(GlobalStateContext);
+
+  const sprinklerIcon = Object.values(tools).find(
+    (item: EcosystemInventoryItemType) => item.name === "Basic Sprinkler",
+  )?.icon;
+  const harvestIcon = Object.values(tools).find(
+    (item: EcosystemInventoryItemType) => item.name === "Basic Harvest Basket",
+  )?.icon;
 
   const [selectedSquareId, setSelectedSquareId] = useState<number | null>(null);
   const [selectedSquareType, setSelectedSquareIdType] = useState<PlotSquareType>("crop");
-
+  const [noOfCropsReadyToWater, setNoOfCropsReadyToWater] = useState<number>(0);
+  const [noOfCropsReadyToHarvest, setNoOfCropsReadyToHarvest] = useState<number>(0);
   const [selectedSquareDetails, setSelectedSquareDetails] = useState<SelectedSquareDetails>({ title: "" });
   const [showSquareModal, setShowSquareModal] = useState(false);
+  const [showUsePlotToolModal, setShowUsePlotToolModal] = useState(false);
+  const [actionType, setActionType] = useState<"Water" | "Harvest" | null>(null);
 
   const handleSquareClick = (squareId: number, itemType: PlotSquareType) => {
     setSelectedSquareId(squareId);
@@ -46,7 +63,7 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations }: PlotGridProp
     const crop = squareAssetId ? crops[squareAssetId] : null;
     const decoration = squareAssetId ? placedDecorations[squareAssetId] : null;
 
-    let title, icon, name, growLevel, harvestLevel, reward, isReadyToWater, isReadyToHarvest;
+    let title, icon, name, growLevel, harvestLevel, reward, isReadyToWater, isReadyToHarvest, appliedTools;
 
     if (crop) {
       name = seeds[crop.seedId].name;
@@ -55,11 +72,16 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations }: PlotGridProp
       growLevel = crop.growLevel;
       harvestLevel = seeds[crop.seedId].harvestLevel || 10;
       reward = seeds[crop.seedId].reward;
+      appliedTools = crop.appliedTools || [];
 
       if (growLevel >= harvestLevel) {
         isReadyToHarvest = true;
       } else if (crop.lastWatered && !isReadyToWater) {
-        const remainingSeconds = getSecondsRemaining(crop.lastWatered, seeds[crop.seedId].growthTime);
+        const remainingSeconds = getSecondsRemaining(
+          crop.lastWatered,
+          seeds[crop.seedId].growthTime,
+          crop.appliedTools || [],
+        );
         if (remainingSeconds <= 0) {
           isReadyToWater = true;
         }
@@ -70,7 +92,31 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations }: PlotGridProp
       icon = decorations[decoration.decorationId]?.icon;
     }
 
-    return { title, icon, name, growLevel, harvestLevel, reward, isReadyToWater, isReadyToHarvest };
+    return { title, icon, name, growLevel, harvestLevel, reward, isReadyToWater, isReadyToHarvest, appliedTools };
+  };
+
+  const handleShowUsePlotToolModal = (actionType: "Water" | "Harvest") => {
+    let noOfCropsReadyToWater = 0;
+    let noOfCropsReadyToHarvest = 0;
+
+    for (const crop in crops) {
+      const { seedId, growLevel, lastWatered, appliedTools } = crops[crop];
+      const harvestLevel = seeds[seedId].harvestLevel || 10;
+
+      if (growLevel >= harvestLevel) {
+        noOfCropsReadyToHarvest += 1;
+      } else if (lastWatered) {
+        const remainingSeconds = getSecondsRemaining(lastWatered, seeds[seedId].growthTime, appliedTools || []);
+        if (remainingSeconds <= 0) {
+          noOfCropsReadyToWater += 1;
+        }
+      }
+    }
+
+    setNoOfCropsReadyToWater(noOfCropsReadyToWater);
+    setNoOfCropsReadyToHarvest(noOfCropsReadyToHarvest);
+    setActionType(actionType);
+    setShowUsePlotToolModal(true);
   };
 
   const closeSquareModal = () => {
@@ -80,21 +126,36 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations }: PlotGridProp
 
   return (
     <div>
-      {/* Decorations Grid */}
-      <div className="mb-4">
-        <h6 className="pb-1">Decorations</h6>
-        <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
-          {plotConfig.reservedSquares.map((squareId) => (
-            <PlotSquare
-              key={squareId}
-              squareId={squareId}
-              itemType="decoration"
-              squareDetails={getSquareDetails(squareId)}
-              handleSquareClick={() => handleSquareClick(squareId, "decoration")}
-            />
-          ))}
+      {isOwnedByCurrentUser && (
+        <div className="flex pt-6">
+          <h4 className="pr-4 pt-2">Garden Plot</h4>
+          <div className="btn btn-icon btn-icon-sm mr-2" onClick={() => handleShowUsePlotToolModal("Water")}>
+            {sprinklerIcon ? <img src={sprinklerIcon} alt="Basic Sprinkler" /> : "💦"}
+          </div>
+          <div className="btn btn-icon btn-icon-sm mr-2" onClick={() => handleShowUsePlotToolModal("Harvest")}>
+            {harvestIcon ? <img src={harvestIcon} alt="Basic Harvest Basket" /> : "🧺"}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Decorations Grid */}
+      {isOwnedByCurrentUser && (
+        <div className="mb-4">
+          <h6 className="pb-1">Decorations</h6>
+          <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
+            {plotConfig.reservedSquares.map((squareId) => (
+              <PlotSquare
+                key={squareId}
+                squareId={squareId}
+                itemType="decoration"
+                squareDetails={getSquareDetails(squareId)}
+                isOwnedByCurrentUser={isOwnedByCurrentUser}
+                handleSquareClick={() => handleSquareClick(squareId, "decoration")}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Crops Grid */}
       <div className="mb-4">
@@ -110,6 +171,7 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations }: PlotGridProp
                   squareId={squareId}
                   itemType="crop"
                   squareDetails={getSquareDetails(squareId)}
+                  isOwnedByCurrentUser={isOwnedByCurrentUser}
                   handleSquareClick={() => handleSquareClick(squareId, "crop")}
                 />
               );
@@ -134,7 +196,17 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations }: PlotGridProp
           itemAssetId={plotSquares[selectedSquareId]!}
           itemType={selectedSquareType}
           selectedSquareDetails={selectedSquareDetails}
+          isOwnedByCurrentUser={isOwnedByCurrentUser}
+          ownerId={ownerId}
           closeSquareModal={closeSquareModal}
+        />
+      )}
+
+      {showUsePlotToolModal && actionType && (
+        <UsePlotToolModal
+          actionType={actionType}
+          numberOfCropsReady={actionType === "Water" ? noOfCropsReadyToWater : noOfCropsReadyToHarvest}
+          closeToolModal={() => setShowUsePlotToolModal(false)}
         />
       )}
     </div>

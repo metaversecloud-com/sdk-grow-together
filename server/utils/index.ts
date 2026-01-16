@@ -1,6 +1,8 @@
 export * from "../constants.js";
+export * from "./crops/index.js";
 export * from "./inventory/index.js";
 export * from "./calculateSquarePosition.js";
+export * from "./checkDidIncreaseLevelOrRank.js";
 export * from "./cleanReturnPayload.js";
 export * from "./errorHandler.js";
 export * from "./getAnalyticName.js";
@@ -10,5 +12,5 @@ export * from "./getPlotAssets.js";
 export * from "./getQueryString.js";
 export * from "./getVersion.js";
 export * from "./initializeVisitorData.js";
-export * from "./standardizedError.js";
+export * from "./standardizeError.js";
 export * from "./topiaInit.js";

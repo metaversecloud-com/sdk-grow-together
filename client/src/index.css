@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+  line-height: 1em !important;
+}
+
 .available {
   border-color: #999 !important;
 }
@@ -12,12 +16,22 @@
 .crop:hover {
   background: #5bc193 !important;
 }
+.crop.readonly:hover {
+  background: #b4edc4 !important;
+}
 
 .decoration {
   background: #fff6b6 !important;
 }
 .decoration:hover {
   background: #ffdc4b !important;
+}
+
+.tool {
+  background: #f8d3af !important;
+}
+.tool:hover {
+  background: #d5b18d !important;
 }
 
 .common {
@@ -51,4 +65,49 @@
 
 .menu-card {
   padding: 10px !important;
+}
+
+.progress {
+  background: #305bab;
+}
+
+.icon {
+  width: 40px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #ebedef;
+  padding: 12px;
+  display: inline-flex;
+  height: 40px;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-icon-sm {
+  padding: 8px !important;
+}
+
+.icon-sm {
+  width: 26px;
+  height: 26px;
+  font-size: 0.7em;
+  padding: 5px !important;
+}
+
+.tooltip-secondary {
+  position: relative;
+  display: inline-block;
+  text-align: center;
+}
+.tooltip-secondary-content {
+  top: 50% !important;
+  left: 50%;
+  transform: translate(-50%, 0%);
+  width: 100%;
+}
+.tooltip-secondary:hover .tooltip-secondary-content {
+  visibility: visible;
+}
+.tooltip-content {
+  font-size: 0.8em !important;
 }

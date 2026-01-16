@@ -7,6 +7,7 @@ import {
   World,
   getInventoryItems,
 } from "../utils/index.js";
+import { PlacedDecorationDataObjectType } from "../types/SharedTypes.js";
 
 /**
  * Handle decoration removal - removes decoration from world and frees up the plot square
@@ -22,54 +23,59 @@ export const handleRemoveDecoration = async (req: Request, res: Response) => {
 
     const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
 
-    const visitorPlotData = visitorData.worlds[urlSlug];
-    const assetId = visitorPlotData.plotSquares[squareId];
+    const plotData = visitorData.worlds[urlSlug];
+    const assetId = plotData.plotSquares[squareId];
 
     if (!assetId) throw "No decoration found on the specified square";
 
-    // Get decoration configuration
-    const decoration = visitorPlotData.decorations[assetId];
-
-    const getInventoryItemsResponse = await getInventoryItems(credentials);
-    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
-
-    const { decorations } = getInventoryItemsResponse;
-
-    const decorationConfig = decorations[decoration.decorationId];
-    if (!decorationConfig) throw "Invalid decoration type";
-
-    // Update visitor's data object
-    visitorData.worlds[urlSlug].plotSquares[squareId] = null;
-    delete visitorData.worlds[urlSlug].decorations[assetId];
-
-    // Remove the placedDecoration entry for this assetId
-    if (visitorData.placedDecorations?.[decoration.decorationName]?.[urlSlug]) {
-      const index = visitorData.placedDecorations[decoration.decorationName][urlSlug].indexOf(assetId);
-      if (index > -1) {
-        visitorData.placedDecorations[decoration.decorationName][urlSlug].splice(index, 1);
-      }
-    }
-    // Only increment availableQuantity if it does not exceed quantity
-    if (
-      visitorInventory[decoration.decorationName].availableQuantity + 1 <=
-      visitorInventory[decoration.decorationName].quantity
-    ) {
-      visitorInventory[decoration.decorationName].availableQuantity += 1;
-    }
-
-    await visitor.updateDataObject(visitorData, {
-      analytics: [
-        {
-          analyticName: "decorationsRemoved",
-          profileId,
-          urlSlug,
-          uniqueKey: profileId,
-        },
-      ],
-    });
-
     try {
       const droppedAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
+
+      const dataObject = droppedAsset.dataObject as PlacedDecorationDataObjectType;
+
+      // Check if visitor owns this asset
+      if (dataObject?.ownerId !== profileId) throw "You must own this plot before removing decorations";
+
+      // Get decoration configuration
+      const decoration = plotData.decorations[assetId];
+
+      const getInventoryItemsResponse = await getInventoryItems(credentials);
+      if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
+
+      const { decorations } = getInventoryItemsResponse;
+
+      const decorationConfig = decorations[decoration.decorationId];
+      if (!decorationConfig) throw "Invalid decoration type";
+
+      // Update visitor's data object
+      visitorData.worlds[urlSlug].plotSquares[squareId] = null;
+      delete visitorData.worlds[urlSlug].decorations[assetId];
+
+      // Remove the placedDecoration entry for this assetId
+      if (visitorData.placedDecorations?.[decoration.decorationName]?.[urlSlug]) {
+        const index = visitorData.placedDecorations[decoration.decorationName][urlSlug].indexOf(assetId);
+        if (index > -1) {
+          visitorData.placedDecorations[decoration.decorationName][urlSlug].splice(index, 1);
+        }
+      }
+      // Only increment availableQuantity if it does not exceed quantity
+      if (
+        visitorInventory.decorations?.[decoration.decorationName]?.availableQuantity + 1 <=
+        visitorInventory.decorations?.[decoration.decorationName]?.quantity
+      ) {
+        visitorInventory.decorations[decoration.decorationName].availableQuantity += 1;
+      }
+
+      await visitor.updateDataObject(visitorData, {
+        analytics: [
+          {
+            analyticName: "decorationsRemoved",
+            profileId,
+            urlSlug,
+            uniqueKey: profileId,
+          },
+        ],
+      });
 
       const world = World.create(urlSlug, { credentials });
       await world
@@ -95,7 +101,7 @@ export const handleRemoveDecoration = async (req: Request, res: Response) => {
     return res.json({
       success: true,
       visitorData,
-      visitorPlotData: visitorData.worlds[urlSlug],
+      plotData: visitorData.worlds[urlSlug],
       visitorInventory,
     });
   } catch (error) {

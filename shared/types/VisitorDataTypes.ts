@@ -20,17 +20,43 @@ export type VisitorWorldDataType = {
   };
 };
 
+export type VisitorInventoryItemType = {
+  id: string;
+  ecosystemItemId: string;
+  availableQuantity: number;
+  description: string;
+  icon: string;
+  name: string;
+  quantity: number;
+  cost: number;
+  rarity: string;
+  reward: number;
+  xp: number;
+  growthTime: number;
+  harvestLevel: number;
+  canBeUsedOnPlot: boolean;
+  actionType: string | undefined;
+  sortOrder: number;
+};
+
 export type VisitorInventoryType = {
-  [itemId: string]: {
-    id: string;
-    quantity: number;
-    availableQuantity: number;
+  coins: number;
+  xp: number;
+  seeds: {
+    [itemId: string]: VisitorInventoryItemType;
+  };
+  decorations: {
+    [itemId: string]: VisitorInventoryItemType;
+  };
+  tools: {
+    [itemId: string]: VisitorInventoryItemType;
   };
 };
 
 export type VisitorDataObjectType = {
   lastDateCoinsEarned: string; // ISO date string when the plot was claimed
   totalCoinsEarned: number; // Lifetime coins earned (for unlocks)
+  inventoryLastUpdated: string; // ISO date string of last inventory update
   placedDecorations: {
     [decorationId: string]: {
       [urlSlug: string]: string[]; // array of droppedAssetIds

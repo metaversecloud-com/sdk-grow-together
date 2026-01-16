@@ -28,11 +28,6 @@ export const HarvestButton = ({
     await backendAPI
       .post("/crop/harvest", { cropAssetId })
       .then((response) => {
-        if (response.data.success) {
-          const harvestAudio = new Audio("https://sdk-grow-together.s3.us-east-1.amazonaws.com/harvest_coins.mp3");
-          harvestAudio.volume = 0.7; // 70% volume
-          harvestAudio.play();
-        }
         setGameState(dispatch, response.data);
       })
       .catch((error) => {

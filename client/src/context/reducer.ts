@@ -9,6 +9,9 @@ import {
   SET_VISITOR_PLOT_DATA,
   SET_DECORATION_DATA,
   SET_VISITOR_INVENTORY,
+  SET_EARNED_MESSAGE,
+  SET_SOUND_EFFECT,
+  SET_DID_LEVEL_UP,
 } from "./types";
 
 const globalReducer = (state: InitialState, action: ActionType) => {
@@ -40,7 +43,7 @@ const globalReducer = (state: InitialState, action: ActionType) => {
     case SET_VISITOR_PLOT_DATA:
       return {
         ...state,
-        visitorPlotData: payload.visitorPlotData,
+        plotData: payload.plotData,
         error: "",
       };
     case SET_CROP_DATA:
@@ -53,6 +56,24 @@ const globalReducer = (state: InitialState, action: ActionType) => {
       return {
         ...state,
         decorationData: payload.decorationData,
+        error: "",
+      };
+    case SET_EARNED_MESSAGE:
+      return {
+        ...state,
+        earnedMessage: payload.earnedMessage,
+        error: "",
+      };
+    case SET_SOUND_EFFECT:
+      return {
+        ...state,
+        soundEffect: payload.soundEffect,
+        error: "",
+      };
+    case SET_DID_LEVEL_UP:
+      return {
+        ...state,
+        didLevelUp: payload.didLevelUp,
         error: "",
       };
     case SET_ERROR:

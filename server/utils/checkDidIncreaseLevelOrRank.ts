@@ -1,0 +1,90 @@
+import { VisitorInterface, WorldActivityType } from "@rtsdk/topia";
+import { World } from "./topiaInit.js";
+import { Credentials } from "../types/Credentials.js";
+import { standardizeError } from "./standardizeError.js";
+import { getLevelsAndRanks } from "../../shared/index.js";
+
+export const checkDidIncreaseLevelOrRank = async (
+  credentials: Credentials,
+  visitor: VisitorInterface,
+  previousXp: number = 0,
+  xpRewardAmount: number = 0,
+) => {
+  const { assetId, profileId, urlSlug } = credentials;
+
+  let coinsEarnedForRankUp = 0,
+    analytics = [],
+    promises = [];
+
+  const { level: previousLevel, rank: previousRank } = await getLevelsAndRanks(previousXp);
+  const { level: currentLevel, rank: currentRank, coinsEarned } = await getLevelsAndRanks(previousXp + xpRewardAmount);
+
+  const didLevelUp = currentLevel > previousLevel;
+  const didRankUp = currentRank !== previousRank;
+
+  if (didLevelUp || didRankUp) {
+    analytics.push({
+      analyticName: "levelsGained",
+      profileId,
+      uniqueKey: profileId,
+    });
+
+    if ([5, 10, 25, 50, 75, 100].includes(currentLevel)) {
+      analytics.push({
+        analyticName: `level${currentLevel}Reached`,
+        profileId,
+        uniqueKey: profileId,
+      });
+    }
+
+    let title = `Congrats! Your garden is level ${currentLevel}`;
+
+    if (didRankUp) {
+      analytics.push({
+        analyticName: "ranksGained",
+        profileId,
+        uniqueKey: profileId,
+      });
+
+      title += `  and your rank is now ${currentRank}`;
+
+      coinsEarnedForRankUp = coinsEarned;
+      if (coinsEarnedForRankUp > 0) title += `. You earned ${coinsEarnedForRankUp} coins for your new rank!`;
+
+      const world = await World.create(urlSlug, { credentials });
+      promises.push(
+        world
+          .triggerActivity({ type: WorldActivityType.GAME_HIGH_SCORE, assetId })
+          .catch((error) =>
+            console.error(
+              "Error triggering GAME_HIGH_SCORE activity in checkDidIncreaseLevelOrRank:",
+              standardizeError(error),
+            ),
+          ),
+      );
+    }
+
+    promises.push(
+      visitor
+        .fireToast({
+          groupId: "handlePurchaseTool",
+          title,
+        })
+        .catch((error) => {
+          console.error("Error firing toast in checkDidIncreaseLevelOrRank:", standardizeError(error));
+        }),
+    );
+
+    if (analytics.length > 0) {
+      promises.push(
+        visitor.updateDataObject({}, { analytics }).catch((error) => {
+          console.error("Error updating data object in checkDidIncreaseLevelOrRank:", standardizeError(error));
+        }),
+      );
+    }
+
+    await Promise.all(promises);
+  }
+
+  return { coinsEarnedForRankUp, didLevelUp };
+};

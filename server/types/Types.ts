@@ -1,4 +1,4 @@
-import { InventoryItemInterface } from "@rtsdk/topia";
+import { InventoryItemInterface, UserInventoryItemInterface } from "@rtsdk/topia";
 
 export type WorldDataObjectType = {
   claimedPlots?: object;
@@ -7,15 +7,27 @@ export type WorldDataObjectType = {
   };
 };
 
-export interface EcosystemItems extends InventoryItemInterface {
+export interface EcosystemItemType extends InventoryItemInterface {
+  credentials: any;
+  fetchInventoryItemById: any;
+  topiaPublicApi: any;
+  errorHandler: any;
   quantity?: number;
   metadata: {
     type?: string;
     cost?: number;
     rarity?: number;
     reward?: number;
+    xp?: number;
     growthTime?: number;
     harvestLevel?: number;
+    canBeUsedOnPlot?: boolean;
+    actionType?: string;
     sortOrder?: number;
+    quantity?: number;
   };
+}
+
+export interface UserItems extends UserInventoryItemInterface {
+  image_url?: string;
 }

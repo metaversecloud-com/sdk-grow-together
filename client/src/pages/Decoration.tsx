@@ -16,11 +16,11 @@ export const Decoration = () => {
   const {
     hasInteractiveParams,
     decorationData,
-    visitorPlotData,
-    visitorInventory = {},
+    plotData,
+    visitorInventory = { coins: 0 },
     decorations = {},
   } = useContext(GlobalStateContext);
-  const { ownerId, ownerName } = decorationData || {};
+  const { plotAssetId: decorationPlotAssetId, ownerId, ownerName } = decorationData || {};
   const { icon, name, rarity, description, cost } = decorationData?.decorationId
     ? decorations[decorationData.decorationId]
     : {};
@@ -31,6 +31,9 @@ export const Decoration = () => {
 
   const profileId = searchParams.get("profileId");
   const isOwnedByCurrentUser = ownerId === profileId;
+
+  let plotAssetId = decorationPlotAssetId;
+  if (isOwnedByCurrentUser && !decorationPlotAssetId && plotData?.plotAssetId) plotAssetId = plotData.plotAssetId;
 
   useEffect(() => {
     if (hasInteractiveParams) {
@@ -52,16 +55,17 @@ export const Decoration = () => {
   }, [hasInteractiveParams]);
 
   const handleOpenPlotIframe = async () => {
-    await backendAPI.post("/plot/view", { plotAssetId: visitorPlotData?.plotAssetId }).catch((error) => {
+    await backendAPI.post("/plot/view", { plotAssetId }).catch((error) => {
       setErrorMessage(dispatch, error as ErrorType);
     });
   };
 
   return (
     <PageContainer isLoading={isLoading} headerText={`Slot ${decorationData?.squareId || ""}`}>
-      <div className="container grid gap-2">
-        {/* Decoration owned by another user */}
-        {isOwnedByCurrentUser && <YourMoney coinsAvailable={visitorInventory["Coins"]?.quantity || 0} />}
+      {!isOwnedByCurrentUser && <div className="chip chip-muted mb-2 mr-auto">{ownerName}'s Garden</div>}
+
+      <div className="grid gap-2">
+        {isOwnedByCurrentUser && <YourMoney coinsAvailable={visitorInventory.coins || 0} />}
 
         <div className="card small">
           <div className="card-details" style={{ maxWidth: "100%" }}>
@@ -73,12 +77,11 @@ export const Decoration = () => {
               </p>
               <p className="p2">{description}</p>
               <p className="text-success">{cost} Coins</p>
-              {!isOwnedByCurrentUser && <div className="chip m-auto mt-2">Owned by {ownerName}</div>}
             </div>
           </div>
         </div>
 
-        {visitorPlotData?.plotAssetId && (
+        {plotAssetId && (
           <button className="btn btn-outline" onClick={handleOpenPlotIframe}>
             View Plot
           </button>
