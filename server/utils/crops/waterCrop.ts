@@ -10,6 +10,7 @@ import {
 } from "../index.js";
 import {
   CropDataObjectType,
+  getSecondsRemaining,
   getSeedImageVariation,
   plotConfig,
   VisitorDataObjectType,
@@ -78,6 +79,10 @@ export const waterCrop = async ({
     if (!seedConfig) throw "Invalid crop type";
 
     if (crop.growLevel >= seedConfig.harvestLevel) throw "Crop is already fully grown";
+
+    const remainingSeconds = getSecondsRemaining(crop.lastWatered, seedConfig.growthTime, crop.appliedTools || []);
+    if (remainingSeconds > 0)
+      throw `Crop is still growing. Please wait ${remainingSeconds} seconds before watering again.`;
 
     let cropAsset;
     try {
