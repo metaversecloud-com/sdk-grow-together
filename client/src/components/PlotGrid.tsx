@@ -9,8 +9,9 @@ import { SelectedSquareDetails } from "@/context/types";
 
 // types
 import {
-  EcosystemInventoryItemType,
   getSecondsRemaining,
+  getSeedConfig,
+  InventoryItemType,
   plotConfig,
   VisitorInventoryType,
   VisitorWorldDataType,
@@ -25,18 +26,26 @@ interface PlotGridProps {
   visitorInventory?: VisitorInventoryType;
   isOwnedByCurrentUser?: boolean;
   ownerId?: string;
+  handleShowInventoryModal?: (activeTab: string) => void;
 }
 
 type PlotSquareType = "crop" | "decoration";
 
-export const PlotGrid = ({ plotSquares, crops, placedDecorations, isOwnedByCurrentUser, ownerId }: PlotGridProps) => {
-  const { decorations = {}, seeds = {}, tools = {} } = useContext(GlobalStateContext);
+export const PlotGrid = ({
+  plotSquares,
+  crops,
+  placedDecorations,
+  isOwnedByCurrentUser,
+  ownerId,
+  handleShowInventoryModal,
+}: PlotGridProps) => {
+  const { ecosystemDecorations = {}, ecosystemSeeds = {}, ecosystemTools = {} } = useContext(GlobalStateContext);
 
-  const sprinklerIcon = Object.values(tools).find(
-    (item: EcosystemInventoryItemType) => item.name === "Basic Sprinkler",
+  const sprinklerIcon = Object.values(ecosystemTools).find(
+    (item: InventoryItemType) => item.name === "Basic Sprinkler",
   )?.icon;
-  const harvestIcon = Object.values(tools).find(
-    (item: EcosystemInventoryItemType) => item.name === "Basic Harvest Basket",
+  const harvestIcon = Object.values(ecosystemTools).find(
+    (item: InventoryItemType) => item.name === "Basic Harvest Basket",
   )?.icon;
 
   const [selectedSquareId, setSelectedSquareId] = useState<number | null>(null);
@@ -66,30 +75,28 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isOwnedByCurre
     let title, icon, name, growLevel, harvestLevel, reward, isReadyToWater, isReadyToHarvest, appliedTools;
 
     if (crop) {
-      name = seeds[crop.seedId].name;
+      const seedConfig = getSeedConfig(ecosystemSeeds, crop);
+
+      name = seedConfig?.name;
       title = `${name} in Slot ${squareId!}`;
-      icon = seeds[crop.seedId].icon;
+      icon = seedConfig?.icon;
       growLevel = crop.growLevel;
-      harvestLevel = seeds[crop.seedId].harvestLevel || 10;
-      reward = seeds[crop.seedId].reward;
+      harvestLevel = seedConfig?.harvestLevel || 10;
+      reward = seedConfig?.reward;
       appliedTools = crop.appliedTools || [];
 
       if (growLevel >= harvestLevel) {
         isReadyToHarvest = true;
       } else if (crop.lastWatered && !isReadyToWater) {
-        const remainingSeconds = getSecondsRemaining(
-          crop.lastWatered,
-          seeds[crop.seedId].growthTime,
-          crop.appliedTools || [],
-        );
+        const remainingSeconds = getSecondsRemaining(crop.lastWatered, seedConfig?.growthTime, crop.appliedTools || []);
         if (remainingSeconds <= 0) {
           isReadyToWater = true;
         }
       }
     } else if (decoration) {
-      name = decorations[decoration.decorationId]?.name;
+      name = decoration?.decorationName;
       title = `${name} in Slot ${squareId!}`;
-      icon = decorations[decoration.decorationId]?.icon;
+      icon = ecosystemDecorations[decoration.decorationName]?.icon;
     }
 
     return { title, icon, name, growLevel, harvestLevel, reward, isReadyToWater, isReadyToHarvest, appliedTools };
@@ -100,13 +107,14 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isOwnedByCurre
     let noOfCropsReadyToHarvest = 0;
 
     for (const crop in crops) {
-      const { seedId, growLevel, lastWatered, appliedTools } = crops[crop];
-      const harvestLevel = seeds[seedId].harvestLevel || 10;
+      const { growLevel, lastWatered, appliedTools } = crops[crop];
+      const seedConfig = getSeedConfig(ecosystemSeeds, crops[crop]);
+      const harvestLevel = seedConfig.harvestLevel || 10;
 
       if (growLevel >= harvestLevel) {
         noOfCropsReadyToHarvest += 1;
       } else if (lastWatered) {
-        const remainingSeconds = getSecondsRemaining(lastWatered, seeds[seedId].growthTime, appliedTools || []);
+        const remainingSeconds = getSecondsRemaining(lastWatered, seedConfig.growthTime, appliedTools || []);
         if (remainingSeconds <= 0) {
           noOfCropsReadyToWater += 1;
         }
@@ -183,9 +191,17 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isOwnedByCurre
       {selectedSquareId !== null && !plotSquares[selectedSquareId] && (
         <>
           {plotConfig.reservedSquares?.includes(selectedSquareId) ? (
-            <PlaceDecoration selectedSquareId={selectedSquareId} setSelectedSquareId={setSelectedSquareId} />
+            <PlaceDecoration
+              selectedSquareId={selectedSquareId}
+              setSelectedSquareId={setSelectedSquareId}
+              handleShowInventoryModal={handleShowInventoryModal!}
+            />
           ) : (
-            <PlantSeed selectedSquareId={selectedSquareId} setSelectedSquareId={setSelectedSquareId} />
+            <PlantSeed
+              selectedSquareId={selectedSquareId}
+              setSelectedSquareId={setSelectedSquareId}
+              handleShowInventoryModal={handleShowInventoryModal!}
+            />
           )}
         </>
       )}
@@ -199,6 +215,7 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isOwnedByCurre
           isOwnedByCurrentUser={isOwnedByCurrentUser}
           ownerId={ownerId}
           closeSquareModal={closeSquareModal}
+          handleShowInventoryModal={handleShowInventoryModal!}
         />
       )}
 
@@ -207,6 +224,7 @@ export const PlotGrid = ({ plotSquares, crops, placedDecorations, isOwnedByCurre
           actionType={actionType}
           numberOfCropsReady={actionType === "Water" ? noOfCropsReadyToWater : noOfCropsReadyToHarvest}
           closeToolModal={() => setShowUsePlotToolModal(false)}
+          handleShowInventoryModal={handleShowInventoryModal}
         />
       )}
     </div>

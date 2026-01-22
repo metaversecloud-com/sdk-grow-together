@@ -16,15 +16,17 @@ import {
 import { GlobalStateContext } from "@/context/GlobalContext";
 
 export const InventoryModal = ({
+  inventoryModalActiveTab,
   showVisitorInventoryOnly,
   onClose,
 }: {
+  inventoryModalActiveTab?: string;
   showVisitorInventoryOnly: boolean;
   onClose: () => void;
 }) => {
   const { visitorInventory = { coins: 0 } } = useContext(GlobalStateContext);
 
-  const [activeTab, setActiveTab] = useState("seeds");
+  const [activeTab, setActiveTab] = useState(inventoryModalActiveTab || "seeds");
 
   return (
     <div className="modal-container">

@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 
 // components
-import { InventoryItem, ModalHeader } from "@/components";
+import { InventoryItem, ModalHeader, NoItems } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
@@ -21,6 +21,7 @@ interface UseToolModalProps {
   closeToolModal: () => void;
   closeSquareModal?: () => void;
   handleAfterUseTool?: () => void;
+  handleShowInventoryModal?: (activeTab: string) => void;
 }
 
 export const UseToolModal = ({
@@ -33,6 +34,7 @@ export const UseToolModal = ({
   closeToolModal,
   closeSquareModal,
   handleAfterUseTool,
+  handleShowInventoryModal,
 }: UseToolModalProps) => {
   const dispatch = useContext(GlobalDispatchContext);
   const { visitorInventory = { tools: {} } } = useContext(GlobalStateContext);
@@ -47,7 +49,7 @@ export const UseToolModal = ({
       const { actionType, canBeUsedOnPlot, quantity } = tool;
       if (
         quantity > 0 &&
-        canBeUsedOnPlot === false &&
+        !canBeUsedOnPlot &&
         (actionType !== "Water" || (actionType === "Water" && !isOwnedByCurrentUser))
       ) {
         validTools.push(tool);
@@ -92,10 +94,22 @@ export const UseToolModal = ({
         />
 
         {availableTools.length === 0 ? (
-          <>
-            <h4>No tools purchased.</h4>
-            <p>Click "View Store" in the garden store to purchase more tools.</p>
-          </>
+          handleShowInventoryModal ? (
+            <NoItems
+              type="tools"
+              activeTab="tools"
+              closeModal={() => {
+                closeToolModal();
+                closeSquareModal?.();
+              }}
+              handleShowInventoryModal={handleShowInventoryModal}
+            />
+          ) : (
+            <>
+              <h4>No tools purchased.</h4>
+              <p>Click "View Store" in the garden store to purchase more tools.</p>
+            </>
+          )
         ) : (
           <div className="grid gap-2 grid-cols-2">
             {availableTools.map((tool) => {

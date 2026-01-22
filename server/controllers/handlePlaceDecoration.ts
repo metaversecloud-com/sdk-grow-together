@@ -21,7 +21,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
     const { assetId, displayName, profileId, urlSlug, visitorId } = credentials;
-    const { decorationId, squareId } = req.body;
+    const { decorationName, squareId } = req.body;
 
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
@@ -46,7 +46,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
       return res.status(409).json({ message: "Decoration already being placed." });
     }
 
-    if (!decorationId || !squareId) throw "Valid decorationId and squareId are required";
+    if (!decorationName || !squareId) throw "Valid decorationName and squareId are required";
 
     const noOfSquares = calculateNumberOfSquares();
     if (squareId < 0 || squareId > noOfSquares) {
@@ -57,9 +57,9 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     const getInventoryItemsResponse = await getInventoryItems(credentials);
     if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
 
-    const { decorations } = getInventoryItemsResponse;
+    const { ecosystemDecorations } = getInventoryItemsResponse;
 
-    const decoration = decorations[decorationId];
+    const decoration = ecosystemDecorations[decorationName];
 
     // Verify decoration exists
     if (!decoration) throw "Invalid decoration type";
@@ -122,7 +122,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     const now = new Date().toISOString();
     const decorationData = {
       dateDropped: now,
-      decorationId: decorationId,
+      decorationId: decoration.id,
       decorationName: decoration.name,
       squareId,
     };

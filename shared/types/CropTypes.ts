@@ -7,9 +7,10 @@ export type CropDataObjectType = {
   ownerId?: string;
   ownerName?: string;
   squareId: number; // Which square in the plot
+  seedId: string;
+  name: string;
   dateDropped: string;
   lastWatered: string;
-  seedId: string;
   growLevel: number;
   appliedTools: string[];
 };

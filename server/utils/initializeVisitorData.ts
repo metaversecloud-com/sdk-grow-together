@@ -85,7 +85,7 @@ export const initializeVisitorData = async (credentials: Credentials) => {
         }
         let availableQuantity = (visitorInventory.decorations[decorationName].quantity || 0) - placedCount;
 
-        // Check for placed decorations for this decorationId in this world
+        // Check for placed decorations for this decorationName in this world
         // this should be updated to check for existence in all worlds once the endpoint is available
         const placedArr = placedDecorationsForItem?.[urlSlug];
         if (placedArr && placedArr.length > 0) {

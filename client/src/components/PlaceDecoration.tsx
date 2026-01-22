@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 
 // components
-import { ModalHeader } from "@/components";
+import { ModalHeader, NoItems } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
@@ -13,9 +13,14 @@ import { backendAPI, setErrorMessage } from "@/utils";
 interface PlaceDecorationProps {
   selectedSquareId: number;
   setSelectedSquareId: (square: number | null) => void;
+  handleShowInventoryModal: (activeTab: string) => void;
 }
 
-export const PlaceDecoration = ({ selectedSquareId, setSelectedSquareId }: PlaceDecorationProps) => {
+export const PlaceDecoration = ({
+  selectedSquareId,
+  setSelectedSquareId,
+  handleShowInventoryModal,
+}: PlaceDecorationProps) => {
   const dispatch = useContext(GlobalDispatchContext);
   const { visitorInventory, plotData = { decorations: {} } } = useContext(GlobalStateContext);
   const { decorations } = visitorInventory || {};
@@ -35,14 +40,14 @@ export const PlaceDecoration = ({ selectedSquareId, setSelectedSquareId }: Place
     setHasPlacedDecorations(placedDecorationCount > 0);
   }, [visitorInventory, decorations]);
 
-  const handlePlaceDecoration = async (decorationId: string) => {
-    if (!decorationId || selectedSquareId === null) return;
+  const handlePlaceDecoration = async (decorationName: string) => {
+    if (!decorationName || selectedSquareId === null) return;
 
     setIsPlacing(true);
 
     await backendAPI
       .post("/decoration/drop", {
-        decorationId,
+        decorationName,
         squareId: selectedSquareId,
       })
       .then((response) => {
@@ -87,11 +92,12 @@ export const PlaceDecoration = ({ selectedSquareId, setSelectedSquareId }: Place
         />
 
         {!hasDecorations ? (
-          Object.keys(plotData.decorations).length > 0 ? (
-            <p>You've added all of your decorations. You'll need to buy more from the store or remove one.</p>
-          ) : (
-            <p className="p2">Click “Buy Decorations” in the garden store to unlock your first decoration.</p>
-          )
+          <NoItems
+            type="decorations"
+            activeTab="decorations"
+            closeModal={() => setSelectedSquareId(null)}
+            handleShowInventoryModal={handleShowInventoryModal}
+          />
         ) : (
           <div className="grid gap-2 grid-cols-2">
             {decorations &&
@@ -104,9 +110,9 @@ export const PlaceDecoration = ({ selectedSquareId, setSelectedSquareId }: Place
                   const available = decorations[decoration.name]?.availableQuantity || 0;
                   return (
                     <div
-                      key={decoration.id}
+                      key={decoration.name}
                       className={`card menu-card text-center ${isPlacing ? "opacity-50" : "cursor-pointer"}`}
-                      onClick={() => !isPlacing && handlePlaceDecoration(decoration.id)}
+                      onClick={() => !isPlacing && handlePlaceDecoration(decoration.name)}
                     >
                       <img className="m-auto" src={decoration.icon} style={{ width: "40px" }} />
                       <div>

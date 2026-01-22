@@ -69,7 +69,7 @@ export const handleGetGameState = async (req: Request, res: Response) => {
     const getInventoryItemsResponse = await getInventoryItems(credentials);
     if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
 
-    const { decorations, seeds, tools } = getInventoryItemsResponse;
+    const { ecosystemDecorations, ecosystemSeeds, ecosystemTools } = getInventoryItemsResponse;
 
     // Fetch visitor details to get isAdmin status
     promises.push(visitor.fetchVisitor());
@@ -84,9 +84,9 @@ export const handleGetGameState = async (req: Request, res: Response) => {
       visitorPlotAssetId,
       plotData,
       visitorInventory,
-      decorations,
-      seeds,
-      tools,
+      ecosystemDecorations,
+      ecosystemSeeds,
+      ecosystemTools,
       noOfAvailablePlots: getPlotAssetsResult.availablePlotAssetIds.length,
       xp,
     });

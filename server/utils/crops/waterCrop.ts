@@ -11,6 +11,7 @@ import {
 import {
   CropDataObjectType,
   getSecondsRemaining,
+  getSeedConfig,
   getSeedImageVariation,
   plotConfig,
   VisitorDataObjectType,
@@ -73,9 +74,9 @@ export const waterCrop = async ({
     const getInventoryItemsResponse = await getInventoryItems(credentials);
     if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
 
-    const { seeds } = getInventoryItemsResponse;
+    const { ecosystemSeeds } = getInventoryItemsResponse;
 
-    const seedConfig = seeds[crop.seedId];
+    const seedConfig = getSeedConfig(ecosystemSeeds, crop);
     if (!seedConfig) throw "Invalid crop type";
 
     if (crop.growLevel >= seedConfig.harvestLevel) throw "Crop is already fully grown";

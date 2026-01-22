@@ -1,8 +1,8 @@
-import { EcosystemInventoryItemType } from "../../types/index.js";
+import { InventoryItemType } from "../../types";
 
 const rarityLevels = ["Common", "Uncommon", "Rare", "Epic", "Legendary"];
 
-export const getXpRewardAmount = (seedConfig: EcosystemInventoryItemType, action: string) => {
+export const getXpRewardAmount = (seedConfig: InventoryItemType, action: string) => {
   const { growthTime, harvestLevel, rarity } = seedConfig;
 
   const rarityIndex = rarityLevels.indexOf(rarity);

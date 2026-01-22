@@ -40,7 +40,7 @@ export const PageContainer = ({
               </button>
             )}
           </div>
-          {isOwnedByCurrentUser && xp !== undefined && <LevelAndRank xp={xp} />}
+          {xp !== undefined && <LevelAndRank xp={xp} />}
         </div>
       )}
 

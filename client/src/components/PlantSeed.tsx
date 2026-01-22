@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 
 // components
-import { ModalHeader } from "@/components";
+import { Loading, ModalHeader, NoItems } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
@@ -13,23 +13,24 @@ import { backendAPI, setErrorMessage, setGameState } from "@/utils";
 interface PlantSeedProps {
   selectedSquareId: number;
   setSelectedSquareId: (square: number | null) => void;
+  handleShowInventoryModal: (activeTab: string) => void;
 }
 
-export const PlantSeed = ({ selectedSquareId, setSelectedSquareId }: PlantSeedProps) => {
+export const PlantSeed = ({ selectedSquareId, setSelectedSquareId, handleShowInventoryModal }: PlantSeedProps) => {
   const dispatch = useContext(GlobalDispatchContext);
   const { visitorInventory } = useContext(GlobalStateContext);
   const { seeds } = visitorInventory || {};
 
   const [isPlanting, setIsPlanting] = useState(false);
 
-  const handlePlantSeed = async (seedId: string) => {
-    if (!seedId || selectedSquareId === null) return;
+  const handlePlantSeed = async (seedName: string) => {
+    if (!seedName || selectedSquareId === null) return;
 
     setIsPlanting(true);
 
     await backendAPI
       .post("/crop/drop", {
-        seedId: seedId,
+        seedName,
         squareId: selectedSquareId,
       })
       .then((response) => {
@@ -56,31 +57,34 @@ export const PlantSeed = ({ selectedSquareId, setSelectedSquareId }: PlantSeedPr
         />
 
         {seeds && Object.keys(seeds).length === 0 ? (
-          <p className="p2">Click “Buy Seeds” in the garden store to unlock your first seed.</p>
+          <NoItems
+            type="seeds"
+            activeTab="seeds"
+            closeModal={() => setSelectedSquareId(null)}
+            handleShowInventoryModal={handleShowInventoryModal}
+          />
         ) : (
           <div className="grid gap-2 grid-cols-3">
-            {seeds &&
+            {isPlanting ? (
+              <div className="col-span-3">
+                <Loading />
+              </div>
+            ) : (
+              seeds &&
               Object.values(seeds).map((seed) => {
                 const growthTimeInMinutes = (seed.growthTime * seed.harvestLevel) / 60;
-                const isAvailable = seed.cost === 0 || seeds[seed.name]?.quantity > 0;
-                if (!isAvailable) return null;
 
                 let buttonClass = "card card-horizontal menu-card";
-                if (isAvailable && !isPlanting) buttonClass += " cursor-pointer available";
+                if (!isPlanting) buttonClass += " cursor-pointer available";
 
                 return (
                   <div
-                    key={seed.id}
+                    key={seed.name}
                     className={buttonClass}
-                    onClick={() => isAvailable && !isPlanting && handlePlantSeed(seed.id)}
+                    onClick={() => !isPlanting && handlePlantSeed(seed.name)}
                     style={{ gap: "0px" }}
                   >
-                    <img
-                      className="m-auto"
-                      src={seed.icon}
-                      style={{ width: "40px", opacity: !isAvailable ? 0.5 : 1 }}
-                    />
-
+                    <img className="mb-2 m-auto" src={seed.icon} />
                     <div className="tooltip" style={{ maxWidth: "100%" }}>
                       <span className="tooltip-content">{seed.name}</span>
                       <h6 className="card-title ellipsis bold">{seed.name}</h6>
@@ -88,9 +92,13 @@ export const PlantSeed = ({ selectedSquareId, setSelectedSquareId }: PlantSeedPr
                     <p className="p4 text-muted">
                       {growthTimeInMinutes} min{growthTimeInMinutes > 1 ? "s" : ""}
                     </p>
+                    <p className="p3">
+                      Profit: <span className="text-success">{seed.reward}</span>
+                    </p>
                   </div>
                 );
-              })}
+              })
+            )}
           </div>
         )}
       </div>

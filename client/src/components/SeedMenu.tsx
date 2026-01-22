@@ -9,23 +9,23 @@ import { ErrorType, SET_VISITOR_INVENTORY } from "@/context/types";
 
 // utils
 import { backendAPI, setErrorMessage } from "@/utils";
-import { EcosystemInventoryItemType } from "@shared/types";
+import { InventoryItemType } from "@shared/types";
 
 export const SeedMenu = () => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { seeds, visitorInventory } = useContext(GlobalStateContext);
+  const { ecosystemSeeds, visitorInventory } = useContext(GlobalStateContext);
   const { coins, seeds: visitorSeeds } = visitorInventory as typeof visitorInventory & {
-    seeds: { [key: string]: EcosystemInventoryItemType };
+    seeds: { [key: string]: InventoryItemType };
   };
 
-  const availableSeeds = seeds && Object.values(seeds).filter((seed) => !visitorSeeds?.[seed.name]);
+  const availableSeeds = ecosystemSeeds && Object.values(ecosystemSeeds).filter((seed) => !visitorSeeds?.[seed.name]);
 
   const [purchasingSeeds, setPurchasingSeeds] = useState<Set<string>>(new Set());
 
-  const handlePurchaseSeed = async (seedId: string) => {
-    setPurchasingSeeds((prev) => new Set([...prev, seedId]));
+  const handlePurchaseSeed = async (seedName: string) => {
+    setPurchasingSeeds((prev) => new Set([...prev, seedName]));
     await backendAPI
-      .post("/seed/purchase", { seedId })
+      .post("/seed/purchase", { seedName })
       .then((response) => {
         dispatch!({
           type: SET_VISITOR_INVENTORY,
@@ -36,7 +36,7 @@ export const SeedMenu = () => {
       .finally(() => {
         setPurchasingSeeds((prev) => {
           const updated = new Set(prev);
-          updated.delete(seedId);
+          updated.delete(seedName);
           return updated;
         });
       });
@@ -53,22 +53,22 @@ export const SeedMenu = () => {
       {availableSeeds && availableSeeds.length > 0 ? (
         <div className="grid grid-cols-2 gap-2">
           {availableSeeds.map((seed) => {
-            const { id, name, rarity, cost, growthTime, harvestLevel, reward } = seed;
+            const { name, rarity, cost, growthTime, harvestLevel, reward } = seed;
 
             return (
               <InventoryItem
-                key={id}
+                key={name}
                 coinsAvailable={coins}
-                id={id}
-                icon={seeds[id].icon}
+                id={name}
+                icon={ecosystemSeeds[name].icon}
                 name={name}
                 description={formatTime(growthTime * harvestLevel)}
                 rarity={rarity}
                 cost={cost}
                 value={reward}
                 valueText="Profit"
-                isPurchasing={purchasingSeeds.has(id)}
-                handlePurchase={() => handlePurchaseSeed(id)}
+                isPurchasing={purchasingSeeds.has(name)}
+                handlePurchase={() => handlePurchaseSeed(name)}
                 isReadyOnly={false}
               />
             );

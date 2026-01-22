@@ -13,6 +13,7 @@ import {
   getEarnedMessage,
   checkDidIncreaseLevelOrRank,
 } from "../utils/index.js";
+import { getSeedConfig } from "../../shared/index.js";
 
 /**
  * Handle crop harvesting - removes crop from world and awards coins
@@ -35,7 +36,7 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
     const crop = plotData.crops[assetId];
     if (!crop) throw "Crop not found";
 
-    const { seedId, growLevel, squareId, appliedTools = [] } = crop;
+    const { growLevel, squareId, appliedTools = [] } = crop;
 
     // Lock to prevent simultaneous harvests
     try {
@@ -54,10 +55,10 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
     const getInventoryItemsResponse = await getInventoryItems(credentials);
     if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
 
-    const { seeds } = getInventoryItemsResponse;
+    const { ecosystemSeeds } = getInventoryItemsResponse;
 
     // Get seed configuration for harvest level and reward calculation
-    const seedConfig = seeds[seedId];
+    const seedConfig = getSeedConfig(ecosystemSeeds, crop);
     if (!seedConfig) throw "Invalid crop type";
 
     // Check if crop is fully grown (at harvest level)

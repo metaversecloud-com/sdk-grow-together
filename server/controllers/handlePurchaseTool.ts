@@ -16,17 +16,17 @@ export const handlePurchaseTool = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
     const { profileId, urlSlug } = credentials;
-    const { toolId } = req.body;
+    const { toolName } = req.body;
 
-    if (!toolId) throw "Valid toolId is required";
+    if (!toolName) throw "Valid toolName is required";
 
     // Get tool configuration
     const getInventoryItemsResponse = await getInventoryItems(credentials);
     if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
 
-    const { tools } = getInventoryItemsResponse;
+    const { ecosystemTools } = getInventoryItemsResponse;
 
-    const toolConfig = tools[toolId];
+    const toolConfig = ecosystemTools[toolName];
     if (!toolConfig) throw "Invalid tool type";
 
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);

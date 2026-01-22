@@ -13,7 +13,6 @@ import {
   modifyVisitorInventoryItem,
   getXpRewardAmount,
   getEarnedMessage,
-  checkDidIncreaseLevelOrRank,
 } from "../utils/index.js";
 import { DroppedAssetClickType } from "@rtsdk/topia";
 import { calculateNumberOfSquares, getSeedImageVariation } from "../../shared/index.js";
@@ -25,7 +24,7 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
     const { assetId, displayName, profileId, urlSlug, visitorId } = credentials;
-    const { seedId, squareId } = req.body;
+    const { seedName, squareId } = req.body;
 
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);
     if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
@@ -49,7 +48,7 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
       return res.status(409).json({ message: "Seed already being planted." });
     }
 
-    if (!seedId || !squareId) throw "Valid seedId and squareId are required";
+    if (!seedName || !squareId) throw "Valid seedName and squareId are required";
 
     const noOfSquares = calculateNumberOfSquares();
     if (squareId < 1 || squareId > noOfSquares) throw `squareId must be between 1 and ${noOfSquares}`;
@@ -58,9 +57,9 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     const getInventoryItemsResponse = await getInventoryItems(credentials);
     if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
 
-    const { seeds } = getInventoryItemsResponse;
+    const { ecosystemSeeds } = getInventoryItemsResponse;
 
-    const seedConfig = seeds[seedId];
+    const seedConfig = ecosystemSeeds[seedName];
     if (!seedConfig) throw "Invalid seed type";
 
     const plotData = visitorData.worlds[urlSlug];
@@ -115,9 +114,10 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
 
     const now = new Date().toISOString();
     const cropData = {
+      seedId: seedConfig.id,
+      name: seedConfig.name,
       dateDropped: now,
       lastWatered: now,
-      seedId,
       growLevel: 0,
       squareId,
       appliedTools: [],
@@ -127,8 +127,6 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     visitorData.worlds[urlSlug].crops[cropAsset.id!] = cropData;
 
     const xpRewardAmount = await getXpRewardAmount(seedConfig, "Plant");
-    let coinsEarnedForRankUp = 0,
-      didLevelUp = false;
 
     await Promise.all([
       cropAsset.setDataObject({
@@ -158,40 +156,19 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
         visitor,
         name: "Experience Points",
         quantity: xpRewardAmount,
-      }).then(async (modifyXpResponse) => {
+      }).then((modifyXpResponse) => {
         if (modifyXpResponse instanceof Error) throw modifyXpResponse;
-        const checkResult = await checkDidIncreaseLevelOrRank(
-          credentials,
-          visitor,
-          visitorInventory.xp,
-          xpRewardAmount,
-        );
-        coinsEarnedForRankUp = checkResult.coinsEarnedForRankUp;
-        didLevelUp = checkResult.didLevelUp;
         visitorInventory.xp = modifyXpResponse.quantity;
       }),
     ]);
 
-    if (coinsEarnedForRankUp > 0) {
-      const modifyCoinsResponse = await modifyVisitorInventoryItem({
-        credentials,
-        visitor,
-        name: "Coins",
-        quantity: coinsEarnedForRankUp,
-      });
-      if (modifyCoinsResponse instanceof Error) throw modifyCoinsResponse;
-      visitorInventory.coins = modifyCoinsResponse.quantity;
-    }
-
-    const earnedMessage = await getEarnedMessage(coinsEarnedForRankUp, xpRewardAmount);
+    const earnedMessage = await getEarnedMessage(0, xpRewardAmount);
 
     return res.json({
       success: true,
       visitorData,
       plotData: visitorData.worlds[urlSlug],
       earnedMessage,
-      soundEffect: "plant",
-      didLevelUp,
     });
   } catch (error) {
     return errorHandler({

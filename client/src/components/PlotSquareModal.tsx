@@ -18,6 +18,7 @@ interface PlotSquareModalProps {
   isOwnedByCurrentUser?: boolean;
   ownerId?: string;
   closeSquareModal: () => void;
+  handleShowInventoryModal: (activeTab: string) => void;
 }
 
 export const PlotSquareModal = ({
@@ -28,6 +29,7 @@ export const PlotSquareModal = ({
   isOwnedByCurrentUser,
   ownerId,
   closeSquareModal,
+  handleShowInventoryModal,
 }: PlotSquareModalProps) => {
   const dispatch = useContext(GlobalDispatchContext);
 
@@ -150,6 +152,7 @@ export const PlotSquareModal = ({
           </div>
         </div>
       </div>
+
       {/* Tool Modal */}
       {showToolModal && (
         <UseToolModal
@@ -161,6 +164,7 @@ export const PlotSquareModal = ({
           appliedTools={appliedTools || []}
           closeToolModal={() => setShowToolModal(false)}
           closeSquareModal={closeSquareModal}
+          handleShowInventoryModal={handleShowInventoryModal}
         />
       )}
     </>

@@ -14,7 +14,13 @@ import {
   checkDidIncreaseLevelOrRank,
   getAnalyticName,
 } from "../utils/index.js";
-import { CropDataObjectType, getSeedImageVariation, plotConfig, getSecondsRemaining } from "../../shared/index.js";
+import {
+  CropDataObjectType,
+  getSeedImageVariation,
+  plotConfig,
+  getSecondsRemaining,
+  getSeedConfig,
+} from "../../shared/index.js";
 import { DroppedAssetInterface } from "@rtsdk/topia";
 
 /**
@@ -60,7 +66,7 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
     const getInventoryItemsResponse = await getInventoryItems(credentials);
     if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
 
-    const { seeds } = getInventoryItemsResponse;
+    const { ecosystemSeeds } = getInventoryItemsResponse;
 
     const getDroppedAssetPromises = [];
     const updateCropAssetPromises = [];
@@ -73,7 +79,7 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
 
     for (const assetId in plotData.crops) {
       const crop = plotData.crops[assetId];
-      const seedConfig = seeds[crop?.seedId];
+      const seedConfig = getSeedConfig(ecosystemSeeds, crop);
 
       if (
         crop &&
@@ -98,8 +104,8 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
       if (!cropAsset || !cropAsset.id) continue;
 
       const crop = plotData.crops[cropAsset.id];
-      const { seedId, growLevel, lastWatered, appliedTools } = crop;
-      const seedConfig = seeds[seedId];
+      const { growLevel, lastWatered, appliedTools } = crop;
+      const seedConfig = getSeedConfig(ecosystemSeeds, crop);
 
       const xpRewardAmount = await getXpRewardAmount(seedConfig, actionType);
       totalXpRewardAmount += xpRewardAmount;

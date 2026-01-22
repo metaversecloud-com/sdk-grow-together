@@ -1,5 +1,5 @@
 import { VisitorInterface } from "@rtsdk/topia";
-import { Credentials, UserItems, VisitorInventoryItemType } from "../../types/index.js";
+import { Credentials, IUserItems, VisitorInventoryItemType } from "../../types/index.js";
 import { getInventoryItem } from "./getInventoryItem.js";
 import { standardizeError } from "../standardizeError.js";
 import { defaultVisitorInventoryItem } from "../../../shared/index.js";
@@ -31,7 +31,7 @@ export const modifyVisitorInventoryItem = async ({
 
       const { inventoryItem, itemData } = getInventoryItemResponse;
 
-      const newItem: UserItems = await visitor.grantInventoryItem(inventoryItem, quantity);
+      const newItem: IUserItems = await visitor.grantInventoryItem(inventoryItem, quantity);
       item = {
         ...defaultVisitorInventoryItem,
         ...itemData,
@@ -39,7 +39,7 @@ export const modifyVisitorInventoryItem = async ({
         ecosystemItemId: newItem.item_id,
         availableQuantity: newItem.quantity || 0,
         description: newItem.description || itemData.description,
-        icon: newItem.image_url || itemData.icon,
+        icon: newItem.image_url || newItem.image_path || itemData.icon || "",
         name,
         quantity: newItem.quantity || 0,
       };
