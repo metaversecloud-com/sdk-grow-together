@@ -83,7 +83,7 @@ export const PlaceDecoration = ({
               ? `Place Decoration in Slot ${selectedSquareId}`
               : hasPlacedDecorations
                 ? "Buy More Decorations"
-                : "No decorations unlocked"
+                : "No decorations purchased"
           }
           disabled={isPlacing}
           handleOnClick={() => {
@@ -93,7 +93,6 @@ export const PlaceDecoration = ({
 
         {!hasDecorations ? (
           <NoItems
-            type="decorations"
             activeTab="decorations"
             closeModal={() => setSelectedSquareId(null)}
             handleShowInventoryModal={handleShowInventoryModal}

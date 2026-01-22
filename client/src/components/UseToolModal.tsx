@@ -86,7 +86,7 @@ export const UseToolModal = ({
     <div className="modal-container">
       <div className="modal">
         <ModalHeader
-          text={`Use Tool on Slot ${selectedSquareId}`}
+          text={availableTools.length === 0 ? "No tools purchased" : `Use Tool on Slot ${selectedSquareId}`}
           disabled={areButtonsDisabled}
           handleOnClick={() => {
             closeToolModal();
@@ -96,7 +96,6 @@ export const UseToolModal = ({
         {availableTools.length === 0 ? (
           handleShowInventoryModal ? (
             <NoItems
-              type="tools"
               activeTab="tools"
               closeModal={() => {
                 closeToolModal();

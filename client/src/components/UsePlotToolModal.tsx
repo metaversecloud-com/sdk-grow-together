@@ -61,9 +61,11 @@ export const UsePlotToolModal = ({
       <div className="modal">
         <ModalHeader
           text={
-            !numberOfCropsReady || numberOfCropsReady <= 0
-              ? `No crops ready to ${actionType.toLowerCase()}`
-              : `${actionType} ${numberOfCropsReady} crops?`
+            !hasTools
+              ? `No ${actionType === "Water" ? "sprinklers" : "harvest baskets"} purchased`
+              : !numberOfCropsReady || numberOfCropsReady <= 0
+                ? `No crops ready to ${actionType.toLowerCase()}`
+                : `${actionType} ${numberOfCropsReady} crops?`
           }
           disabled={areButtonsDisabled}
           handleOnClick={() => {
@@ -72,12 +74,7 @@ export const UsePlotToolModal = ({
         />
 
         {!hasTools ? (
-          <NoItems
-            type={actionType === "Water" ? "sprinklers" : "harvest baskets"}
-            activeTab="tools"
-            closeModal={closeToolModal}
-            handleShowInventoryModal={handleShowInventoryModal!}
-          />
+          <NoItems activeTab="tools" closeModal={closeToolModal} handleShowInventoryModal={handleShowInventoryModal!} />
         ) : (
           <div className="grid gap-2 grid-cols-2">
             {Object.values(tools)

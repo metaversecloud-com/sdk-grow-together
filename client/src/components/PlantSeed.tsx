@@ -49,7 +49,9 @@ export const PlantSeed = ({ selectedSquareId, setSelectedSquareId, handleShowInv
     <div className="modal-container">
       <div className="modal">
         <ModalHeader
-          text={seeds && Object.keys(seeds).length > 0 ? `Plant Seed in Slot ${selectedSquareId}` : "No seeds unlocked"}
+          text={
+            seeds && Object.keys(seeds).length > 0 ? `Plant Seed in Slot ${selectedSquareId}` : "No seeds purchased"
+          }
           disabled={isPlanting}
           handleOnClick={() => {
             setSelectedSquareId(null);
@@ -58,7 +60,6 @@ export const PlantSeed = ({ selectedSquareId, setSelectedSquareId, handleShowInv
 
         {seeds && Object.keys(seeds).length === 0 ? (
           <NoItems
-            type="seeds"
             activeTab="seeds"
             closeModal={() => setSelectedSquareId(null)}
             handleShowInventoryModal={handleShowInventoryModal}
@@ -92,7 +93,7 @@ export const PlantSeed = ({ selectedSquareId, setSelectedSquareId, handleShowInv
                     <p className="p4 text-muted">
                       {growthTimeInMinutes} min{growthTimeInMinutes > 1 ? "s" : ""}
                     </p>
-                    <p className="p3">
+                    <p className="p4">
                       Profit: <span className="text-success">{seed.reward}</span>
                     </p>
                   </div>

@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 
 // components
-import { PlaceDecoration, PlantSeed, PlotSquare, PlotSquareModal, UsePlotToolModal } from "@/components";
+import { EarnedMessage, PlaceDecoration, PlantSeed, PlotSquare, PlotSquareModal, UsePlotToolModal } from "@/components";
 
 // context
 import { GlobalStateContext } from "@/context/GlobalContext";
@@ -187,6 +187,8 @@ export const PlotGrid = ({
           )}
         </div>
       </div>
+
+      <EarnedMessage isOwnedByCurrentUser={isOwnedByCurrentUser} />
 
       {selectedSquareId !== null && !plotSquares[selectedSquareId] && (
         <>

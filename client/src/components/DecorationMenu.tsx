@@ -52,8 +52,8 @@ export const DecorationMenu = () => {
                 name={name}
                 rarity={rarity}
                 cost={cost}
-                isPurchasing={purchasingDecorations.has(id)}
-                handlePurchase={() => handlePurchaseDecoration(id)}
+                isPurchasing={purchasingDecorations.has(name)}
+                handlePurchase={() => handlePurchaseDecoration(name)}
                 isReadyOnly={false}
               />
             );

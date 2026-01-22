@@ -87,7 +87,7 @@ export const Plot = () => {
       isLoading={isLoading}
       headerText={headerText}
       isOwnedByCurrentUser={isOwnedByCurrentUser}
-      xp={plotOwnerXp}
+      xp={!!isOwnedByCurrentUser || !!isOwnedByOtherUser ? plotOwnerXp : undefined}
     >
       <div className="container">
         {/* Current user's plot */}

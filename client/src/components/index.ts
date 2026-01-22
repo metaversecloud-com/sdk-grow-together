@@ -5,6 +5,7 @@ export * from "./AppliedToolIcons.js";
 export * from "./ConfirmationModal.js";
 export * from "./CropDetails.js";
 export * from "./DecorationMenu.js";
+export * from "./EarnedMessage.js";
 export * from "./GetStartedModal.js";
 export * from "./HarvestButton.js";
 export * from "./InfoModal.js";

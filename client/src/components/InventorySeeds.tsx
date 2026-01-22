@@ -1,19 +1,23 @@
 import { useContext } from "react";
 
 // components
-import { InventoryItem } from "@/components";
+import { InventoryItem, NoItems } from "@/components";
 
 // context
 import { GlobalStateContext } from "@/context/GlobalContext";
 
-export const InventorySeeds = () => {
+export const InventorySeeds = ({
+  handleShowInventoryModal,
+}: {
+  handleShowInventoryModal: (activeTab: string) => void;
+}) => {
   const { visitorInventory } = useContext(GlobalStateContext);
 
-  if (!visitorInventory || !visitorInventory.seeds) {
+  if (!visitorInventory?.seeds || Object.keys(visitorInventory.seeds).length === 0) {
     return (
       <>
         <h4>No seeds purchased.</h4>
-        <p>Click "View Store" in the garden store to purchase seeds.</p>
+        <NoItems handleShowInventoryModal={handleShowInventoryModal} />
       </>
     );
   }

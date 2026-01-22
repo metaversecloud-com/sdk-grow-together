@@ -19,8 +19,8 @@ export const AppliedToolIcons = ({ appliedTools }: { appliedTools: string[] | un
         if (!tool) return null;
 
         return (
-          <div key={index} className="tooltip mb-1">
-            <span className="tooltip-content" style={{ width: "100px", left: "20px" }}>
+          <div key={index} className="tooltip mb-1" style={{ position: "absolute", margin: "-5px" }}>
+            <span className="tooltip-content" style={{ width: "125px", left: "60px" }}>
               {toolName}: {tool.description}
             </span>
             <div className="icon icon-sm">
