@@ -164,7 +164,10 @@ export const handleUseTool = async (req: Request, res: Response) => {
             .triggerParticle({
               name: actionType.toLowerCase() + "_grow_together",
               duration: 1,
-              position: cropAsset.position,
+              position: {
+                x: cropAsset.position.x - 50,
+                y: cropAsset.position.y - 40,
+              },
             })
             .catch((error) => {
               errorHandler({
