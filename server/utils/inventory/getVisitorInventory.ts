@@ -22,7 +22,9 @@ export const getVisitorInventory = async (credentials: Credentials): Promise<Vis
       tools: { [key: string]: any } = {};
 
     for (const item of allItems || []) {
-      const { item_id, name = "" } = item;
+      const { item_id, name = "", status } = item;
+
+      if (status !== "ACTIVE") continue;
 
       const data = await structureInventoryItemResponse(item);
 

@@ -15,6 +15,8 @@ export const getInventoryItems = async (credentials: Credentials) => {
     let ecosystemTools: { [key: string]: InventoryItemType } = {};
 
     for (const item of allItems) {
+      if (item.status !== "ACTIVE") continue;
+
       const data = await structureInventoryItemResponse(item);
 
       if (data.type === "decoration") ecosystemDecorations[data.name] = data;
