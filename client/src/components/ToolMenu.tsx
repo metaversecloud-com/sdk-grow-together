@@ -12,14 +12,14 @@ import { backendAPI, setErrorMessage } from "@/utils";
 
 export const ToolMenu = () => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { tools, visitorInventory = { coins: 0 } } = useContext(GlobalStateContext);
+  const { ecosystemTools, visitorInventory = { coins: 0 } } = useContext(GlobalStateContext);
 
   const [purchasingTools, setPurchasingTools] = useState<Set<string>>(new Set());
 
-  const handlePurchaseTool = async (toolId: string) => {
-    setPurchasingTools((prev) => new Set([...prev, toolId]));
+  const handlePurchaseTool = async (toolName: string) => {
+    setPurchasingTools((prev) => new Set([...prev, toolName]));
     await backendAPI
-      .post("/tool/purchase", { toolId })
+      .post("/tool/purchase", { toolName })
       .then((response) => {
         dispatch!({
           type: SET_VISITOR_INVENTORY,
@@ -30,7 +30,7 @@ export const ToolMenu = () => {
       .finally(() => {
         setPurchasingTools((prev) => {
           const updated = new Set(prev);
-          updated.delete(toolId);
+          updated.delete(toolName);
           return updated;
         });
       });
@@ -39,8 +39,8 @@ export const ToolMenu = () => {
   return (
     <div>
       <div className="grid grid-cols-2 gap-2">
-        {tools &&
-          Object.values(tools).map((tool) => {
+        {ecosystemTools &&
+          Object.values(ecosystemTools).map((tool) => {
             const { id, name, description, rarity, cost, quantity, icon } = tool;
 
             return (
@@ -55,7 +55,7 @@ export const ToolMenu = () => {
                 cost={cost}
                 quantity={quantity}
                 isPurchasing={purchasingTools.has(id)}
-                handlePurchase={() => handlePurchaseTool(id)}
+                handlePurchase={() => handlePurchaseTool(name)}
                 isReadyOnly={false}
                 showDescriptionTooltip={true}
               />

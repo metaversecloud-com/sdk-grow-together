@@ -16,21 +16,24 @@ import {
 import { GlobalStateContext } from "@/context/GlobalContext";
 
 export const InventoryModal = ({
+  inventoryModalActiveTab,
   showVisitorInventoryOnly,
   onClose,
 }: {
+  inventoryModalActiveTab?: string;
   showVisitorInventoryOnly: boolean;
   onClose: () => void;
 }) => {
   const { visitorInventory = { coins: 0 } } = useContext(GlobalStateContext);
 
-  const [activeTab, setActiveTab] = useState("seeds");
+  const [activeTab, setActiveTab] = useState(inventoryModalActiveTab || "seeds");
+  const [showStore, setShowStore] = useState(!showVisitorInventoryOnly);
 
   return (
     <div className="modal-container">
       <div className="modal" style={{ height: "70vh" }}>
         <ModalHeader
-          text={`${showVisitorInventoryOnly ? "Your Backpack" : "Garden Store"}`}
+          text={`${showStore ? "Garden Store" : "Your Backpack"}`}
           disabled={false}
           handleOnClick={onClose}
         />
@@ -61,20 +64,35 @@ export const InventoryModal = ({
           </button>
         </div>
 
-        {showVisitorInventoryOnly ? (
+        {showStore ? (
           activeTab === "seeds" ? (
-            <InventorySeeds />
+            <SeedMenu />
           ) : activeTab === "tools" ? (
-            <InventoryTools />
+            <ToolMenu />
           ) : (
-            <InventoryDecorations />
+            <DecorationMenu />
           )
         ) : activeTab === "seeds" ? (
-          <SeedMenu />
+          <InventorySeeds
+            handleShowInventoryModal={() => {
+              setShowStore(true);
+              setActiveTab("seeds");
+            }}
+          />
         ) : activeTab === "tools" ? (
-          <ToolMenu />
+          <InventoryTools
+            handleShowInventoryModal={() => {
+              setShowStore(true);
+              setActiveTab("tools");
+            }}
+          />
         ) : (
-          <DecorationMenu />
+          <InventoryDecorations
+            handleShowInventoryModal={() => {
+              setShowStore(true);
+              setActiveTab("decorations");
+            }}
+          />
         )}
       </div>
     </div>

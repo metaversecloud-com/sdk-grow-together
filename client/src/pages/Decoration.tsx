@@ -18,11 +18,11 @@ export const Decoration = () => {
     decorationData,
     plotData,
     visitorInventory = { coins: 0 },
-    decorations = {},
+    ecosystemDecorations = {},
   } = useContext(GlobalStateContext);
   const { plotAssetId: decorationPlotAssetId, ownerId, ownerName } = decorationData || {};
-  const { icon, name, rarity, description, cost } = decorationData?.decorationId
-    ? decorations[decorationData.decorationId]
+  const { icon, name, rarity, description, cost } = decorationData?.decorationName
+    ? ecosystemDecorations[decorationData.decorationName]
     : {};
 
   const [searchParams] = useSearchParams();

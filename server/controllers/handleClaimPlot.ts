@@ -12,7 +12,7 @@ import {
 } from "../utils/index.js";
 import {
   PlotAssetDataObjectType,
-  EcosystemInventoryItemType,
+  InventoryItemType,
   VisitorInventoryItemType,
   WorldDataObjectType,
 } from "../types/index.js";
@@ -82,11 +82,22 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       });
       // Throw error if Carrots doesn't exist in inventory for Public Key - user will not be able to do anything with their garden if they don't have any seeds to start with
       if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
-      visitorInventory.seeds[name] = modifyInventoryItemResponse as EcosystemInventoryItemType &
-        VisitorInventoryItemType;
+      visitorInventory.seeds[name] = modifyInventoryItemResponse as InventoryItemType & VisitorInventoryItemType;
     }
 
     if (Object.keys(visitorInventory.tools).length === 0) {
+      const starterPlotTools = ["Basic Sprinkler", "Basic Harvest Basket"];
+      for (const name of starterPlotTools) {
+        const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
+          credentials,
+          visitor,
+          name,
+          quantity: 1,
+        });
+        if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
+        visitorInventory.tools[name] = modifyInventoryItemResponse as InventoryItemType & VisitorInventoryItemType;
+      }
+
       const starterTools = ["Wooden Watering Can", "Basic Mulch", "Basic Compost"];
       for (const name of starterTools) {
         const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
@@ -96,8 +107,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
           quantity: 5,
         });
         if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
-        visitorInventory.tools[name] = modifyInventoryItemResponse as EcosystemInventoryItemType &
-          VisitorInventoryItemType;
+        visitorInventory.tools[name] = modifyInventoryItemResponse as InventoryItemType & VisitorInventoryItemType;
       }
     }
 

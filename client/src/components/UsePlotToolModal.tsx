@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 
 // components
-import { InventoryItem, ModalHeader } from "@/components";
+import { InventoryItem, ModalHeader, NoItems } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
@@ -14,10 +14,16 @@ import { VisitorInventoryItemType } from "@shared/types";
 interface UsePlotToolModalProps {
   actionType: string;
   numberOfCropsReady: number;
+  handleShowInventoryModal?: (activeTab: string) => void;
   closeToolModal: () => void;
 }
 
-export const UsePlotToolModal = ({ actionType, numberOfCropsReady, closeToolModal }: UsePlotToolModalProps) => {
+export const UsePlotToolModal = ({
+  actionType,
+  numberOfCropsReady,
+  handleShowInventoryModal,
+  closeToolModal,
+}: UsePlotToolModalProps) => {
   const dispatch = useContext(GlobalDispatchContext);
   const { visitorInventory = { tools: {} } } = useContext(GlobalStateContext);
   const tools = visitorInventory.tools as Record<string, VisitorInventoryItemType>;
@@ -55,9 +61,11 @@ export const UsePlotToolModal = ({ actionType, numberOfCropsReady, closeToolModa
       <div className="modal">
         <ModalHeader
           text={
-            !numberOfCropsReady || numberOfCropsReady <= 0
-              ? `No crops ready to ${actionType.toLowerCase()}`
-              : `${actionType} ${numberOfCropsReady} crops?`
+            !hasTools
+              ? `No ${actionType === "Water" ? "sprinklers" : "harvest baskets"} purchased`
+              : !numberOfCropsReady || numberOfCropsReady <= 0
+                ? `No crops ready to ${actionType.toLowerCase()}`
+                : `${actionType} ${numberOfCropsReady} crops?`
           }
           disabled={areButtonsDisabled}
           handleOnClick={() => {
@@ -66,10 +74,7 @@ export const UsePlotToolModal = ({ actionType, numberOfCropsReady, closeToolModa
         />
 
         {!hasTools ? (
-          <>
-            <h4>No tools purchased.</h4>
-            <p>Click "View Store" in the garden store to purchase more tools.</p>
-          </>
+          <NoItems activeTab="tools" closeModal={closeToolModal} handleShowInventoryModal={handleShowInventoryModal!} />
         ) : (
           <div className="grid gap-2 grid-cols-2">
             {Object.values(tools)

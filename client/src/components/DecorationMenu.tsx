@@ -12,14 +12,14 @@ import { backendAPI, setErrorMessage } from "@/utils";
 
 export const DecorationMenu = () => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { decorations, visitorInventory = { coins: 0 } } = useContext(GlobalStateContext);
+  const { ecosystemDecorations, visitorInventory = { coins: 0 } } = useContext(GlobalStateContext);
 
   const [purchasingDecorations, setPurchasingDecorations] = useState<Set<string>>(new Set());
 
-  const handlePurchaseDecoration = async (decorationId: string) => {
-    setPurchasingDecorations((prev) => new Set([...prev, decorationId]));
+  const handlePurchaseDecoration = async (decorationName: string) => {
+    setPurchasingDecorations((prev) => new Set([...prev, decorationName]));
     await backendAPI
-      .post("/decoration/purchase", { decorationId })
+      .post("/decoration/purchase", { decorationName })
       .then((response) => {
         dispatch!({
           type: SET_VISITOR_INVENTORY,
@@ -30,7 +30,7 @@ export const DecorationMenu = () => {
       .finally(() => {
         setPurchasingDecorations((prev) => {
           const updated = new Set(prev);
-          updated.delete(decorationId);
+          updated.delete(decorationName);
           return updated;
         });
       });
@@ -39,8 +39,8 @@ export const DecorationMenu = () => {
   return (
     <div>
       <div className="grid grid-cols-2 gap-2">
-        {decorations &&
-          Object.values(decorations).map((decoration) => {
+        {ecosystemDecorations &&
+          Object.values(ecosystemDecorations).map((decoration) => {
             const { id, name, rarity, cost, icon } = decoration;
 
             return (
@@ -52,8 +52,8 @@ export const DecorationMenu = () => {
                 name={name}
                 rarity={rarity}
                 cost={cost}
-                isPurchasing={purchasingDecorations.has(id)}
-                handlePurchase={() => handlePurchaseDecoration(id)}
+                isPurchasing={purchasingDecorations.has(name)}
+                handlePurchase={() => handlePurchaseDecoration(name)}
                 isReadyOnly={false}
               />
             );

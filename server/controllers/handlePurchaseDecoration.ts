@@ -16,17 +16,17 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
     const { profileId, urlSlug } = credentials;
-    const { decorationId } = req.body;
+    const { decorationName } = req.body;
 
-    if (!decorationId) throw "Valid decorationId is required";
+    if (!decorationName) throw "Valid decorationName is required";
 
     // Get decoration configuration
     const getInventoryItemsResponse = await getInventoryItems(credentials);
     if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
 
-    const { decorations } = getInventoryItemsResponse;
+    const { ecosystemDecorations } = getInventoryItemsResponse;
 
-    const decorationConfig = decorations[decorationId];
+    const decorationConfig = ecosystemDecorations[decorationName];
     if (!decorationConfig) throw "Invalid decoration type";
 
     const initializeVisitorDataResponse = await initializeVisitorData(credentials);

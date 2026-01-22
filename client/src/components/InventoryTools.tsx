@@ -1,19 +1,23 @@
 import { useContext } from "react";
 
 // components
-import { InventoryItem } from "@/components";
+import { InventoryItem, NoItems } from "@/components";
 
 // context
 import { GlobalStateContext } from "@/context/GlobalContext";
 
-export const InventoryTools = () => {
+export const InventoryTools = ({
+  handleShowInventoryModal,
+}: {
+  handleShowInventoryModal: (activeTab: string) => void;
+}) => {
   const { visitorInventory } = useContext(GlobalStateContext);
 
-  if (!visitorInventory || !visitorInventory.tools) {
+  if (!visitorInventory?.tools || Object.keys(visitorInventory.tools).length === 0) {
     return (
       <>
         <h4>No tools purchased.</h4>
-        <p>Click "View Store" in the garden store to purchase more tools.</p>
+        <NoItems handleShowInventoryModal={handleShowInventoryModal} />
       </>
     );
   }

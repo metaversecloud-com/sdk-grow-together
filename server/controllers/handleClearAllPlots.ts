@@ -151,12 +151,12 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
 
         // Reset placedDecorations for this urlSlug only
         if (ownerData.placedDecorations) {
-          for (const decorationId of Object.keys(ownerData.placedDecorations)) {
-            if (ownerData.placedDecorations[decorationId][urlSlug]) {
-              delete ownerData.placedDecorations[decorationId][urlSlug];
+          for (const decorationName of Object.keys(ownerData.placedDecorations)) {
+            if (ownerData.placedDecorations[decorationName][urlSlug]) {
+              delete ownerData.placedDecorations[decorationName][urlSlug];
               // Clean up empty objects
-              if (Object.keys(ownerData.placedDecorations[decorationId]).length === 0) {
-                delete ownerData.placedDecorations[decorationId];
+              if (Object.keys(ownerData.placedDecorations[decorationName]).length === 0) {
+                delete ownerData.placedDecorations[decorationName];
               }
             }
           }

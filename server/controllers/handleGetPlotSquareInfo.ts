@@ -24,9 +24,9 @@ export const handleGetPlotSquareInfo = async (req: Request, res: Response) => {
     const droppedAsset = await DroppedAsset.create(assetId, urlSlug, { credentials });
     const squareData = (await droppedAsset.fetchDataObject()) as CropDataObjectType;
 
-    const { seedId, squareId, ownerId } = squareData;
+    const { seedId, name, squareId, ownerId } = squareData;
 
-    if (seedId && profileId === ownerId && !visitorData.worlds[urlSlug]?.plotSquares[squareId]) {
+    if (name && profileId === ownerId && !visitorData.worlds[urlSlug]?.plotSquares[squareId]) {
       await visitor.closeIframe(assetId).catch((error: any) => {
         return errorHandler({
           error,
@@ -46,7 +46,7 @@ export const handleGetPlotSquareInfo = async (req: Request, res: Response) => {
     const getInventoryItemsResponse = await getInventoryItems(credentials);
     if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
 
-    const { decorations, seeds, tools } = getInventoryItemsResponse;
+    const { ecosystemDecorations, ecosystemSeeds, ecosystemTools } = getInventoryItemsResponse;
 
     await visitor.updateDataObject(
       {},
@@ -68,15 +68,15 @@ export const handleGetPlotSquareInfo = async (req: Request, res: Response) => {
       visitorData,
       plotData: visitorData.worlds[urlSlug],
       visitorInventory,
-      decorations,
-      seeds,
-      tools,
+      ecosystemDecorations,
+      ecosystemSeeds,
+      ecosystemTools,
     });
   } catch (error) {
     return errorHandler({
       error,
-      functionName: "handleGetGameState",
-      message: "Error getting game state",
+      functionName: "handleGetPlotSquareInfo",
+      message: "Error getting plot square info",
       req,
       res,
     });

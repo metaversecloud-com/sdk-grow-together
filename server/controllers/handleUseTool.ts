@@ -10,6 +10,7 @@ import {
   getEarnedMessage,
   checkDidIncreaseLevelOrRank,
   getAnalyticName,
+  World,
 } from "../utils/index.js";
 import { VisitorDataObjectType } from "../../shared/index.js";
 
@@ -130,7 +131,7 @@ export const handleUseTool = async (req: Request, res: Response) => {
 
       earnedMessage = await getEarnedMessage(coinReward, xpReward);
     } else {
-      const cropAsset = await DroppedAsset.create(assetId, urlSlug, { credentials });
+      const cropAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
       await cropAsset.fetchDataObject();
       let cropData = cropAsset.dataObject;
 
@@ -149,6 +150,7 @@ export const handleUseTool = async (req: Request, res: Response) => {
           uniqueKey: profileId,
         });
 
+        const world = World.create(urlSlug, { credentials });
         const lockId = `applyingTool_${assetId}_${Math.round(Date.now() / 10000) * 10000}`;
         await Promise.all([
           owner.updateDataObject(ownerData, {
@@ -158,6 +160,22 @@ export const handleUseTool = async (req: Request, res: Response) => {
           cropAsset.updateDataObject(cropData, {
             lock: { lockId, releaseLock: true },
           }),
+          world
+            .triggerParticle({
+              name: actionType.toLowerCase() + "_grow_together",
+              duration: 1,
+              position: {
+                x: cropAsset.position.x - 50,
+                y: cropAsset.position.y - 40,
+              },
+            })
+            .catch((error) => {
+              errorHandler({
+                error,
+                functionName: "handleUseTool",
+                message: `Failed to trigger ${actionType.toLowerCase()} particle effect: ${error}`,
+              });
+            }),
         ]);
       }
 

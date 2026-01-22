@@ -1,15 +1,15 @@
 import { useContext, useState, useEffect } from "react";
 
 // components
-import { AppliedToolIcons, HarvestButton, UseToolModal, WaterButton } from "@/components";
+import { AppliedToolIcons, EarnedMessage, HarvestButton, UseToolModal, WaterButton } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
-import { ErrorType, SET_EARNED_MESSAGE } from "@/context/types";
+import { ErrorType } from "@/context/types";
 
 // utils
 import { backendAPI, setErrorMessage } from "@/utils";
-import { CropDataObjectType, getSecondsRemaining } from "@shared/index.js";
+import { CropDataObjectType, getSecondsRemaining, getSeedConfig } from "@shared/index.js";
 
 interface CropDetailsProps {
   crop: CropDataObjectType;
@@ -25,10 +25,10 @@ export const CropDetails = ({
   isOwnedByCurrentUser,
 }: CropDetailsProps) => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { seeds = {}, earnedMessage } = useContext(GlobalStateContext);
+  const { ecosystemSeeds = {} } = useContext(GlobalStateContext);
 
-  const { plotAssetId: cropPlotAssetId, lastWatered, growLevel, ownerName, seedId, appliedTools = [] } = crop;
-  const seedConfig = seeds[seedId];
+  const { plotAssetId: cropPlotAssetId, lastWatered, growLevel, ownerName, appliedTools = [] } = crop;
+  const seedConfig = getSeedConfig(ecosystemSeeds, crop);
   const { name, reward, growthTime, harvestLevel, rarity } = seedConfig;
 
   let plotAssetId = cropPlotAssetId;
@@ -64,18 +64,6 @@ export const CropDetails = ({
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
   }, [lastWatered, growLevel, seedConfig, harvestLevel, growthTime, wasHarvested, appliedTools]);
-
-  useEffect(() => {
-    if (earnedMessage) {
-      // Clear the earned message after displaying it for 8 seconds
-      setTimeout(() => {
-        dispatch!({
-          type: SET_EARNED_MESSAGE,
-          payload: { earnedMessage: undefined },
-        });
-      }, 8000);
-    }
-  }, [earnedMessage]);
 
   const handleAfterUseTool = () => {
     setIsReadyToWater(false);
@@ -120,7 +108,7 @@ export const CropDetails = ({
         <div className="card small">
           <AppliedToolIcons appliedTools={appliedTools} />
           <div className="card-details" style={{ maxWidth: "100%", marginLeft: "-30px" }}>
-            <img className="m-auto" src={seeds[seedId].icon} style={{ width: "40px", height: "40px" }} />
+            <img className="m-auto" src={seedConfig.icon} style={{ width: "40px", height: "40px" }} />
             <div className="text-center">
               <h3 className="card-title bold">{name}</h3>
               <p className="text-muted">
@@ -139,17 +127,7 @@ export const CropDetails = ({
           </div>
         </div>
 
-        {/* Rewards Earned (by non-owners) */}
-        {!isOwnedByCurrentUser && earnedMessage && (
-          <>
-            <div className="card success">
-              <div className="card-details text-center">
-                {earnedMessage.multiplier && <strong>{earnedMessage.multiplier} </strong>}
-                <span className="text-success">{earnedMessage.message}</span>
-              </div>
-            </div>
-          </>
-        )}
+        <EarnedMessage isOwnedByCurrentUser={isOwnedByCurrentUser} />
 
         {/* Action Buttons */}
         {((!isOwnedByCurrentUser && isReadyToWater) || !isReadyToWater) &&

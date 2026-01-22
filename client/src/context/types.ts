@@ -1,6 +1,6 @@
 import {
   CropDataObjectType,
-  EcosystemInventoryItemType,
+  InventoryItemType,
   PlacedDecorationDataObjectType,
   PlotAssetDataObjectType,
   VisitorDataObjectType,
@@ -46,9 +46,9 @@ export interface InitialState {
   visitorData?: VisitorDataObjectType;
   visitorPlotAssetId?: string;
   plotData?: VisitorWorldDataType;
-  decorations?: { [key: string]: EcosystemInventoryItemType };
-  seeds?: { [key: string]: EcosystemInventoryItemType };
-  tools?: { [key: string]: EcosystemInventoryItemType };
+  ecosystemDecorations?: { [key: string]: InventoryItemType };
+  ecosystemSeeds?: { [key: string]: InventoryItemType };
+  ecosystemTools?: { [key: string]: InventoryItemType };
   xp?: number;
   earnedMessage?: { message?: string; multiplier?: string };
   soundEffect?: string;

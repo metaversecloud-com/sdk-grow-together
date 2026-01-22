@@ -1,6 +1,6 @@
 import { VisitorInterface } from "@rtsdk/topia";
-import { Credentials, UserItems, VisitorInventoryType } from "../../types/index.js";
-import { getInventoryItems, standardizeError, Visitor } from "../index.js";
+import { Credentials, IUserItems, VisitorInventoryType } from "../../types/index.js";
+import { standardizeError, structureInventoryItemResponse, Visitor } from "../index.js";
 import { defaultVisitorInventoryItem } from "../../../shared/index.js";
 
 /**
@@ -12,18 +12,8 @@ export const getVisitorInventory = async (credentials: Credentials): Promise<Vis
 
     const visitor = (await Visitor.create(visitorId, urlSlug, { credentials })) as VisitorInterface;
 
-    // Get all inventory items - shouldn't need this once all metadata is available on Visitor inventoryItems
-    const getInventoryItemsResponse = await getInventoryItems(credentials);
-    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
-
-    const {
-      decorations: ecosystemDecorations,
-      seeds: ecosystemSeeds,
-      tools: ecosystemTools,
-    } = getInventoryItemsResponse;
-
     await visitor.fetchInventoryItems();
-    const allItems = visitor.inventoryItems as UserItems[];
+    const allItems = visitor.inventoryItems as IUserItems[];
 
     let coins = 0,
       xp = 0,
@@ -32,38 +22,34 @@ export const getVisitorInventory = async (credentials: Credentials): Promise<Vis
       tools: { [key: string]: any } = {};
 
     for (const item of allItems || []) {
-      const { item_id, name = "" } = item;
+      const { item_id, name = "", status } = item;
+
+      if (status !== "ACTIVE") continue;
+
+      const data = await structureInventoryItemResponse(item);
 
       if (name === "Coins") {
         coins = item.quantity || 0;
       } else if (name === "Experience Points") {
         xp = item.quantity || 0;
-      } else if (name === "Rank") {
-        xp = item.quantity || 0;
-      } else if (ecosystemSeeds[item_id]) {
-        // Merge inventory item with seed data
-        seeds[name] = {
-          ...defaultVisitorInventoryItem,
-          ...ecosystemSeeds[item_id],
-          ecosystemItemId: item_id,
-          quantity: item.quantity || 0,
-        };
-      } else if (ecosystemDecorations[item_id]) {
-        // Merge inventory item with decoration data
+      } else if (data.type === "decoration") {
         decorations[name] = {
           ...defaultVisitorInventoryItem,
-          ...ecosystemDecorations[item_id],
+          ...data,
           ecosystemItemId: item_id,
           availableQuantity: item.quantity || 0,
-          quantity: item.quantity || 0,
         };
-      } else if (ecosystemTools[item_id]) {
-        // Merge inventory item with tool data
+      } else if (data.type === "seed") {
+        seeds[name] = {
+          ...defaultVisitorInventoryItem,
+          ...data,
+          ecosystemItemId: item_id,
+        };
+      } else if (data.type === "tool") {
         tools[name] = {
           ...defaultVisitorInventoryItem,
-          ...ecosystemTools[item_id],
+          ...data,
           ecosystemItemId: item_id,
-          quantity: item.quantity || 0,
         };
       }
     }

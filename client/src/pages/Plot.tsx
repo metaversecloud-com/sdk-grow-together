@@ -31,6 +31,7 @@ export const Plot = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isClaiming, setIsClaiming] = useState(false);
   const [showInventoryModal, setShowInventoryModal] = useState(false);
+  const [inventoryModalActiveTab, setInventoryModalActiveTab] = useState("seeds");
   const [showVisitorInventoryOnly, setShowVisitorInventoryOnly] = useState(false);
   const [showGetStartedModal, setShowGetStartedModal] = useState(searchParams.get("isFirstTimeOpen") === "true");
 
@@ -75,12 +76,18 @@ export const Plot = () => {
       .finally(() => setIsLoading(false));
   };
 
+  const handleShowInventoryModal = (activeTab: string) => {
+    setInventoryModalActiveTab(activeTab);
+    setShowVisitorInventoryOnly(false);
+    setShowInventoryModal(true);
+  };
+
   return (
     <PageContainer
       isLoading={isLoading}
       headerText={headerText}
       isOwnedByCurrentUser={isOwnedByCurrentUser}
-      xp={plotOwnerXp}
+      xp={!!isOwnedByCurrentUser || !!isOwnedByOtherUser ? plotOwnerXp : undefined}
     >
       <div className="container">
         {/* Current user's plot */}
@@ -114,6 +121,7 @@ export const Plot = () => {
               placedDecorations={decorations || {}}
               isOwnedByCurrentUser={isOwnedByCurrentUser}
               ownerId={ownerId}
+              handleShowInventoryModal={handleShowInventoryModal}
             />
           </div>
         )}
@@ -174,6 +182,7 @@ export const Plot = () => {
       {/* Modals */}
       {showInventoryModal && (
         <InventoryModal
+          inventoryModalActiveTab={inventoryModalActiveTab}
           showVisitorInventoryOnly={showVisitorInventoryOnly}
           onClose={() => setShowInventoryModal(false)}
         />

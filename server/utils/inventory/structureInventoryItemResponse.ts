@@ -1,22 +1,42 @@
 import { getRarity } from "../../../shared/index.js";
-import { EcosystemItemType } from "../../types/Types.js";
+import { IEcosystemItems, IUserItems } from "../../types/index.js";
 
-export const structureInventoryItemResponse = async (item: EcosystemItemType) => {
+export const structureInventoryItemResponse = async (item: IEcosystemItems | IUserItems): Promise<any> => {
+  const { id, name, description, image_path, image_url, metadata, itemMetadata } = item;
+
+  const icon = image_path !== "" ? image_path : image_url !== "" ? image_url : "";
+
+  let metadataToUse = Object.keys(metadata || {}).length > 0 ? metadata : itemMetadata;
+  const { cost, rarity, reward, xp, growthTime, harvestLevel, canBeUsedOnPlot, actionType, sortOrder, quantity, type } =
+    metadataToUse || {
+      cost: 0,
+      rarity: 0,
+      reward: 0,
+      xp: 0,
+      growthTime: 0,
+      harvestLevel: 0,
+      canBeUsedOnPlot: false,
+      actionType: undefined,
+      sortOrder: 0,
+      quantity: 0,
+    };
+
   const itemData = {
-    id: item.id,
-    name: item.name || "Unknown",
-    icon: item.image_path || "",
-    cost: item.metadata?.cost || 0,
-    rarity: getRarity(item.metadata?.rarity || 0),
-    description: item.description || "",
-    reward: item.metadata?.reward || 0,
-    xp: item.metadata?.xp || 0,
-    growthTime: item.metadata?.growthTime || 0,
-    harvestLevel: item.metadata?.harvestLevel || 0,
-    canBeUsedOnPlot: item.metadata?.canBeUsedOnPlot || false,
-    actionType: item.metadata?.actionType || undefined,
-    sortOrder: item.metadata?.sortOrder || 0,
-    quantity: item.metadata?.quantity || 1,
+    id,
+    name: name || "Unknown",
+    icon,
+    cost,
+    rarity: getRarity(rarity || 0),
+    description: description || "",
+    reward,
+    xp,
+    growthTime,
+    harvestLevel,
+    canBeUsedOnPlot,
+    actionType,
+    sortOrder,
+    quantity: item.quantity || quantity || 0,
+    type,
   };
 
   return itemData;

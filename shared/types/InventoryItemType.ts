@@ -1,7 +1,7 @@
 /**
- * Shared Ecosystem Inventory Item types between client and server
+ * Shared Inventory Item types between client and server
  */
-export type EcosystemInventoryItemType = {
+export type InventoryItemType = {
   id: string;
   name: string;
   cost: number; // 0 for free seeds
