@@ -41,11 +41,11 @@ export const PlotGrid = ({
 }: PlotGridProps) => {
   const { ecosystemDecorations = {}, ecosystemSeeds = {}, ecosystemTools = {} } = useContext(GlobalStateContext);
 
-  const sprinklerIcon = Object.values(ecosystemTools).find(
-    (item: InventoryItemType) => item.name === "Basic Sprinkler",
+  const sprinklerIcon = Object.values(ecosystemTools).find((item: InventoryItemType) =>
+    item.name.includes("Sprinkler"),
   )?.icon;
-  const harvestIcon = Object.values(ecosystemTools).find(
-    (item: InventoryItemType) => item.name === "Basic Harvest Basket",
+  const harvestIcon = Object.values(ecosystemTools).find((item: InventoryItemType) =>
+    item.name.includes("Harvest Basket"),
   )?.icon;
 
   const [selectedSquareId, setSelectedSquareId] = useState<number | null>(null);

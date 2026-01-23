@@ -54,7 +54,7 @@ export const ToolMenu = () => {
                 rarity={rarity}
                 cost={cost}
                 quantity={quantity}
-                isPurchasing={purchasingTools.has(id)}
+                isPurchasing={purchasingTools.has(name)}
                 handlePurchase={() => handlePurchaseTool(name)}
                 isReadyOnly={false}
                 showDescriptionTooltip={true}
