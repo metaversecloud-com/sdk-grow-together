@@ -75,8 +75,7 @@ export const Instructions = () => {
           <b>Step 1: Click the "View Garden" sign.</b>
         </p>
         <p className="p2">
-          <b>Step 2a: To use Sprinklers or Harvest Baskets,</b> click one of the actions next to "Garden Plot" to use
-          them. These can only be used on your garden.
+          <b>Step 2a: To use Sprinklers or Harvest Baskets,</b> click one of the actions next to "Garden Plot."
           <img src="https://sdk-grow-together.s3.us-east-1.amazonaws.com/usePlotTools.jpg" alt="Plot Tools" />
         </p>
         <p className="p2">
@@ -84,8 +83,8 @@ export const Instructions = () => {
           <img src="https://sdk-grow-together.s3.us-east-1.amazonaws.com/useTools.jpg" alt="Plot Tools" />
         </p>
         <p className="p2">
-          <b>To use Watering Cans,</b> follow step 2b at friend's garden. Watering Cans can only be used on friends
-          crops, but you will be rewarded for helping them.
+          <b>Step 2c: To use Watering Cans,</b> click a crop ready for water in a friend's garden. Then click "Use Tool"
+          and select a Watering Can. Watering Cans can only be used on friends crops.
         </p>
       </Accordion>
     </>
