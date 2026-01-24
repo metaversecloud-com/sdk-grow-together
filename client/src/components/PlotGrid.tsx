@@ -138,10 +138,10 @@ export const PlotGrid = ({
         <div className="flex pt-6">
           <h4 className="pr-4 pt-2">Garden Plot</h4>
           <div className="btn btn-icon btn-icon-sm mr-2" onClick={() => handleShowUsePlotToolModal("Water")}>
-            {sprinklerIcon ? <img src={sprinklerIcon} alt="Basic Sprinkler" /> : "💦"}
+            {sprinklerIcon ? <img src={sprinklerIcon} alt="Sprinkler" /> : "💦"}
           </div>
           <div className="btn btn-icon btn-icon-sm mr-2" onClick={() => handleShowUsePlotToolModal("Harvest")}>
-            {harvestIcon ? <img src={harvestIcon} alt="Basic Harvest Basket" /> : "🧺"}
+            {harvestIcon ? <img src={harvestIcon} alt="Harvest Basket" /> : "🧺"}
           </div>
         </div>
       )}
