@@ -86,7 +86,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
     }
 
     if (Object.keys(visitorInventory.tools).length === 0) {
-      const starterPlotTools = ["Basic Sprinkler", "Basic Harvest Basket"];
+      const starterPlotTools = ["Sprinkler", "Harvest Basket"];
       for (const name of starterPlotTools) {
         const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
           credentials,

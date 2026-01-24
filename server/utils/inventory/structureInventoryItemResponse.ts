@@ -35,8 +35,8 @@ export const structureInventoryItemResponse = async (item: IEcosystemItems | IUs
     canBeUsedOnPlot,
     actionType,
     sortOrder,
-    quantity: item.quantity || quantity || 0,
     type,
+    quantity: item.quantity || quantity || 0, // item.quantity only exists for IUserItems, metadata.quantity for IEcosystemItems is a custom field used specifically for tools to determine how many are given per purchase
   };
 
   return itemData;
