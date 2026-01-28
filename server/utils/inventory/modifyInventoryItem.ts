@@ -1,8 +1,6 @@
 import { VisitorInterface } from "@rtsdk/topia";
 import { Credentials, VisitorInventoryItemType } from "../../types/index.js";
-import { getInventoryItem } from "./getInventoryItem.js";
-import { standardizeError } from "../standardizeError.js";
-import { defaultVisitorInventoryItem } from "../../../shared/index.js";
+import { getInventoryItem, standardizeError, structureVisitorInventoryItem } from "../index.js";
 
 export const modifyVisitorInventoryItem = async ({
   credentials,
@@ -16,22 +14,16 @@ export const modifyVisitorInventoryItem = async ({
   quantity: number;
 }): Promise<VisitorInventoryItemType | Error> => {
   try {
-    let item = {} as VisitorInventoryItemType;
-
     const getInventoryItemResponse = await getInventoryItem(credentials, name);
     if (getInventoryItemResponse instanceof Error) throw getInventoryItemResponse;
 
-    const { inventoryItem, itemData } = getInventoryItemResponse;
+    const inventoryItem = getInventoryItemResponse;
 
-    const newItem = await visitor.grantInventoryItem(inventoryItem, quantity);
-    item = {
-      ...defaultVisitorInventoryItem,
-      ...itemData,
-      id: newItem.id,
-      availableQuantity: newItem.quantity || 0,
-    };
+    const visitorItem = await visitor.modifyInventoryItemQuantity(inventoryItem, quantity);
 
-    return item;
+    const itemData = await structureVisitorInventoryItem(visitorItem);
+
+    return itemData;
   } catch (error: any) {
     return standardizeError(error);
   }

@@ -20,11 +20,3 @@ export type MetadataType = {
   sortOrder?: number;
   quantity?: number;
 };
-
-export interface IEcosystemItems extends InventoryItemInterface {
-  credentials: any;
-  fetchInventoryItemById: any;
-  topiaPublicApi: any;
-  errorHandler: any;
-  metadata?: MetadataType;
-}

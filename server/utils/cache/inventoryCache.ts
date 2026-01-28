@@ -1,14 +1,13 @@
-import { Credentials, IEcosystemItems, InventoryItemType } from "../../types/index.js";
-import { Ecosystem } from "../topiaInit.js";
-import { structureInventoryItem } from "../inventory/structureInventoryItem.js";
-import { standardizeError } from "../standardizeError.js";
+import { Credentials, InventoryItemType } from "../../types/index.js";
+import { InventoryItemInterface } from "@rtsdk/topia";
+import { Ecosystem, standardizeError, structureEcosystemInventoryItem } from "../index.js";
 
 // Cache duration: 24 hours in milliseconds
 const CACHE_DURATION_MS = 24 * 60 * 60 * 1000;
 
 interface InventoryCacheEntry {
   data: {
-    allItems: IEcosystemItems[];
+    allItems: InventoryItemInterface[];
     ecosystemDecorations: { [key: string]: InventoryItemType };
     ecosystemSeeds: { [key: string]: InventoryItemType };
     ecosystemTools: { [key: string]: InventoryItemType };
@@ -56,7 +55,7 @@ class InventoryCache {
     const ecosystem = await Ecosystem.create({ credentials });
     await ecosystem.fetchInventoryItems();
 
-    const allItems = ecosystem.inventoryItems as unknown as IEcosystemItems[];
+    const allItems = ecosystem.inventoryItems;
 
     let ecosystemDecorations: { [key: string]: InventoryItemType } = {};
     let ecosystemSeeds: { [key: string]: InventoryItemType } = {};
@@ -65,7 +64,7 @@ class InventoryCache {
     for (const item of allItems) {
       if (item.status !== "ACTIVE") continue;
 
-      const data = await structureInventoryItem(item);
+      const data = await structureEcosystemInventoryItem(item);
 
       if (data.type === "decoration") ecosystemDecorations[data.name] = data;
       else if (data.type === "seed") ecosystemSeeds[data.name] = data;

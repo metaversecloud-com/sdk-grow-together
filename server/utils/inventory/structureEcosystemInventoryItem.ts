@@ -1,11 +1,12 @@
-import { defaultVisitorInventoryItem, getRarity } from "../../../shared/index.js";
-import { IEcosystemItems } from "../../types/index.js";
+import { InventoryItemInterface } from "@rtsdk/topia";
+import { getRarity } from "../../../shared/index.js";
+import { MetadataType } from "../../types/Types.js";
 
-export const structureInventoryItem = async (item: IEcosystemItems): Promise<any> => {
+export const structureEcosystemInventoryItem = async (item: InventoryItemInterface): Promise<any> => {
   const { id, name, description, image_path, metadata } = item;
 
   const { cost, rarity, reward, growthTime, harvestLevel, canBeUsedOnPlot, actionType, sortOrder, quantity, type } =
-    metadata || defaultVisitorInventoryItem;
+    (metadata as MetadataType) || {};
 
   const itemData = {
     id,

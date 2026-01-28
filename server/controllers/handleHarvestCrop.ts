@@ -30,6 +30,7 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
 
     const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
 
+
     const plotData = visitorData.worlds[urlSlug];
 
     // Check if the crop exists in visitor's data
