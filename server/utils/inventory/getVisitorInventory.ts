@@ -1,7 +1,7 @@
 import { VisitorInterface } from "@rtsdk/topia";
-import { Credentials, IUserItems, VisitorInventoryType } from "../../types/index.js";
-import { standardizeError, structureInventoryItemResponse, Visitor } from "../index.js";
-import { defaultVisitorInventoryItem } from "../../../shared/index.js";
+import { Credentials, MetadataType, VisitorInventoryItemType, VisitorInventoryType } from "../../types/index.js";
+import { standardizeError, Visitor } from "../index.js";
+import { defaultVisitorInventoryItem, getRarity } from "../../../shared/index.js";
 
 /**
  * Retrieve and organize visitor inventory items
@@ -13,43 +13,79 @@ export const getVisitorInventory = async (credentials: Credentials): Promise<Vis
     const visitor = (await Visitor.create(visitorId, urlSlug, { credentials })) as VisitorInterface;
 
     await visitor.fetchInventoryItems();
-    const allItems = visitor.inventoryItems as IUserItems[];
+    const allItems = visitor.inventoryItems;
 
     let coins = 0,
       xp = 0,
-      seeds: { [key: string]: any } = {},
-      decorations: { [key: string]: any } = {},
-      tools: { [key: string]: any } = {};
+      seeds: { [key: string]: VisitorInventoryItemType } = {},
+      decorations: { [key: string]: VisitorInventoryItemType } = {},
+      tools: { [key: string]: VisitorInventoryItemType } = {};
 
-    for (const item of allItems || []) {
-      const { item_id, name = "", status } = item;
+    for (const visitorItem of allItems || []) {
+      const { id, status, quantity, item } = visitorItem;
 
-      if (status !== "ACTIVE") continue;
+      const { name, description = "", image_url = "", metadata } = item || {};
 
-      const data = await structureInventoryItemResponse(item);
+      const {
+        type,
+        cost = 0,
+        rarity = 0,
+        reward = 0,
+        growthTime = 0,
+        harvestLevel = 0,
+        canBeUsedOnPlot = false,
+        actionType,
+        sortOrder = 0,
+      } = metadata as MetadataType;
+
+      if (status !== "ACTIVE" || !name) continue;
 
       if (name === "Coins") {
-        coins = item.quantity || 0;
+        coins = quantity || 0;
       } else if (name === "Experience Points") {
-        xp = item.quantity || 0;
-      } else if (data.type === "decoration") {
+        xp = quantity || 0;
+      } else if (type === "decoration") {
         decorations[name] = {
           ...defaultVisitorInventoryItem,
-          ...data,
-          ecosystemItemId: item_id,
-          availableQuantity: item.quantity || 0,
+          id,
+          availableQuantity: quantity || 0,
+          description,
+          icon: image_url,
+          name,
+          quantity,
+          cost,
+          reward,
+          rarity: getRarity(rarity),
+          sortOrder,
         };
-      } else if (data.type === "seed") {
+      } else if (type === "seed") {
         seeds[name] = {
           ...defaultVisitorInventoryItem,
-          ...data,
-          ecosystemItemId: item_id,
+          description,
+          icon: image_url,
+          name,
+          quantity,
+          cost,
+          reward,
+          rarity: getRarity(rarity),
+          growthTime,
+          harvestLevel,
+          actionType,
+          sortOrder,
         };
-      } else if (data.type === "tool") {
+      } else if (type === "tool") {
         tools[name] = {
           ...defaultVisitorInventoryItem,
-          ...data,
-          ecosystemItemId: item_id,
+          description,
+          icon: image_url,
+          name,
+          quantity,
+          cost,
+          reward,
+          rarity: getRarity(rarity),
+          canBeUsedOnPlot,
+          actionType,
+          sortOrder,
         };
       }
     }

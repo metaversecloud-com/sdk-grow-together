@@ -1,19 +1,20 @@
 import { Credentials, IEcosystemItems } from "../../types/index.js";
-import { Ecosystem } from "../topiaInit.js";
-import { standardizeError } from "../standardizeError.js";
-import { structureInventoryItemResponse } from "./structureInventoryItemResponse.js";
+import { standardizeError } from "../index.js";
+import { getInventoryItems, structureInventoryItem } from "./index.js";
 
 export const getInventoryItem = async (credentials: Credentials, itemName: string) => {
   try {
-    const ecosystem = await Ecosystem.create({ credentials });
-    await ecosystem.fetchInventoryItems();
+    const getInventoryItemsResponse = await getInventoryItems(credentials);
+    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
 
-    const inventoryItem = ecosystem.inventoryItems?.find(
+    const { allItems } = getInventoryItemsResponse;
+
+    const inventoryItem = allItems.find(
       (item) => item.name === itemName && item.status === "ACTIVE",
     ) as IEcosystemItems;
     if (!inventoryItem) throw new Error(`Inventory item ${itemName} not found in ecosystem`);
 
-    const itemData = await structureInventoryItemResponse(inventoryItem);
+    const itemData = await structureInventoryItem(inventoryItem);
 
     return { inventoryItem, itemData };
   } catch (error: any) {

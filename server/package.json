@@ -10,11 +10,13 @@
     "build": "npx tsc",
     "ts-check": "tsc --noEmit",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "link-sdk": "yalc link @rtsdk/topia",
+    "unlink-sdk": "yalc remove @rtsdk/topia"
   },
   "dependencies": {
     "@googleapis/sheets": "^9.0.0",
-    "@rtsdk/topia": "^0.19.0",
+    "@rtsdk/topia": "^0.19.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.18.3"

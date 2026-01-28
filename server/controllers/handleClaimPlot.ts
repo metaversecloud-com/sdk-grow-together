@@ -49,18 +49,6 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       throw `This plot is already owned by ${plotAssetData.ownerName || "another player"}.`;
     }
 
-    const title = `${displayName}'s Garden`;
-
-    // Add owner text asset below the plot
-    const asset = Asset.create("textAsset", { credentials });
-    const droppedTextAsset = await DroppedAsset.drop(asset, {
-      position: { x: plotAsset.position.x, y: plotAsset.position.y + 580 },
-      isTextTopLayer: true,
-      text: title,
-      uniqueName: `GrowTogether_ownerText_${profileId}`,
-      urlSlug,
-    });
-
     // Claim the plot
     const claimedDate = new Date().toISOString();
 
@@ -157,6 +145,18 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
         },
       }),
     );
+
+    const title = `${displayName}'s Garden`;
+
+    // Add owner text asset below the plot
+    const asset = Asset.create("textAsset", { credentials });
+    const droppedTextAsset = await DroppedAsset.drop(asset, {
+      position: { x: plotAsset.position.x, y: plotAsset.position.y + 580 },
+      isTextTopLayer: true,
+      text: title,
+      uniqueName: `GrowTogether_ownerText_${profileId}`,
+      urlSlug,
+    });
 
     const baseUrl = getBaseUrl(req.hostname);
     const clickableLink = `${baseUrl}/plot?ownerName=${encodeURIComponent(displayName)}&ownerProfileId=${profileId}`;

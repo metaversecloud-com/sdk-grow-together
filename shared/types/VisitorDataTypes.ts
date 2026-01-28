@@ -22,7 +22,6 @@ export type VisitorWorldDataType = {
 
 export type VisitorInventoryItemType = {
   id: string;
-  ecosystemItemId: string;
   availableQuantity: number;
   description: string;
   icon: string;
@@ -31,7 +30,6 @@ export type VisitorInventoryItemType = {
   cost: number;
   rarity: string;
   reward: number;
-  xp: number;
   growthTime: number;
   harvestLevel: number;
   canBeUsedOnPlot: boolean;
