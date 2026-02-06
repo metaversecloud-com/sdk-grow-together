@@ -36,7 +36,7 @@ jobs:
                   
           # Read CODEOWNERS file if it exists
           if [[ -f ".github/CODEOWNERS" ]]; then
-            echo "📋 Reading CODEOWNERS file..."
+            echo "[INFO] Reading CODEOWNERS file..."
             # Extract usernames from CODEOWNERS (remove @ prefix)
             codeowners=$(grep -v '^#' .github/CODEOWNERS | grep -o '@[a-zA-Z0-9_-]*' | sed 's/@//' | sort -u)
             for user in $codeowners; do
@@ -44,11 +44,11 @@ jobs:
               echo "  - CODEOWNER: $user"
             done
           else
-            echo "⚠️  No CODEOWNERS file found"
+            echo "[WARN] No CODEOWNERS file found"
           fi
                   
           # Get repository collaborators with admin/maintain permissions using GitHub API
-          echo "🔍 Checking repository permissions..."
+          echo "[CHECK] Checking repository permissions..."
                   
           # Check if user has admin or maintain permissions
           user_permission=$(curl -s -H "Authorization: token ${{ secrets.PAT }}" \
@@ -65,7 +65,7 @@ jobs:
           for user in "${authorized_users[@]}"; do
             if [[ "$user" == "$merged_by" ]]; then
               is_authorized=true
-              echo "✅ User $merged_by is authorized via CODEOWNERS"
+              echo "[OK] User $merged_by is authorized via CODEOWNERS"
               break
             fi
           done
@@ -73,7 +73,7 @@ jobs:
           # Check if user has admin or maintain permissions
           if [[ "$user_permission" == "admin" || "$user_permission" == "maintain" ]]; then
             is_authorized=true
-            echo "✅ User $merged_by is authorized via repository permissions ($user_permission)"
+            echo "[OK] User $merged_by is authorized via repository permissions ($user_permission)"
           fi
                   
           # Check if user is organization owner (for metaversecloud-com org)
@@ -94,21 +94,21 @@ jobs:
                     
             if [[ "$owner_status" == "admin" ]]; then
               is_authorized=true
-              echo "✅ User $merged_by is authorized as organization owner"
+              echo "[OK] User $merged_by is authorized as organization owner"
             fi
           fi
                   
           echo "is_authorized=$is_authorized" >> $GITHUB_OUTPUT
                   
           if [[ "$is_authorized" == "false" ]]; then
-            echo "❌ User $merged_by is not authorized to trigger releases"
-            echo "💡 Authorized users include:"
+            echo "[ERROR] User $merged_by is not authorized to trigger releases"
+            echo "[TIP] Authorized users include:"
             echo "  - CODEOWNERS: ${authorized_users[*]}"
             echo "  - Repository admins and maintainers"
             echo "  - Organization owners"
             exit 0
           else
-            echo "🎉 User $merged_by is authorized to trigger releases"
+            echo "[SUCCESS] User $merged_by is authorized to trigger releases"
           fi
 
       - name: Check for release labels and determine version bumps
@@ -221,7 +221,7 @@ jobs:
           generate_release_notes: true
           make_latest: true
           body: |
-            ## 🚀 Release ${{ env.NEW_VERSION }}
+            ## ? Release ${{ env.NEW_VERSION }}
                     
             **Version Bumps Applied:**
             - Major: ${{ steps.check.outputs.has_major }}
