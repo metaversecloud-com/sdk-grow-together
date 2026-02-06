@@ -17,10 +17,7 @@ export const handleRemoveDecoration = async (req: Request, res: Response) => {
     const { assetId, profileId, urlSlug } = credentials;
     const { squareId } = req.body;
 
-    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
-    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
-
-    const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
+    const { visitor, visitorData, visitorInventory } = await initializeVisitorData(credentials);
 
     const plotData = visitorData.worlds[urlSlug];
     const decorationAssetId = plotData.plotSquares[squareId];
@@ -33,10 +30,7 @@ export const handleRemoveDecoration = async (req: Request, res: Response) => {
     // Get decoration configuration
     const decoration = plotData.decorations[decorationAssetId];
 
-    const getInventoryItemsResponse = await getInventoryItems(credentials);
-    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
-
-    const { ecosystemDecorations } = getInventoryItemsResponse;
+    const { ecosystemDecorations } = await getInventoryItems(credentials);
 
     const decorationConfig = ecosystemDecorations[decoration.decorationName];
     if (!decorationConfig) throw "Invalid decoration type";

@@ -11,10 +11,7 @@ export const handleRemoveCrop = async (req: Request, res: Response) => {
     const { profileId, urlSlug } = credentials;
     const { squareId } = req.body;
 
-    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
-    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
-
-    const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
+    const { visitor, visitorData, visitorInventory } = await initializeVisitorData(credentials);
 
     const plotData = visitorData.worlds[urlSlug];
     const assetId = plotData.plotSquares[squareId];

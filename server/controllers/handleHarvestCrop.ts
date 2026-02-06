@@ -25,10 +25,7 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
     const { cropAssetId } = req.body;
     const assetId = cropAssetId || credentials.assetId;
 
-    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
-    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
-
-    const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
+    const { visitor, visitorData, visitorInventory } = await initializeVisitorData(credentials);
 
 
     const plotData = visitorData.worlds[urlSlug];
@@ -53,10 +50,7 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
       return res.status(409).json({ message: "Crop is already being harvest." });
     }
 
-    const getInventoryItemsResponse = await getInventoryItems(credentials);
-    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
-
-    const { ecosystemSeeds } = getInventoryItemsResponse;
+    const { ecosystemSeeds } = await getInventoryItems(credentials);
 
     // Get seed configuration for harvest level and reward calculation
     const seedConfig = getSeedConfig(ecosystemSeeds, crop);
@@ -94,7 +88,6 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
       name: "Experience Points",
       quantity: xpRewardAmount,
     });
-    if (modifyXpResponse instanceof Error) throw modifyXpResponse;
 
     const { coinsEarnedForRankUp, didLevelUp } = await checkDidIncreaseLevelOrRank(
       credentials,
@@ -112,7 +105,6 @@ export const handleHarvestCrop = async (req: Request, res: Response) => {
       name: "Coins",
       quantity: coinRewardAmount,
     });
-    if (modifyCoinsResponse instanceof Error) throw modifyCoinsResponse;
     visitorInventory.coins = modifyCoinsResponse.quantity;
 
     // Update visitor's data object

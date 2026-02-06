@@ -6,7 +6,7 @@ import { defaultVisitorInventoryItem, getRarity } from "../../../shared/index.js
 /**
  * Retrieve and organize visitor inventory items
  */
-export const getVisitorInventory = async (credentials: Credentials): Promise<VisitorInventoryType | Error> => {
+export const getVisitorInventory = async (credentials: Credentials): Promise<VisitorInventoryType> => {
   try {
     const { urlSlug, visitorId } = credentials;
 
@@ -70,6 +70,6 @@ export const getVisitorInventory = async (credentials: Credentials): Promise<Vis
 
     return visitorInventory;
   } catch (error: any) {
-    return standardizeError(error);
+    throw standardizeError(error);
   }
 };

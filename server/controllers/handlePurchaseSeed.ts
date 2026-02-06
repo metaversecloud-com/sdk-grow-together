@@ -21,18 +21,12 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
     if (!seedName) throw "Valid seedName is required";
 
     // Get seed configuration
-    const getInventoryItemsResponse = await getInventoryItems(credentials);
-    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
-
-    const { ecosystemSeeds } = getInventoryItemsResponse;
+    const { ecosystemSeeds } = await getInventoryItems(credentials);
 
     const seedConfig = ecosystemSeeds[seedName];
     if (!seedConfig) throw "Invalid seed type";
 
-    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
-    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
-
-    const { visitor, visitorInventory } = initializeVisitorDataResponse;
+    const { visitor, visitorInventory } = await initializeVisitorData(credentials);
 
     // Check if seed is already purchased (for paid seeds)
     if (seedConfig.cost > 0 && visitorInventory.seeds[seedName]) throw "Seed already purchased";
@@ -49,7 +43,6 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
       name: "Coins",
       quantity: -seedConfig.cost,
     });
-    if (modifyCoinsResponse instanceof Error) throw modifyCoinsResponse;
     visitorInventory.coins = modifyCoinsResponse.quantity;
 
     const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
@@ -58,7 +51,6 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
       name: seedConfig.name,
       quantity: 1,
     });
-    if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
 
     visitorInventory.seeds[seedName] = {
       ...visitorInventory.seeds[seedName],

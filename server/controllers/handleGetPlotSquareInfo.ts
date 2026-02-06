@@ -16,10 +16,7 @@ export const handleGetPlotSquareInfo = async (req: Request, res: Response) => {
     const credentials = getCredentials(req.query);
     const { assetId, profileId, urlSlug } = credentials;
 
-    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
-    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
-
-    const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
+    const { visitor, visitorData, visitorInventory } = await initializeVisitorData(credentials);
 
     const droppedAsset = await DroppedAsset.create(assetId, urlSlug, { credentials });
     const squareData = (await droppedAsset.fetchDataObject()) as CropDataObjectType;
@@ -43,10 +40,7 @@ export const handleGetPlotSquareInfo = async (req: Request, res: Response) => {
       });
     }
 
-    const getInventoryItemsResponse = await getInventoryItems(credentials);
-    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
-
-    const { ecosystemDecorations, ecosystemSeeds, ecosystemTools } = getInventoryItemsResponse;
+    const { ecosystemDecorations, ecosystemSeeds, ecosystemTools } = await getInventoryItems(credentials);
 
     await visitor.updateDataObject(
       {},

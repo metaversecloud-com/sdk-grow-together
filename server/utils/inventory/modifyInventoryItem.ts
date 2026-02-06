@@ -12,12 +12,9 @@ export const modifyVisitorInventoryItem = async ({
   visitor: VisitorInterface;
   name: string;
   quantity: number;
-}): Promise<VisitorInventoryItemType | Error> => {
+}): Promise<VisitorInventoryItemType> => {
   try {
-    const getInventoryItemResponse = await getInventoryItem(credentials, name);
-    if (getInventoryItemResponse instanceof Error) throw getInventoryItemResponse;
-
-    const inventoryItem = getInventoryItemResponse;
+    const inventoryItem = await getInventoryItem(credentials, name);
 
     const visitorItem = await visitor.modifyInventoryItemQuantity(inventoryItem, quantity);
 
@@ -25,6 +22,6 @@ export const modifyVisitorInventoryItem = async ({
 
     return itemData;
   } catch (error: any) {
-    return standardizeError(error);
+    throw standardizeError(error);
   }
 };

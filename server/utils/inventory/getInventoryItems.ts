@@ -10,6 +10,6 @@ export const getInventoryItems = async (credentials: Credentials) => {
   try {
     return await inventoryCache.get(credentials);
   } catch (error: any) {
-    return standardizeError(error);
+    throw standardizeError(error);
   }
 };

@@ -17,10 +17,7 @@ export const handleTeleportToOpenPlot = async (req: Request, res: Response) => {
     const visitor = await Visitor.create(visitorId, urlSlug, { credentials });
 
     // Get all plot assets
-    const getPlotAssetsResult = await getPlotAssets(credentials);
-    if (getPlotAssetsResult instanceof Error) throw getPlotAssetsResult;
-
-    const { availablePlotAssetIds } = getPlotAssetsResult;
+    const { availablePlotAssetIds } = await getPlotAssets(credentials);
     if (availablePlotAssetIds.length === 0) throw new Error("No available plots to teleport to.");
 
     const plotAssetId = availablePlotAssetIds[Math.floor(Math.random() * availablePlotAssetIds.length)];

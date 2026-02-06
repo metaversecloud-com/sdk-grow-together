@@ -23,10 +23,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     const { assetId, displayName, profileId, urlSlug, visitorId } = credentials;
     const { decorationName, squareId } = req.body;
 
-    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
-    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
-
-    const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
+    const { visitor, visitorData, visitorInventory } = await initializeVisitorData(credentials);
     const { decorations: visitorDecorations } = visitorInventory;
 
     // Get the plot asset and lock to prevent simultaneous placements
@@ -54,10 +51,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     }
 
     // Get decorations configuration
-    const getInventoryItemsResponse = await getInventoryItems(credentials);
-    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
-
-    const { ecosystemDecorations } = getInventoryItemsResponse;
+    const { ecosystemDecorations } = await getInventoryItems(credentials);
 
     const decoration = ecosystemDecorations[decorationName];
 

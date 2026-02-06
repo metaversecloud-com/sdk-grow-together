@@ -19,16 +19,12 @@ export const handleGetGameState = async (req: Request, res: Response) => {
     const { assetId, profileId, urlSlug } = credentials;
 
     const getPlotAssetsResult = await getPlotAssets(credentials, false);
-    if (getPlotAssetsResult instanceof Error) throw getPlotAssetsResult;
 
     const plotAsset = await DroppedAsset.create(assetId, urlSlug, { credentials });
     const plotAssetData = (await plotAsset.fetchDataObject()) as PlotAssetDataObjectType;
 
     // Initialize visitor data with defaults if needed
-    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
-    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
-
-    const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
+    const { visitor, visitorData, visitorInventory } = await initializeVisitorData(credentials);
 
     let plotData = visitorData.worlds[urlSlug],
       xp = visitorInventory.xp || 0;
@@ -66,10 +62,7 @@ export const handleGetGameState = async (req: Request, res: Response) => {
     );
 
     // Get all inventory items
-    const getInventoryItemsResponse = await getInventoryItems(credentials);
-    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
-
-    const { ecosystemDecorations, ecosystemSeeds, ecosystemTools } = getInventoryItemsResponse;
+    const { ecosystemDecorations, ecosystemSeeds, ecosystemTools } = await getInventoryItems(credentials);
 
     // Fetch visitor details to get isAdmin status
     promises.push(visitor.fetchVisitor());

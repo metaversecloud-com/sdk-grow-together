@@ -53,10 +53,7 @@ export const initializeVisitorData = async (credentials: Credentials) => {
       }
     }
 
-    const getVisitorInventoryResult = await getVisitorInventory(credentials);
-    if (getVisitorInventoryResult instanceof Error) throw getVisitorInventoryResult;
-
-    const visitorInventory = getVisitorInventoryResult;
+    const visitorInventory = await getVisitorInventory(credentials);
 
     if (shouldUpdate) {
       await visitor.updateDataObject(visitorData, {
@@ -111,6 +108,6 @@ export const initializeVisitorData = async (credentials: Credentials) => {
 
     return { visitor, visitorData, visitorInventory };
   } catch (error: any) {
-    return standardizeError(error);
+    throw standardizeError(error);
   }
 };

@@ -45,10 +45,7 @@ export const handleUseTool = async (req: Request, res: Response) => {
       },
     ];
 
-    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
-    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
-
-    const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
+    const { visitor, visitorData, visitorInventory } = await initializeVisitorData(credentials);
 
     let owner, ownerData, plotData, result;
     if (profileId === ownerId) {
@@ -77,7 +74,6 @@ export const handleUseTool = async (req: Request, res: Response) => {
         assetId,
         analytics,
       });
-      if (result instanceof Error) throw result;
 
       // Determine coinReward and xpReward based on tool name
       let coinReward = 0;
@@ -108,7 +104,6 @@ export const handleUseTool = async (req: Request, res: Response) => {
           name: "Experience Points",
           quantity: xpReward,
         });
-        if (modifyXpResponse instanceof Error) throw modifyXpResponse;
 
         const checkResult = await checkDidIncreaseLevelOrRank(credentials, visitor, visitorInventory.xp, xpReward);
         coinsEarnedForRankUp = checkResult.coinsEarnedForRankUp;
@@ -125,7 +120,6 @@ export const handleUseTool = async (req: Request, res: Response) => {
           name: "Coins",
           quantity: coinReward,
         });
-        if (modifyCoinsResponse instanceof Error) throw modifyCoinsResponse;
         visitorInventory.coins = modifyCoinsResponse.quantity;
       }
 

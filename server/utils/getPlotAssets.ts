@@ -6,7 +6,7 @@ import { PlotAssetDataObjectType, WorldDataObjectType } from "../types/index.js"
 export const getPlotAssets = async (
   credentials: Credentials,
   shouldFetchAllPlotAssets: boolean = true,
-): Promise<{ availablePlotAssetIds: string[]; claimedPlotAssetIds: string[] } | Error> => {
+): Promise<{ availablePlotAssetIds: string[]; claimedPlotAssetIds: string[] }> => {
   try {
     const { urlSlug } = credentials;
 
@@ -74,6 +74,6 @@ export const getPlotAssets = async (
 
     return { availablePlotAssetIds, claimedPlotAssetIds };
   } catch (error: any) {
-    return standardizeError(error);
+    throw standardizeError(error);
   }
 };

@@ -17,10 +17,7 @@ export const handleWaterCrop = async (req: Request, res: Response) => {
     const credentials = getCredentials(req.query);
     const { cropAssetId } = req.body;
 
-    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
-    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
-
-    const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
+    const { visitor, visitorData, visitorInventory } = await initializeVisitorData(credentials);
 
     const waterCropResult = await waterCrop({
       credentials,
@@ -29,7 +26,6 @@ export const handleWaterCrop = async (req: Request, res: Response) => {
       assetId: cropAssetId || credentials.assetId,
       shouldReward: true,
     });
-    if (waterCropResult instanceof Error) throw waterCropResult;
 
     let earnedMessage,
       didLevelUp = false;
@@ -47,7 +43,6 @@ export const handleWaterCrop = async (req: Request, res: Response) => {
           name: "Coins",
           quantity: coinsEarnedForRankUp,
         });
-        if (modifyCoinsResponse instanceof Error) throw modifyCoinsResponse;
         visitorInventory.coins = modifyCoinsResponse.quantity;
       }
 
