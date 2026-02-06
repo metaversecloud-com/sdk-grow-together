@@ -1,6 +1,5 @@
 interface InventoryItemProps {
   coinsAvailable?: number;
-  id: string;
   icon: string;
   name: string;
   description?: string;
@@ -17,7 +16,6 @@ interface InventoryItemProps {
 
 export const InventoryItem = ({
   coinsAvailable,
-  id,
   icon,
   name,
   description,
@@ -32,7 +30,7 @@ export const InventoryItem = ({
   handlePurchase,
 }: InventoryItemProps) => {
   return (
-    <div key={id} className="card menu-card">
+    <div key={name} className="card menu-card">
       {showDescriptionTooltip && (
         <div className="tooltip" style={{ position: "absolute", margin: "-5px" }}>
           <span className="tooltip-content" style={{ width: "125px", left: "60px" }}>
@@ -56,7 +54,7 @@ export const InventoryItem = ({
             <i>{rarity}</i>
           </p>
           {!showDescriptionTooltip && description && <p className="p3 truncate">{description}</p>}
-          {value && valueText && (
+          {valueText && (
             <p className="p3">
               {valueText}: <span className="text-success">{value}</span>
             </p>
@@ -74,7 +72,7 @@ export const InventoryItem = ({
             <div className="card-actions">
               <button
                 className="btn btn-outline p3"
-                onClick={() => handlePurchase(id)}
+                onClick={() => handlePurchase(name)}
                 disabled={(coinsAvailable ?? 0) < (cost ?? 0) || isPurchasing}
               >
                 {isPurchasing ? "Purchasing..." : "Buy"}

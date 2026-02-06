@@ -26,12 +26,11 @@ export const InventoryDecorations = ({
     <div>
       <div className="grid grid-cols-2 gap-2">
         {Object.values(visitorInventory.decorations).map((decoration) => {
-          const { id, name, rarity, availableQuantity, icon } = decoration;
+          const { name, rarity, availableQuantity, icon } = decoration;
 
           return (
             <InventoryItem
-              key={id}
-              id={id}
+              key={name}
               icon={icon}
               name={name}
               rarity={rarity}

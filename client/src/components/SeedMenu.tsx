@@ -59,7 +59,6 @@ export const SeedMenu = () => {
               <InventoryItem
                 key={name}
                 coinsAvailable={coins}
-                id={name}
                 icon={ecosystemSeeds[name].icon}
                 name={name}
                 description={formatTime(growthTime * harvestLevel)}

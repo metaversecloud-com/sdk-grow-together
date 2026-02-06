@@ -30,10 +30,7 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
     if (!admin.isAdmin) throw "Only admins can clear plots";
 
     // Get all plot assets
-    const getPlotAssetsResult = await getPlotAssets(credentials);
-    if (getPlotAssetsResult instanceof Error) throw getPlotAssetsResult;
-
-    const { claimedPlotAssetIds } = getPlotAssetsResult;
+    const { claimedPlotAssetIds } = await getPlotAssets(credentials);
 
     // Collect all data from plot assets in batches for better performance
     const ownerIds: string[] = [];

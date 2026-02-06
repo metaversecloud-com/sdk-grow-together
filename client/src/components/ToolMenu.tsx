@@ -41,13 +41,12 @@ export const ToolMenu = () => {
       <div className="grid grid-cols-2 gap-2">
         {ecosystemTools &&
           Object.values(ecosystemTools).map((tool) => {
-            const { id, name, description, rarity, cost, quantity, icon } = tool;
+            const { name, description, rarity, cost, quantity, icon } = tool;
 
             return (
               <InventoryItem
-                key={id}
+                key={name}
                 coinsAvailable={visitorInventory.coins}
-                id={id}
                 icon={icon}
                 name={name}
                 description={description}

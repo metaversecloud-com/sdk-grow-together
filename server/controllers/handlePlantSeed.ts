@@ -27,10 +27,7 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     const { assetId, displayName, profileId, urlSlug, visitorId } = credentials;
     const { seedName, squareId } = req.body;
 
-    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
-    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
-
-    const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
+    const { visitor, visitorData, visitorInventory } = await initializeVisitorData(credentials);
 
     // Get the plot asset and lock to prevent simultaneous plantings
     const plotAsset = await DroppedAsset.get(assetId, urlSlug, { credentials });
@@ -55,10 +52,7 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     if (squareId < 1 || squareId > noOfSquares) throw `squareId must be between 1 and ${noOfSquares}`;
 
     // Get seed configuration
-    const getInventoryItemsResponse = await getInventoryItems(credentials);
-    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
-
-    const { ecosystemSeeds } = getInventoryItemsResponse;
+    const { ecosystemSeeds } = await getInventoryItems(credentials);
 
     const seedConfig = ecosystemSeeds[seedName];
     if (!seedConfig) throw "Invalid seed type";
@@ -160,7 +154,6 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
         name: "Experience Points",
         quantity: xpRewardAmount,
       }).then(async (modifyXpResponse) => {
-        if (modifyXpResponse instanceof Error) throw modifyXpResponse;
         const checkResult = await checkDidIncreaseLevelOrRank(
           credentials,
           visitor,
@@ -180,7 +173,6 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
         name: "Coins",
         quantity: coinsEarnedForRankUp,
       });
-      if (modifyCoinsResponse instanceof Error) throw modifyCoinsResponse;
       visitorInventory.coins = modifyCoinsResponse.quantity;
     }
 

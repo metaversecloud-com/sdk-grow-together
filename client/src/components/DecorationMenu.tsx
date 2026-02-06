@@ -41,13 +41,12 @@ export const DecorationMenu = () => {
       <div className="grid grid-cols-2 gap-2">
         {ecosystemDecorations &&
           Object.values(ecosystemDecorations).map((decoration) => {
-            const { id, name, rarity, cost, icon } = decoration;
+            const { name, rarity, cost, icon } = decoration;
 
             return (
               <InventoryItem
-                key={id}
+                key={name}
                 coinsAvailable={visitorInventory.coins}
-                id={id}
                 icon={icon}
                 name={name}
                 rarity={rarity}

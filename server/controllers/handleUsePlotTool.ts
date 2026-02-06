@@ -38,10 +38,7 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
       totalXpRewardAmount = 0,
       soundEffect = "sprinkler";
 
-    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
-    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
-
-    const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
+    const { visitor, visitorData, visitorInventory } = await initializeVisitorData(credentials);
 
     const plotData = visitorData.worlds[urlSlug];
 
@@ -63,10 +60,7 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
     }
 
     // Get seed configuration for harvest level and reward calculation
-    const getInventoryItemsResponse = await getInventoryItems(credentials);
-    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
-
-    const { ecosystemSeeds } = getInventoryItemsResponse;
+    const { ecosystemSeeds } = await getInventoryItems(credentials);
 
     const getDroppedAssetPromises = [];
     const updateCropAssetPromises = [];
@@ -221,10 +215,7 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
     await Promise.all(promises);
 
     // get updated visitor inventory and check for level/rank up
-    const getVisitorInventoryResponse = await getVisitorInventory(credentials);
-    if (getVisitorInventoryResponse instanceof Error) throw getVisitorInventoryResponse;
-
-    const updatedVisitorInventory = getVisitorInventoryResponse;
+    const updatedVisitorInventory = await getVisitorInventory(credentials);
 
     const { coinsEarnedForRankUp, didLevelUp } = await checkDidIncreaseLevelOrRank(
       credentials,
@@ -241,7 +232,6 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
         name: "Coins",
         quantity: totalCoinsRewardAmount,
       });
-      if (modifyCoinsResponse instanceof Error) throw modifyCoinsResponse;
       updatedVisitorInventory.coins = modifyCoinsResponse.quantity;
     }
 

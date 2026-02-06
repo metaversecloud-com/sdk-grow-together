@@ -84,18 +84,17 @@ export const UsePlotToolModal = ({
                 );
               })
               .map((tool) => {
-                const { id, name, description, rarity, quantity, icon } = tool;
+                const { name, description, rarity, quantity, icon } = tool;
                 const canUse = numberOfCropsReady > 0;
 
                 return (
                   <div
-                    key={id}
+                    key={name}
                     className={areButtonsDisabled || !canUse ? "opacity-50" : "cursor-pointer"}
                     onClick={() => canUse && handleUseTool(tool)}
                   >
                     <InventoryItem
-                      key={id}
-                      id={id}
+                      key={name}
                       icon={icon}
                       name={name}
                       description={description}

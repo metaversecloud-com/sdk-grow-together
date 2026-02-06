@@ -21,18 +21,12 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
     if (!decorationName) throw "Valid decorationName is required";
 
     // Get decoration configuration
-    const getInventoryItemsResponse = await getInventoryItems(credentials);
-    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
-
-    const { ecosystemDecorations } = getInventoryItemsResponse;
+    const { ecosystemDecorations } = await getInventoryItems(credentials);
 
     const decorationConfig = ecosystemDecorations[decorationName];
     if (!decorationConfig) throw "Invalid decoration type";
 
-    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
-    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
-
-    const { visitor, visitorInventory } = initializeVisitorDataResponse;
+    const { visitor, visitorInventory } = await initializeVisitorData(credentials);
 
     // Check if visitor has enough coins
     if (visitorInventory.coins < decorationConfig.cost) throw `Not enough coins.`;
@@ -44,7 +38,6 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
       name: "Coins",
       quantity: -decorationConfig.cost,
     });
-    if (modifyCoinsResponse instanceof Error) throw modifyCoinsResponse;
     visitorInventory.coins = modifyCoinsResponse.quantity;
 
     const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
@@ -53,7 +46,6 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
       name: decorationConfig.name,
       quantity: 1,
     });
-    if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
 
     const availableQuantity = visitorInventory.decorations[decorationConfig.name]?.availableQuantity || 0;
     visitorInventory.decorations[decorationConfig.name] = {

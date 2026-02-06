@@ -26,12 +26,11 @@ export const InventoryTools = ({
     <div>
       <div className="grid grid-cols-2 gap-2">
         {Object.values(visitorInventory.tools).map((tool) => {
-          const { id, name, description, rarity, quantity, icon } = tool;
+          const { name, description, rarity, quantity, icon } = tool;
 
           return (
             <InventoryItem
-              key={id}
-              id={id}
+              key={name}
               icon={icon}
               name={name}
               description={description}

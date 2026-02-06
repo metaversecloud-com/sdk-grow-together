@@ -1,20 +1,17 @@
-import { getRarity } from "../utils/index.js";
-
 export const defaultVisitorInventoryItem = {
   id: "",
-  ecosystemItemId: "",
   availableQuantity: 0,
   description: "",
   icon: "",
   name: "",
   quantity: 0,
   cost: 0,
-  rarity: getRarity(0),
+  rarity: 0,
   reward: 0,
-  xp: 0,
   growthTime: 0,
   harvestLevel: 0,
   canBeUsedOnPlot: false,
   actionType: undefined,
   sortOrder: 0,
+  type: "",
 };

@@ -112,7 +112,7 @@ export const UseToolModal = ({
         ) : (
           <div className="grid gap-2 grid-cols-2">
             {availableTools.map((tool) => {
-              const { id, name, description, rarity, quantity, icon, actionType } = tool;
+              const { name, description, rarity, quantity, icon, actionType } = tool;
               const canUse =
                 (actionType && actionType !== "Water" && !appliedTools?.some((tool) => tool.includes(actionType))) ||
                 (isReadyToWater && actionType === "Water");
@@ -124,15 +124,14 @@ export const UseToolModal = ({
                     : null;
 
               return (
-                <div key={id} className={`${tooltipText ? "tooltip-secondary" : ""}`} style={{ maxWidth: "100%" }}>
+                <div key={name} className={`${tooltipText ? "tooltip-secondary" : ""}`} style={{ maxWidth: "100%" }}>
                   <span className="tooltip-content tooltip-secondary-content">{tooltipText}</span>
                   <div
                     className={areButtonsDisabled || !canUse ? "opacity-50" : "cursor-pointer"}
                     onClick={() => canUse && handleUseTool(tool)}
                   >
                     <InventoryItem
-                      key={id}
-                      id={id}
+                      key={name}
                       icon={icon}
                       name={name}
                       description={description}

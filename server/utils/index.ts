@@ -1,4 +1,5 @@
 export * from "../constants.js";
+export * from "./cache/inventoryCache.js";
 export * from "./crops/index.js";
 export * from "./inventory/index.js";
 export * from "./calculateSquarePosition.js";

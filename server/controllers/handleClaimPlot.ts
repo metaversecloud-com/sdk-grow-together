@@ -30,10 +30,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
 
     const promises = [];
 
-    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
-    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
-
-    const { visitor, visitorData, visitorInventory } = initializeVisitorDataResponse;
+    const { visitor, visitorData, visitorInventory } = await initializeVisitorData(credentials);
 
     if (visitorData.worlds[urlSlug].plotAssetId) {
       throw "You already own a plot. Each player can only claim one plot.";
@@ -49,18 +46,6 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
       throw `This plot is already owned by ${plotAssetData.ownerName || "another player"}.`;
     }
 
-    const title = `${displayName}'s Garden`;
-
-    // Add owner text asset below the plot
-    const asset = Asset.create("textAsset", { credentials });
-    const droppedTextAsset = await DroppedAsset.drop(asset, {
-      position: { x: plotAsset.position.x, y: plotAsset.position.y + 580 },
-      isTextTopLayer: true,
-      text: title,
-      uniqueName: `GrowTogether_ownerText_${profileId}`,
-      urlSlug,
-    });
-
     // Claim the plot
     const claimedDate = new Date().toISOString();
 
@@ -74,14 +59,13 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
     // Add free seed and starter tools to visitor's inventory if they don't already have it
     const name = "Carrots";
     if (!visitorInventory.seeds[name]) {
+      // Throw error if Carrots doesn't exist in inventory for Public Key - user will not be able to do anything with their garden if they don't have any seeds to start with
       const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
         credentials,
         visitor,
         name,
         quantity: 1,
       });
-      // Throw error if Carrots doesn't exist in inventory for Public Key - user will not be able to do anything with their garden if they don't have any seeds to start with
-      if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
       visitorInventory.seeds[name] = modifyInventoryItemResponse as InventoryItemType & VisitorInventoryItemType;
     }
 
@@ -94,7 +78,6 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
           name,
           quantity: 1,
         });
-        if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
         visitorInventory.tools[name] = modifyInventoryItemResponse as InventoryItemType & VisitorInventoryItemType;
       }
 
@@ -106,7 +89,6 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
           name,
           quantity: 5,
         });
-        if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
         visitorInventory.tools[name] = modifyInventoryItemResponse as InventoryItemType & VisitorInventoryItemType;
       }
     }
@@ -157,6 +139,18 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
         },
       }),
     );
+
+    const title = `${displayName}'s Garden`;
+
+    // Add owner text asset below the plot
+    const asset = Asset.create("textAsset", { credentials });
+    const droppedTextAsset = await DroppedAsset.drop(asset, {
+      position: { x: plotAsset.position.x, y: plotAsset.position.y + 580 },
+      isTextTopLayer: true,
+      text: title,
+      uniqueName: `GrowTogether_ownerText_${profileId}`,
+      urlSlug,
+    });
 
     const baseUrl = getBaseUrl(req.hostname);
     const clickableLink = `${baseUrl}/plot?ownerName=${encodeURIComponent(displayName)}&ownerProfileId=${profileId}`;

@@ -37,17 +37,14 @@ export const waterCrop = async ({
   assetId: string;
   shouldReward?: boolean;
   analytics?: Array<{ analyticName: string; profileId: string; urlSlug?: string; uniqueKey: string }>;
-}): Promise<
-  | {
-      success: boolean;
-      visitorData: VisitorDataObjectType;
-      plotData: VisitorWorldDataType;
-      cropData?: CropDataObjectType;
-      xpRewardAmount?: number;
-      totalXp?: number;
-    }
-  | Error
-> => {
+}): Promise<{
+  success: boolean;
+  visitorData: VisitorDataObjectType;
+  plotData: VisitorWorldDataType;
+  cropData?: CropDataObjectType;
+  xpRewardAmount?: number;
+  totalXp?: number;
+}> => {
   try {
     const { profileId, urlSlug } = credentials;
     const plotData = ownerData.worlds[urlSlug];
@@ -71,10 +68,7 @@ export const waterCrop = async ({
     }
 
     // Get seed configuration for harvest level and reward calculation
-    const getInventoryItemsResponse = await getInventoryItems(credentials);
-    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
-
-    const { ecosystemSeeds } = getInventoryItemsResponse;
+    const { ecosystemSeeds } = await getInventoryItems(credentials);
 
     const seedConfig = getSeedConfig(ecosystemSeeds, crop);
     if (!seedConfig) throw "Invalid crop type";
@@ -176,7 +170,6 @@ export const waterCrop = async ({
         name: "Experience Points",
         quantity: xpRewardAmount,
       });
-      if (modifyXpResponse instanceof Error) throw modifyXpResponse;
       totalXp = modifyXpResponse.quantity;
     }
 
@@ -189,6 +182,6 @@ export const waterCrop = async ({
       totalXp,
     };
   } catch (error: any) {
-    return standardizeError(error);
+    throw standardizeError(error);
   }
 };

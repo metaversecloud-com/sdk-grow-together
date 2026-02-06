@@ -31,12 +31,11 @@ export const InventorySeeds = ({
   return (
     <div className="grid grid-cols-2 gap-2">
       {Object.values(visitorInventory.seeds).map((seed) => {
-        const { id, name, icon, rarity, cost, growthTime, harvestLevel, reward } = seed;
+        const { name, icon, rarity, cost, growthTime, harvestLevel, reward } = seed;
 
         return (
           <InventoryItem
-            key={id}
-            id={id}
+            key={name}
             icon={icon}
             name={name}
             description={formatTime(growthTime * harvestLevel)}

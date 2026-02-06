@@ -1,8 +1,6 @@
 import { VisitorInterface } from "@rtsdk/topia";
-import { Credentials, IUserItems, VisitorInventoryItemType } from "../../types/index.js";
-import { getInventoryItem } from "./getInventoryItem.js";
-import { standardizeError } from "../standardizeError.js";
-import { defaultVisitorInventoryItem } from "../../../shared/index.js";
+import { Credentials, VisitorInventoryItemType } from "../../types/index.js";
+import { getInventoryItem, standardizeError, structureVisitorInventoryItem } from "../index.js";
 
 export const modifyVisitorInventoryItem = async ({
   credentials,
@@ -14,39 +12,16 @@ export const modifyVisitorInventoryItem = async ({
   visitor: VisitorInterface;
   name: string;
   quantity: number;
-}): Promise<VisitorInventoryItemType | Error> => {
+}): Promise<VisitorInventoryItemType> => {
   try {
-    let item = {} as VisitorInventoryItemType;
+    const inventoryItem = await getInventoryItem(credentials, name);
 
-    await visitor.fetchInventoryItems();
-    const visitorInventoryItem = visitor.inventoryItems?.find((item) => item.name === name);
+    const visitorItem = await visitor.modifyInventoryItemQuantity(inventoryItem, quantity);
 
-    if (visitorInventoryItem) {
-      const updatedItem = await visitor.modifyInventoryItemQuantity(visitorInventoryItem, quantity);
-      item.availableQuantity = updatedItem.quantity;
-      item.quantity = updatedItem.quantity;
-    } else {
-      const getInventoryItemResponse = await getInventoryItem(credentials, name);
-      if (getInventoryItemResponse instanceof Error) throw getInventoryItemResponse;
+    const itemData = await structureVisitorInventoryItem(visitorItem);
 
-      const { inventoryItem, itemData } = getInventoryItemResponse;
-
-      const newItem: IUserItems = await visitor.grantInventoryItem(inventoryItem, quantity);
-      item = {
-        ...defaultVisitorInventoryItem,
-        ...itemData,
-        id: newItem.id,
-        ecosystemItemId: newItem.item_id,
-        availableQuantity: newItem.quantity || 0,
-        description: newItem.description || itemData.description,
-        icon: newItem.image_url || newItem.image_path || itemData.icon || "",
-        name,
-        quantity: newItem.quantity || 0,
-      };
-    }
-
-    return item;
+    return itemData;
   } catch (error: any) {
-    return standardizeError(error);
+    throw standardizeError(error);
   }
 };

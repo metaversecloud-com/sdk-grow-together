@@ -21,18 +21,12 @@ export const handlePurchaseTool = async (req: Request, res: Response) => {
     if (!toolName) throw "Valid toolName is required";
 
     // Get tool configuration
-    const getInventoryItemsResponse = await getInventoryItems(credentials);
-    if (getInventoryItemsResponse instanceof Error) throw getInventoryItemsResponse;
-
-    const { ecosystemTools } = getInventoryItemsResponse;
+    const { ecosystemTools } = await getInventoryItems(credentials);
 
     const toolConfig = ecosystemTools[toolName];
     if (!toolConfig) throw "Invalid tool type";
 
-    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
-    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
-
-    const { visitor, visitorInventory } = initializeVisitorDataResponse;
+    const { visitor, visitorInventory } = await initializeVisitorData(credentials);
 
     // Check if visitor has enough coins
     if (visitorInventory.coins < toolConfig.cost) throw `Not enough coins.`;
@@ -44,7 +38,6 @@ export const handlePurchaseTool = async (req: Request, res: Response) => {
       name: "Coins",
       quantity: -toolConfig.cost,
     });
-    if (modifyCoinsResponse instanceof Error) throw modifyCoinsResponse;
     visitorInventory.coins = modifyCoinsResponse.quantity;
 
     const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
@@ -53,7 +46,6 @@ export const handlePurchaseTool = async (req: Request, res: Response) => {
       name: toolConfig.name,
       quantity: toolConfig.quantity,
     });
-    if (modifyInventoryItemResponse instanceof Error) throw modifyInventoryItemResponse;
 
     visitorInventory.tools[toolConfig.name] = {
       ...visitorInventory.tools[toolConfig.name],

@@ -13,10 +13,7 @@ export const handleTeleportToPlot = async (req: Request, res: Response) => {
     const credentials = getCredentials(req.query);
     const { assetId, profileId, urlSlug } = credentials;
 
-    const initializeVisitorDataResponse = await initializeVisitorData(credentials);
-    if (initializeVisitorDataResponse instanceof Error) throw initializeVisitorDataResponse;
-
-    const { visitor, visitorData } = initializeVisitorDataResponse;
+    const { visitor, visitorData } = await initializeVisitorData(credentials);
 
     const plotData = visitorData.worlds[urlSlug];
 
