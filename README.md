@@ -31,6 +31,18 @@ A relaxing, loop-based gardening game where players claim plots, plant seeds, gr
 
 - **Plot Management**: Admins can clear individual plots or all plots in a world.
 
+## Implementation Requirements
+
+### Required Assets with Unique Names
+
+The app uses the following unique name patterns for managing dropped assets:
+
+| Unique Name Pattern | Description |
+|---------------------|-------------|
+| `GrowTogether_crop_{profileId}` | Crop assets planted by users |
+| `GrowTogether_decoration_{profileId}` | Decoration assets placed by users |
+| `GrowTogether_ownerText_{profileId}` | Owner name text displayed on plots |
+
 ## Technical Architecture
 
 The app uses a combination of data objects, dropped assets, and interactive elements to create a persistent garden experience.
