@@ -2,8 +2,8 @@ import { Credentials, InventoryItemType } from "../../types/index.js";
 import { InventoryItemInterface } from "@rtsdk/topia";
 import { Ecosystem, standardizeError, structureEcosystemInventoryItem } from "../index.js";
 
-// Cache duration: 24 hours in milliseconds
-const CACHE_DURATION_MS = 24 * 60 * 60 * 1000;
+// Cache duration: 6 hours in milliseconds
+const CACHE_DURATION_MS = 6 * 60 * 60 * 1000;
 
 interface InventoryCacheEntry {
   data: {
@@ -133,12 +133,12 @@ class InventoryCache {
   /**
    * Get inventory items from cache or fetch if not cached
    */
-  async get(credentials: Credentials) {
+  async get(credentials: Credentials, forceRefresh = false) {
     const cacheKey = this.getCacheKey(credentials);
     const cachedEntry = this.cache.get(cacheKey);
 
-    // Return cached data if valid
-    if (cachedEntry && !this.isExpired(cachedEntry)) {
+    // Return cached data if valid and not forcing refresh
+    if (cachedEntry && !this.isExpired(cachedEntry) && !forceRefresh) {
       // Trigger background refresh if approaching expiry
       if (this.shouldRefresh(cachedEntry) && !cachedEntry.isRefreshing) {
         this.refreshInBackground(cacheKey, credentials).catch((error) => {

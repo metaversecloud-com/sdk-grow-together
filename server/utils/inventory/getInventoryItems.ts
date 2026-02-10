@@ -6,9 +6,9 @@ import { inventoryCache } from "../cache/inventoryCache.js";
  * Get all inventory items (decorations, seeds, tools) with caching
  * Results are cached for daily and automatically refreshed in the background
  */
-export const getInventoryItems = async (credentials: Credentials) => {
+export const getInventoryItems = async (credentials: Credentials, forceRefresh = false) => {
   try {
-    return await inventoryCache.get(credentials);
+    return await inventoryCache.get(credentials, forceRefresh);
   } catch (error: any) {
     throw standardizeError(error);
   }

@@ -1,4 +1,5 @@
 import { useContext, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 // components
 import { NewUserInfo, PageContainer } from "@/components";
@@ -13,13 +14,15 @@ import { backendAPI, setErrorMessage, setGameState } from "@/utils";
 export const Teleport = () => {
   const dispatch = useContext(GlobalDispatchContext);
   const { hasInteractiveParams, noOfAvailablePlots, visitorPlotAssetId } = useContext(GlobalStateContext);
+  const [searchParams] = useSearchParams();
+  const forceRefreshInventory = searchParams.get("forceRefreshInventory") === "true";
 
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (hasInteractiveParams) {
       backendAPI
-        .get("/game-state")
+        .get("/game-state", { params: { forceRefreshInventory } })
         .then((response) => {
           setGameState(dispatch, response.data);
         })
