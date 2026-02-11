@@ -22,13 +22,14 @@ export const Home = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const profileId = searchParams.get("profileId");
+  const forceRefreshInventory = searchParams.get("forceRefreshInventory") === "true";
 
   const isOwnedByCurrentUser = profileId === ownerId;
 
   useEffect(() => {
     if (hasInteractiveParams) {
       backendAPI
-        .get("/game-state")
+        .get("/game-state", { params: { forceRefreshInventory } })
         .then((response) => {
           setGameState(dispatch, response.data);
         })

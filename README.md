@@ -31,6 +31,18 @@ A relaxing, loop-based gardening game where players claim plots, plant seeds, gr
 
 - **Plot Management**: Admins can clear individual plots or all plots in a world.
 
+## Implementation Requirements
+
+### Required Assets with Unique Names
+
+The app uses the following unique name patterns for managing dropped assets:
+
+| Unique Name Pattern                   | Description                        |
+| ------------------------------------- | ---------------------------------- |
+| `GrowTogether_crop_{profileId}`       | Crop assets planted by users       |
+| `GrowTogether_decoration_{profileId}` | Decoration assets placed by users  |
+| `GrowTogether_ownerText_{profileId}`  | Owner name text displayed on plots |
+
 ## Technical Architecture
 
 The app uses a combination of data objects, dropped assets, and interactive elements to create a persistent garden experience.
@@ -152,6 +164,18 @@ The application exposes the following API endpoints:
 - `POST /decoration/drop` - Place a decoration in a plot square
 - `POST /decoration/remove` - Remove a decoration from a plot
 
+## Environment Variables
+
+Create a `.env` file in the root directory. See `.env-example` for a template.
+
+| Variable               | Description                                                                        | Required |
+| ---------------------- | ---------------------------------------------------------------------------------- | -------- |
+| `NODE_ENV`             | Node environment                                                                   | No       |
+| `SKIP_PREFLIGHT_CHECK` | Skip CRA preflight check                                                           | No       |
+| `INSTANCE_DOMAIN`      | Topia API domain (`api.topia.io` for production, `api-stage.topia.io` for staging) | Yes      |
+| `INTERACTIVE_KEY`      | Topia interactive app key                                                          | Yes      |
+| `INTERACTIVE_SECRET`   | Topia interactive app secret                                                       | Yes      |
+
 ## For Developers
 
 ### Built With
@@ -195,17 +219,10 @@ cd ..
 ```
 
 4. **Configure environment variables**
-   Create a `.env` file in the root directory with the following:
 
-```
-API_KEY=xxxxxxxxxxxxx
-INSTANCE_DOMAIN=api.topia.io
-INSTANCE_PROTOCOL=https
-INTERACTIVE_KEY=xxxxxxxxxxxxx
-INTERACTIVE_SECRET=xxxxxxxxxxxxxx
-```
+   See [Environment Variables](#environment-variables) above.
 
-### Where to find API_KEY, INTERACTIVE_KEY and INTERACTIVE_SECRET
+### Where to find INTERACTIVE_KEY and INTERACTIVE_SECRET
 
 [Topia Dev Account Dashboard](https://dev.topia.io/t/dashboard/integrations)
 

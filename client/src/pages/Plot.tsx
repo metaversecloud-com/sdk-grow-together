@@ -27,6 +27,7 @@ export const Plot = () => {
   const { coins } = visitorInventory;
 
   const [searchParams] = useSearchParams();
+  const forceRefreshInventory = searchParams.get("forceRefreshInventory") === "true";
 
   const [isLoading, setIsLoading] = useState(true);
   const [isClaiming, setIsClaiming] = useState(false);
@@ -51,7 +52,7 @@ export const Plot = () => {
   useEffect(() => {
     if (hasInteractiveParams) {
       backendAPI
-        .get("/game-state")
+        .get("/game-state", { params: { forceRefreshInventory } })
         .then((response) => {
           setGameState(dispatch, response.data);
         })
