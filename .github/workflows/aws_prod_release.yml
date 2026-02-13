@@ -56,8 +56,8 @@ jobs:
                   
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3.0.0
-          with:
-            platforms: arm64,amd64
+        with:
+          platforms: arm64,amd64
                     
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
