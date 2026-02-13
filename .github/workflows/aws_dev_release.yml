@@ -95,11 +95,6 @@ jobs:
           cache-to: type=gha,mode=max
           provenance: false
           sbom: false
-                    
-      - name: push docker image to Amazon ECR
-        run: |
-          docker push ${{ steps.metadata.outputs.tags }}
-
                 
   deploy_matrix:
     runs-on: ubuntu-latest
