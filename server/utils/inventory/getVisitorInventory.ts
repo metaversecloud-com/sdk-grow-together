@@ -1,7 +1,6 @@
 import { VisitorInterface } from "@rtsdk/topia";
-import { Credentials, MetadataType, VisitorInventoryItemType, VisitorInventoryType } from "../../types/index.js";
+import { Credentials, VisitorInventoryItemType, VisitorInventoryType } from "../../types/index.js";
 import { standardizeError, structureVisitorInventoryItem, Visitor } from "../index.js";
-import { defaultVisitorInventoryItem, getRarity } from "../../../shared/index.js";
 
 /**
  * Retrieve and organize visitor inventory items

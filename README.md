@@ -37,11 +37,12 @@ A relaxing, loop-based gardening game where players claim plots, plant seeds, gr
 
 The app uses the following unique name patterns for managing dropped assets:
 
-| Unique Name Pattern                   | Description                        |
-| ------------------------------------- | ---------------------------------- |
-| `GrowTogether_crop_{profileId}`       | Crop assets planted by users       |
-| `GrowTogether_decoration_{profileId}` | Decoration assets placed by users  |
-| `GrowTogether_ownerText_{profileId}`  | Owner name text displayed on plots |
+| Unique Name Pattern                   | Description                               |
+| ------------------------------------- | ----------------------------------------- |
+| `GrowTogether_plot`                   | View/Open Garden sign assets (key assets) |
+| `GrowTogether_crop_{profileId}`       | Crop assets planted by users              |
+| `GrowTogether_decoration_{profileId}` | Decoration assets placed by users         |
+| `GrowTogether_ownerText_{profileId}`  | Owner name text displayed on plots        |
 
 ## Technical Architecture
 

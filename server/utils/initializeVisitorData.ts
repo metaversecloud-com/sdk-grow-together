@@ -10,7 +10,7 @@ import { getVisitorInventory } from "./inventory/getVisitorInventory.js";
  */
 export const initializeVisitorData = async (credentials: Credentials) => {
   try {
-    const { assetId, urlSlug, visitorId } = credentials;
+    const { assetId, profileId, urlSlug, visitorId } = credentials;
 
     const visitor = (await Visitor.create(visitorId, urlSlug, { credentials })) as VisitorInterface;
     let visitorData = (await visitor.fetchDataObject()) as VisitorDataObjectType;
@@ -42,7 +42,8 @@ export const initializeVisitorData = async (credentials: Credentials) => {
         })
           .then(async (plotAsset) => {
             const plotAssetDataObject = (await plotAsset.fetchDataObject()) as PlotAssetDataObjectType;
-            if (!plotAssetDataObject.ownerId) visitorData.worlds[urlSlug] = DEFAULT_VISITOR_WORLD_DATA;
+            if (!plotAssetDataObject.ownerId || plotAssetDataObject.ownerId !== profileId)
+              visitorData.worlds[urlSlug] = DEFAULT_VISITOR_WORLD_DATA;
           })
           .catch(() => {
             console.error("Visitor plot asset no longer in world");
