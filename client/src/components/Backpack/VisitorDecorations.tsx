@@ -6,17 +6,17 @@ import { InventoryItem, NoItems } from "@/components";
 // context
 import { GlobalStateContext } from "@/context/GlobalContext";
 
-export const InventoryTools = ({
+export const VisitorDecorations = ({
   handleShowInventoryModal,
 }: {
   handleShowInventoryModal: (activeTab: string) => void;
 }) => {
   const { visitorInventory } = useContext(GlobalStateContext);
 
-  if (!visitorInventory?.tools || Object.keys(visitorInventory.tools).length === 0) {
+  if (!visitorInventory?.decorations || Object.keys(visitorInventory.decorations).length === 0) {
     return (
       <>
-        <h4>No tools purchased.</h4>
+        <h4>No decorations purchased.</h4>
         <NoItems handleShowInventoryModal={handleShowInventoryModal} />
       </>
     );
@@ -25,20 +25,18 @@ export const InventoryTools = ({
   return (
     <div>
       <div className="grid grid-cols-2 gap-2">
-        {Object.values(visitorInventory.tools).map((tool) => {
-          const { name, description, rarity, quantity, icon } = tool;
+        {Object.values(visitorInventory.decorations).map((decoration) => {
+          const { name, rarity, availableQuantity, icon } = decoration;
 
           return (
             <InventoryItem
               key={name}
               icon={icon}
               name={name}
-              description={description}
               rarity={rarity}
-              value={quantity}
-              valueText="Owned"
+              value={availableQuantity}
+              valueText="Available"
               isReadyOnly={true}
-              showDescriptionTooltip={true}
             />
           );
         })}
@@ -47,4 +45,4 @@ export const InventoryTools = ({
   );
 };
 
-export default InventoryTools;
+export default VisitorDecorations;

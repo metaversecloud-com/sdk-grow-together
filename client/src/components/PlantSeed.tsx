@@ -23,14 +23,14 @@ export const PlantSeed = ({ selectedSquareId, setSelectedSquareId, handleShowInv
 
   const [isPlanting, setIsPlanting] = useState(false);
 
-  const handlePlantSeed = async (seedName: string) => {
-    if (!seedName || selectedSquareId === null) return;
+  const handlePlantSeed = async (seedId: string) => {
+    if (!seedId || selectedSquareId === null) return;
 
     setIsPlanting(true);
 
     await backendAPI
       .post("/crop/drop", {
-        seedName,
+        seedId,
         squareId: selectedSquareId,
       })
       .then((response) => {
@@ -82,7 +82,7 @@ export const PlantSeed = ({ selectedSquareId, setSelectedSquareId, handleShowInv
                   <div
                     key={seed.name}
                     className={buttonClass}
-                    onClick={() => !isPlanting && handlePlantSeed(seed.name)}
+                    onClick={() => !isPlanting && handlePlantSeed(seed.ecosystemItemId)}
                     style={{ gap: "0px" }}
                   >
                     <img className="mb-2 m-auto" src={seed.icon} />

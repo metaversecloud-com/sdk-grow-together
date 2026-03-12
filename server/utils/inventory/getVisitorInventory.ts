@@ -30,9 +30,9 @@ export const getVisitorInventory = async (credentials: Credentials): Promise<Vis
       if (name === "Coins") coins = quantity || 0;
       else if (name === "Experience Points") xp = quantity || 0;
       else if (type === "accessory") accessories[ecosystemItemId] = itemData;
-      else if (type === "decoration") decorations[name] = itemData;
-      else if (type === "seed") seeds[name] = itemData;
-      else if (type === "tool") tools[name] = itemData;
+      else if (type === "decoration") decorations[ecosystemItemId] = itemData;
+      else if (type === "seed") seeds[ecosystemItemId] = itemData;
+      else if (type === "tool") tools[ecosystemItemId] = itemData;
     }
 
     // Sort items by sortOrder while keeping them as objects
@@ -52,21 +52,21 @@ export const getVisitorInventory = async (credentials: Credentials): Promise<Vis
     Object.values(decorations)
       .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
       .forEach((decoration) => {
-        sortedDecorations[decoration.name] = decoration;
+        sortedDecorations[decoration.ecosystemItemId] = decoration;
       });
 
     // Sort seeds
     Object.values(seeds)
       .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
       .forEach((seed) => {
-        sortedSeeds[seed.name] = seed;
+        sortedSeeds[seed.ecosystemItemId] = seed;
       });
 
     // Sort tools
     Object.values(tools)
       .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
       .forEach((tool) => {
-        sortedTools[tool.name] = tool;
+        sortedTools[tool.ecosystemItemId] = tool;
       });
 
     const visitorInventory: VisitorInventoryType = {

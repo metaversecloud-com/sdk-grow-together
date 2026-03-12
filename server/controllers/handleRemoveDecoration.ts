@@ -32,7 +32,7 @@ export const handleRemoveDecoration = async (req: Request, res: Response) => {
 
     const { ecosystemDecorations } = await getInventoryItems(credentials);
 
-    const decorationConfig = ecosystemDecorations[decoration.decorationName];
+    const decorationConfig = ecosystemDecorations[decoration.decorationId];
     if (!decorationConfig) throw "Invalid decoration type";
 
     // Update visitor's data object
@@ -48,10 +48,10 @@ export const handleRemoveDecoration = async (req: Request, res: Response) => {
     }
     // Only increment availableQuantity if it does not exceed quantity
     if (
-      visitorInventory.decorations?.[decoration.decorationName]?.availableQuantity + 1 <=
-      visitorInventory.decorations?.[decoration.decorationName]?.quantity
+      visitorInventory.decorations?.[decoration.decorationId]?.availableQuantity + 1 <=
+      visitorInventory.decorations?.[decoration.decorationId]?.quantity
     ) {
-      visitorInventory.decorations[decoration.decorationName].availableQuantity += 1;
+      visitorInventory.decorations[decoration.decorationId].availableQuantity += 1;
     }
 
     await visitor.updateDataObject(visitorData, {

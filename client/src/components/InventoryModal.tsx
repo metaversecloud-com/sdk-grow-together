@@ -3,14 +3,14 @@ import { useContext, useState } from "react";
 // components
 import {
   AccessoriesMenu,
-  DecorationMenu,
-  InventoryAccessories,
-  InventoryDecorations,
-  InventorySeeds,
-  InventoryTools,
+  DecorationsMenu,
+  VisitorAccessories,
+  VisitorDecorations,
+  VisitorSeeds,
+  VisitorTools,
   ModalHeader,
-  SeedMenu,
-  ToolMenu,
+  SeedsMenu,
+  ToolsMenu,
   YourMoney,
 } from "@/components";
 
@@ -75,37 +75,37 @@ export const InventoryModal = ({
 
         {showStore ? (
           activeTab === "seeds" ? (
-            <SeedMenu />
+            <SeedsMenu />
           ) : activeTab === "tools" ? (
-            <ToolMenu />
+            <ToolsMenu />
           ) : activeTab === "accessories" ? (
             <AccessoriesMenu />
           ) : (
-            <DecorationMenu />
+            <DecorationsMenu />
           )
         ) : activeTab === "seeds" ? (
-          <InventorySeeds
+          <VisitorSeeds
             handleShowInventoryModal={() => {
               setShowStore(true);
               setActiveTab("seeds");
             }}
           />
         ) : activeTab === "tools" ? (
-          <InventoryTools
+          <VisitorTools
             handleShowInventoryModal={() => {
               setShowStore(true);
               setActiveTab("tools");
             }}
           />
         ) : activeTab === "accessories" ? (
-          <InventoryAccessories
+          <VisitorAccessories
             handleShowInventoryModal={() => {
               setShowStore(true);
               setActiveTab("accessories");
             }}
           />
         ) : (
-          <InventoryDecorations
+          <VisitorDecorations
             handleShowInventoryModal={() => {
               setShowStore(true);
               setActiveTab("decorations");

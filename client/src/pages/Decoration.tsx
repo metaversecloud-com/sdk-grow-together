@@ -21,8 +21,8 @@ export const Decoration = () => {
     ecosystemDecorations = {},
   } = useContext(GlobalStateContext);
   const { plotAssetId: decorationPlotAssetId, ownerId, ownerName } = decorationData || {};
-  const { icon, name, rarity, description, cost } = decorationData?.decorationName
-    ? ecosystemDecorations[decorationData.decorationName]
+  const { icon, name, rarity, description, cost } = decorationData?.decorationId
+    ? ecosystemDecorations[decorationData.decorationId]
     : {};
 
   const [searchParams] = useSearchParams();

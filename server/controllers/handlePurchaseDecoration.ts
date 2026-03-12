@@ -16,14 +16,14 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
     const { profileId, urlSlug } = credentials;
-    const { decorationName } = req.body;
+    const { decorationId } = req.body;
 
-    if (!decorationName) throw "Valid decorationName is required";
+    if (!decorationId) throw "Valid decorationId is required";
 
     // Get decoration configuration
     const { ecosystemDecorations } = await getInventoryItems(credentials);
 
-    const decorationConfig = ecosystemDecorations[decorationName];
+    const decorationConfig = ecosystemDecorations[decorationId];
     if (!decorationConfig) throw "Invalid decoration type";
 
     const { visitor, visitorInventory } = await initializeVisitorData(credentials);
@@ -47,12 +47,12 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
       quantity: 1,
     });
 
-    const availableQuantity = visitorInventory.decorations[decorationConfig.name]?.availableQuantity || 0;
-    visitorInventory.decorations[decorationConfig.name] = {
-      ...visitorInventory.decorations[decorationConfig.name],
+    const availableQuantity = visitorInventory.decorations[decorationId]?.availableQuantity || 0;
+    visitorInventory.decorations[decorationId] = {
+      ...visitorInventory.decorations[decorationId],
       ...modifyInventoryItemResponse,
     };
-    visitorInventory.decorations[decorationConfig.name].availableQuantity = availableQuantity + 1;
+    visitorInventory.decorations[decorationId].availableQuantity = availableQuantity + 1;
 
     await visitor.updateDataObject(
       {},

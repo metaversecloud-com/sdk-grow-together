@@ -16,14 +16,14 @@ export const handlePurchaseTool = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
     const { profileId, urlSlug } = credentials;
-    const { toolName } = req.body;
+    const { toolId } = req.body;
 
-    if (!toolName) throw "Valid toolName is required";
+    if (!toolId) throw "Valid toolId is required";
 
     // Get tool configuration
     const { ecosystemTools } = await getInventoryItems(credentials);
 
-    const toolConfig = ecosystemTools[toolName];
+    const toolConfig = ecosystemTools[toolId];
     if (!toolConfig) throw "Invalid tool type";
 
     const { visitor, visitorInventory } = await initializeVisitorData(credentials);
@@ -47,8 +47,8 @@ export const handlePurchaseTool = async (req: Request, res: Response) => {
       quantity: toolConfig.quantity,
     });
 
-    visitorInventory.tools[toolConfig.name] = {
-      ...visitorInventory.tools[toolConfig.name],
+    visitorInventory.tools[toolId] = {
+      ...visitorInventory.tools[toolId],
       ...modifyInventoryItemResponse,
     };
 

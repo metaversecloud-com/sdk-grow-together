@@ -199,8 +199,11 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
         quantity: -1,
       }),
     );
-    visitorInventory.tools[name].availableQuantity -= 1;
-    visitorInventory.tools[name].quantity -= 1;
+    const toolEntry = Object.values(visitorInventory.tools).find(t => t.name === name);
+    if (toolEntry) {
+      toolEntry.availableQuantity -= 1;
+      toolEntry.quantity -= 1;
+    }
 
     // Remove crops that are no longer in the world
     const uniqueCropsToRemove = [...new Set(cropsToRemove)];

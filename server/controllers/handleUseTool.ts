@@ -189,8 +189,11 @@ export const handleUseTool = async (req: Request, res: Response) => {
         name,
         quantity: -1,
       });
-      visitorInventory.tools[name].availableQuantity -= 1;
-      visitorInventory.tools[name].quantity -= 1;
+      const toolEntry = Object.values(visitorInventory.tools).find(t => t.name === name);
+      if (toolEntry) {
+        toolEntry.availableQuantity -= 1;
+        toolEntry.quantity -= 1;
+      }
     }
 
     return res.json({ ...result, visitorInventory, earnedMessage, soundEffect: actionType.toLowerCase(), didLevelUp });

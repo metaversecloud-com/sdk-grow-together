@@ -17,7 +17,8 @@ export const handleGetGameState = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
     const { assetId, profileId, urlSlug } = credentials;
-    const forceRefreshInventory = true; //req.query.forceRefreshInventory === "true";
+    const forceRefreshInventory =
+      process.env.FORCE_REFRESH_INVENTORY === "true" || req.query.forceRefreshInventory === "true";
 
     const getPlotAssetsResult = await getPlotAssets(credentials, false);
 

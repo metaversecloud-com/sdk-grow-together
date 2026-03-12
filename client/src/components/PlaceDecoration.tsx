@@ -40,14 +40,14 @@ export const PlaceDecoration = ({
     setHasPlacedDecorations(placedDecorationCount > 0);
   }, [visitorInventory, decorations]);
 
-  const handlePlaceDecoration = async (decorationName: string) => {
-    if (!decorationName || selectedSquareId === null) return;
+  const handlePlaceDecoration = async (decorationId: string) => {
+    if (!decorationId || selectedSquareId === null) return;
 
     setIsPlacing(true);
 
     await backendAPI
       .post("/decoration/drop", {
-        decorationName,
+        decorationId,
         squareId: selectedSquareId,
       })
       .then((response) => {
@@ -103,15 +103,15 @@ export const PlaceDecoration = ({
               Object.values(decorations)
                 .filter((decoration) => {
                   // Only show decorations that are available in inventory
-                  return decorations[decoration.name]?.availableQuantity > 0;
+                  return decoration.availableQuantity > 0;
                 })
                 .map((decoration) => {
-                  const available = decorations[decoration.name]?.availableQuantity || 0;
+                  const available = decoration.availableQuantity || 0;
                   return (
                     <div
                       key={decoration.name}
                       className={`card menu-card text-center ${isPlacing ? "opacity-50" : "cursor-pointer"}`}
-                      onClick={() => !isPlacing && handlePlaceDecoration(decoration.name)}
+                      onClick={() => !isPlacing && handlePlaceDecoration(decoration.ecosystemItemId)}
                     >
                       <img className="m-auto" src={decoration.icon} style={{ width: "40px" }} />
                       <div>

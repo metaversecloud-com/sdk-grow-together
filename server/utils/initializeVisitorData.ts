@@ -62,9 +62,10 @@ export const initializeVisitorData = async (credentials: Credentials) => {
       });
     }
 
-    for (const decorationName in visitorInventory.decorations) {
+    for (const decorationId in visitorInventory.decorations) {
       // Calculate availableQuantity as item.quantity minus the total placed decorations for all urlSlugs
       let placedCount = 0;
+      const decorationName = visitorInventory.decorations[decorationId].name;
       const placedDecorationsForItem = visitorData.placedDecorations?.[decorationName];
       if (placedDecorationsForItem) {
         // Use Object.values and flatMap for better performance
@@ -73,7 +74,7 @@ export const initializeVisitorData = async (credentials: Credentials) => {
           0,
         );
       }
-      let availableQuantity = (visitorInventory.decorations[decorationName].quantity || 0) - placedCount;
+      let availableQuantity = (visitorInventory.decorations[decorationId].quantity || 0) - placedCount;
 
       // Check for placed decorations for this decorationName in this world
       // this should be updated to check for existence in all worlds once the endpoint is available
@@ -104,7 +105,7 @@ export const initializeVisitorData = async (credentials: Credentials) => {
       }
 
       // Update availableQuantity in visitorInventory
-      visitorInventory.decorations[decorationName].availableQuantity = availableQuantity;
+      visitorInventory.decorations[decorationId].availableQuantity = availableQuantity;
     }
 
     return { visitor, visitorData, visitorInventory };

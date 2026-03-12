@@ -80,7 +80,9 @@ export const UsePlotToolModal = ({
             {Object.values(tools)
               .filter((tool) => {
                 return (
-                  tools[tool.name]?.quantity > 0 && tool.canBeUsedOnPlot === true && tool.actionType === actionType
+                  tools[tool.ecosystemItemId]?.quantity > 0 &&
+                  tool.canBeUsedOnPlot === true &&
+                  tool.actionType === actionType
                 );
               })
               .map((tool) => {

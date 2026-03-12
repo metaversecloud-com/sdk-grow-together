@@ -10,16 +10,16 @@ import { ErrorType, SET_VISITOR_INVENTORY } from "@/context/types";
 // utils
 import { backendAPI, setErrorMessage } from "@/utils";
 
-export const DecorationMenu = () => {
+export const ToolsMenu = () => {
   const dispatch = useContext(GlobalDispatchContext);
-  const { ecosystemDecorations, visitorInventory = { coins: 0 } } = useContext(GlobalStateContext);
+  const { ecosystemTools, visitorInventory = { coins: 0 } } = useContext(GlobalStateContext);
 
-  const [purchasingDecorations, setPurchasingDecorations] = useState<Set<string>>(new Set());
+  const [purchasingTools, setPurchasingTools] = useState<Set<string>>(new Set());
 
-  const handlePurchaseDecoration = async (decorationName: string) => {
-    setPurchasingDecorations((prev) => new Set([...prev, decorationName]));
+  const handlePurchaseTool = async (toolId: string) => {
+    setPurchasingTools((prev) => new Set([...prev, toolId]));
     await backendAPI
-      .post("/decoration/purchase", { decorationName })
+      .post("/tool/purchase", { toolId })
       .then((response) => {
         dispatch!({
           type: SET_VISITOR_INVENTORY,
@@ -28,9 +28,9 @@ export const DecorationMenu = () => {
       })
       .catch((error) => setErrorMessage(dispatch, error as ErrorType))
       .finally(() => {
-        setPurchasingDecorations((prev) => {
+        setPurchasingTools((prev) => {
           const updated = new Set(prev);
-          updated.delete(decorationName);
+          updated.delete(toolId);
           return updated;
         });
       });
@@ -39,21 +39,24 @@ export const DecorationMenu = () => {
   return (
     <div>
       <div className="grid grid-cols-2 gap-2">
-        {ecosystemDecorations &&
-          Object.values(ecosystemDecorations).map((decoration) => {
-            const { name, rarity, cost, icon } = decoration;
+        {ecosystemTools &&
+          Object.values(ecosystemTools).map((tool) => {
+            const { name, description, rarity, cost, quantity, icon } = tool;
 
             return (
               <InventoryItem
-                key={name}
+                key={tool.id}
                 coinsAvailable={visitorInventory.coins}
                 icon={icon}
                 name={name}
+                description={description}
                 rarity={rarity}
                 cost={cost}
-                isPurchasing={purchasingDecorations.has(name)}
-                handlePurchase={() => handlePurchaseDecoration(name)}
+                quantity={quantity}
+                isPurchasing={purchasingTools.has(tool.id)}
+                handlePurchase={() => handlePurchaseTool(tool.id)}
                 isReadyOnly={false}
+                showDescriptionTooltip={true}
               />
             );
           })}
@@ -62,4 +65,4 @@ export const DecorationMenu = () => {
   );
 };
 
-export default DecorationMenu;
+export default ToolsMenu;

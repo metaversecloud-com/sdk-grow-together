@@ -6,7 +6,7 @@ import { InventoryItem, NoItems } from "@/components";
 // context
 import { GlobalStateContext } from "@/context/GlobalContext";
 
-export const InventoryAccessories = ({
+export const VisitorAccessories = ({
   handleShowInventoryModal,
 }: {
   handleShowInventoryModal: (activeTab: string) => void;
@@ -44,4 +44,4 @@ export const InventoryAccessories = ({
   );
 };
 
-export default InventoryAccessories;
+export default VisitorAccessories;

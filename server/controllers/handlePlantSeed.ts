@@ -25,7 +25,7 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
     const { assetId, displayName, profileId, urlSlug, visitorId } = credentials;
-    const { seedName, squareId } = req.body;
+    const { seedId, squareId } = req.body;
 
     const { visitor, visitorData, visitorInventory } = await initializeVisitorData(credentials);
 
@@ -46,7 +46,7 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
       return res.status(409).json({ message: "Seed already being planted." });
     }
 
-    if (!seedName || !squareId) throw "Valid seedName and squareId are required";
+    if (!seedId || !squareId) throw "Valid seedId and squareId are required";
 
     const noOfSquares = calculateNumberOfSquares();
     if (squareId < 1 || squareId > noOfSquares) throw `squareId must be between 1 and ${noOfSquares}`;
@@ -54,7 +54,7 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     // Get seed configuration
     const { ecosystemSeeds } = await getInventoryItems(credentials);
 
-    const seedConfig = ecosystemSeeds[seedName];
+    const seedConfig = ecosystemSeeds[seedId];
     if (!seedConfig) throw "Invalid seed type";
 
     const plotData = visitorData.worlds[urlSlug];
@@ -63,7 +63,7 @@ export const handlePlantSeed = async (req: Request, res: Response) => {
     if (plotData.plotAssetId !== assetId) throw "You must own this plot before planting seeds";
 
     // Check if visitor has purchased this seed (for paid seeds)
-    if (seedConfig.cost > 0 && !visitorInventory.seeds?.[seedConfig.name]) {
+    if (seedConfig.cost > 0 && !visitorInventory.seeds?.[seedId]) {
       throw "You must purchase this seed before planting";
     }
 
