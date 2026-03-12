@@ -1,5 +1,3 @@
-import { InventoryItemInterface, UserInventoryItemInterface } from "@rtsdk/topia";
-
 export type WorldDataObjectType = {
   claimedPlots?: object;
   plots: {
@@ -8,6 +6,7 @@ export type WorldDataObjectType = {
 };
 
 export type MetadataType = {
+  displayName?: string;
   type?: string;
   cost?: number;
   rarity?: number;

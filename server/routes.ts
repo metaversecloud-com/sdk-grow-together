@@ -12,6 +12,7 @@ import {
   handleRemoveDecoration,
   handleOpenPlotIframe,
   handleRemoveCrop,
+  handlePurchaseAccessory,
   handlePurchaseDecoration,
   handleOpenPlotSquareIframe,
   handleClearPlot,
@@ -71,6 +72,9 @@ router.post("/crop/remove", handleRemoveCrop);
 router.post("/decoration/purchase", handlePurchaseDecoration);
 router.post("/decoration/drop", handlePlaceDecoration);
 router.post("/decoration/remove", handleRemoveDecoration);
+
+// accessory routes
+router.post("/accessory/purchase", handlePurchaseAccessory);
 
 // tool routes
 router.post("/tool/purchase", handlePurchaseTool);

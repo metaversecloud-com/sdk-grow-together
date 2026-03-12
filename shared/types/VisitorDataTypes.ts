@@ -22,10 +22,12 @@ export type VisitorWorldDataType = {
 
 export type VisitorInventoryItemType = {
   id: string;
+  ecosystemItemId: string;
   availableQuantity: number;
   description: string;
   icon: string;
   name: string;
+  displayName: string;
   quantity: number;
   cost: number;
   rarity: string;
@@ -47,6 +49,9 @@ export type VisitorInventoryType = {
     [itemId: string]: VisitorInventoryItemType;
   };
   tools: {
+    [itemId: string]: VisitorInventoryItemType;
+  };
+  accessories: {
     [itemId: string]: VisitorInventoryItemType;
   };
 };

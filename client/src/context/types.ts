@@ -46,6 +46,7 @@ export interface InitialState {
   visitorData?: VisitorDataObjectType;
   visitorPlotAssetId?: string;
   plotData?: VisitorWorldDataType;
+  ecosystemAccessories?: { [key: string]: InventoryItemType };
   ecosystemDecorations?: { [key: string]: InventoryItemType };
   ecosystemSeeds?: { [key: string]: InventoryItemType };
   ecosystemTools?: { [key: string]: InventoryItemType };

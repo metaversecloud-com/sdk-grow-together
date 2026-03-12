@@ -5,9 +5,16 @@ import { MetadataType } from "../../types/Types.js";
 export const structureVisitorInventoryItem = async (visitorItem: UserInventoryItemInterface): Promise<any> => {
   const { name, description = "", image_url = "", image_path = "", status, quantity = 0, item } = visitorItem;
 
-  const { name: itemName, description: itemDescription = "", image_url: itemImageUrl = "", metadata } = item || {};
+  const {
+    id: ecosystemItemId,
+    name: itemName,
+    description: itemDescription = "",
+    image_url: itemImageUrl = "",
+    metadata,
+  } = item || {};
 
   const {
+    displayName,
     type,
     cost = 0,
     rarity = 0,
@@ -21,11 +28,13 @@ export const structureVisitorInventoryItem = async (visitorItem: UserInventoryIt
 
   const itemData = {
     ...defaultVisitorInventoryItem,
+    ecosystemItemId,
     type,
     status,
     description: itemDescription || description,
     icon: itemImageUrl || image_url || image_path,
     name: itemName || name,
+    displayName: displayName || itemName || name,
     availableQuantity: quantity,
     quantity,
     cost,

@@ -2,7 +2,9 @@ import { useContext, useState } from "react";
 
 // components
 import {
+  AccessoriesMenu,
   DecorationMenu,
+  InventoryAccessories,
   InventoryDecorations,
   InventorySeeds,
   InventoryTools,
@@ -40,27 +42,34 @@ export const InventoryModal = ({
 
         <YourMoney coinsAvailable={visitorInventory.coins} />
 
-        <div className="tab-text-container">
+        <div className="flex justify-between gap-2 py-2" style={{ borderBottom: "1px solid var(--color-border)" }}>
           <button
-            className={`btn btn-text ${activeTab === "seeds" ? "active" : ""}`}
-            style={{ width: "auto" }}
+            className={`p2 ${activeTab === "seeds" && "border-b border-gray-400"}`}
+            style={{ minWidth: 0 }}
             onClick={() => setActiveTab("seeds")}
           >
             Seeds
           </button>
           <button
-            className={`btn btn-text ${activeTab === "tools" ? "active" : ""}`}
-            style={{ width: "auto" }}
+            className={`p2 ${activeTab === "tools" && "border-b border-gray-400"}`}
+            style={{ minWidth: 0 }}
             onClick={() => setActiveTab("tools")}
           >
             Tools
           </button>
           <button
-            className={`btn btn-text ${activeTab === "decorations" ? "active" : ""}`}
-            style={{ width: "auto" }}
+            className={`p2 ${activeTab === "decorations" && "border-b border-gray-400"}`}
+            style={{ minWidth: 0 }}
             onClick={() => setActiveTab("decorations")}
           >
             Decorations
+          </button>
+          <button
+            className={`p2 ${activeTab === "accessories" && "border-b border-gray-400"}`}
+            style={{ minWidth: 0 }}
+            onClick={() => setActiveTab("accessories")}
+          >
+            Accessories
           </button>
         </div>
 
@@ -69,6 +78,8 @@ export const InventoryModal = ({
             <SeedMenu />
           ) : activeTab === "tools" ? (
             <ToolMenu />
+          ) : activeTab === "accessories" ? (
+            <AccessoriesMenu />
           ) : (
             <DecorationMenu />
           )
@@ -84,6 +95,13 @@ export const InventoryModal = ({
             handleShowInventoryModal={() => {
               setShowStore(true);
               setActiveTab("tools");
+            }}
+          />
+        ) : activeTab === "accessories" ? (
+          <InventoryAccessories
+            handleShowInventoryModal={() => {
+              setShowStore(true);
+              setActiveTab("accessories");
             }}
           />
         ) : (

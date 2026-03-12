@@ -1,3 +1,4 @@
+export * from "./AccessoriesMenu.js";
 export * from "./Accordion.js";
 export * from "./AdminView.js";
 export * from "./AdminIconButton.js";
@@ -10,6 +11,7 @@ export * from "./GetStartedModal.js";
 export * from "./HarvestButton.js";
 export * from "./InfoModal.js";
 export * from "./Instructions.js";
+export * from "./InventoryAccessories.js";
 export * from "./InventoryDecorations.js";
 export * from "./InventoryItem.js";
 export * from "./InventoryModal.js";
