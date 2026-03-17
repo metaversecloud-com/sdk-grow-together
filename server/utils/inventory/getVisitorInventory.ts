@@ -22,14 +22,14 @@ export const getVisitorInventory = async (credentials: Credentials): Promise<Vis
       tools: { [key: string]: VisitorInventoryItemType } = {};
 
     for (const visitorItem of allItems || []) {
-      const itemData = await structureVisitorInventoryItem(visitorItem);
+      const itemData = await structureVisitorInventoryItem(visitorItem, credentials);
 
       const { ecosystemItemId, name, status, quantity, type } = itemData;
       if (status !== "ACTIVE" || !name) continue;
 
       if (name === "Coins") coins = quantity || 0;
       else if (name === "Experience Points") xp = quantity || 0;
-      else if (type === "accessory") accessories[ecosystemItemId] = itemData;
+      else if (visitorItem.type === "ACCESSORY") accessories[ecosystemItemId] = itemData;
       else if (type === "decoration") decorations[ecosystemItemId] = itemData;
       else if (type === "seed") seeds[ecosystemItemId] = itemData;
       else if (type === "tool") tools[ecosystemItemId] = itemData;

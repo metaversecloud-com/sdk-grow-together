@@ -48,7 +48,7 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
     const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
       credentials,
       visitor,
-      name: seedConfig.name,
+      id: seedId,
       quantity: 1,
     });
 

@@ -68,7 +68,7 @@ class InventoryCache {
 
       const data = await structureEcosystemInventoryItem(item);
 
-      if (data.type === "accessory") ecosystemAccessories[data.id] = data;
+      if (item.type === "ACCESSORY") ecosystemAccessories[data.id] = data;
       else if (data.type === "decoration") ecosystemDecorations[data.id] = data;
       else if (data.type === "seed") ecosystemSeeds[data.id] = data;
       else if (data.type === "tool") ecosystemTools[data.id] = data;

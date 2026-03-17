@@ -43,7 +43,7 @@ export const handlePurchaseTool = async (req: Request, res: Response) => {
     const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
       credentials,
       visitor,
-      name: toolConfig.name,
+      id: toolId,
       quantity: toolConfig.quantity,
     });
 

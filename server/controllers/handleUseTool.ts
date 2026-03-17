@@ -186,7 +186,7 @@ export const handleUseTool = async (req: Request, res: Response) => {
       modifyVisitorInventoryItem({
         credentials,
         visitor,
-        name,
+        id: tool.ecosystemItemId || tool.id,
         quantity: -1,
       });
       const toolEntry = Object.values(visitorInventory.tools).find(t => t.name === name);

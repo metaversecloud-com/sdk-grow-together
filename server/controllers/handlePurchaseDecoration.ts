@@ -43,7 +43,7 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
     const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
       credentials,
       visitor,
-      name: decorationConfig.name,
+      id: decorationId,
       quantity: 1,
     });
 

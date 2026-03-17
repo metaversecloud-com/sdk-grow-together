@@ -5,7 +5,7 @@ import { InventoryItem } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
-import { ErrorType, SET_VISITOR_INVENTORY } from "@/context/types";
+import { DEDUCT_COINS, ErrorType, SET_VISITOR_INVENTORY } from "@/context/types";
 
 // utils
 import { backendAPI, setErrorMessage } from "@/utils";
@@ -17,7 +17,9 @@ export const ToolsMenu = () => {
   const [purchasingTools, setPurchasingTools] = useState<Set<string>>(new Set());
 
   const handlePurchaseTool = async (toolId: string) => {
+    const cost = ecosystemTools?.[toolId]?.cost ?? 0;
     setPurchasingTools((prev) => new Set([...prev, toolId]));
+    dispatch!({ type: DEDUCT_COINS, payload: { amount: cost } });
     await backendAPI
       .post("/tool/purchase", { toolId })
       .then((response) => {
@@ -26,7 +28,10 @@ export const ToolsMenu = () => {
           payload: { visitorInventory: response.data.visitorInventory, error: "" },
         });
       })
-      .catch((error) => setErrorMessage(dispatch, error as ErrorType))
+      .catch((error) => {
+        dispatch!({ type: DEDUCT_COINS, payload: { amount: -cost } });
+        setErrorMessage(dispatch, error as ErrorType);
+      })
       .finally(() => {
         setPurchasingTools((prev) => {
           const updated = new Set(prev);

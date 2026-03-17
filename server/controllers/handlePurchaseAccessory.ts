@@ -46,7 +46,7 @@ export const handlePurchaseAccessory = async (req: Request, res: Response) => {
     const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
       credentials,
       visitor,
-      name: accessoryConfig.name,
+      id: accessoryId,
       quantity: 1,
     });
 

@@ -5,6 +5,7 @@ export type InventoryItemType = {
   id: string;
   name: string;
   displayName: string;
+  type: string | undefined;
   cost: number; // 0 for free seeds
   reward: number; // coins earned when harvested
   growthTime: number; // total time in seconds per level

@@ -195,7 +195,7 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
       modifyVisitorInventoryItem({
         credentials,
         visitor,
-        name,
+        id: tool.ecosystemItemId || tool.id,
         quantity: -1,
       }),
     );
