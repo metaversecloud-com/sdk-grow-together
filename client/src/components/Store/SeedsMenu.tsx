@@ -5,38 +5,43 @@ import { InventoryItem } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
-import { ErrorType, SET_VISITOR_INVENTORY } from "@/context/types";
+import { DEDUCT_COINS, ErrorType, SET_VISITOR_INVENTORY } from "@/context/types";
 
 // utils
 import { backendAPI, setErrorMessage } from "@/utils";
 import { InventoryItemType } from "@shared/types";
 
-export const SeedMenu = () => {
+export const SeedsMenu = () => {
   const dispatch = useContext(GlobalDispatchContext);
   const { ecosystemSeeds, visitorInventory } = useContext(GlobalStateContext);
   const { coins, seeds: visitorSeeds } = visitorInventory as typeof visitorInventory & {
     seeds: { [key: string]: InventoryItemType };
   };
 
-  const availableSeeds = ecosystemSeeds && Object.values(ecosystemSeeds).filter((seed) => !visitorSeeds?.[seed.name]);
+  const availableSeeds = ecosystemSeeds && Object.values(ecosystemSeeds).filter((seed) => !visitorSeeds?.[seed.id]);
 
   const [purchasingSeeds, setPurchasingSeeds] = useState<Set<string>>(new Set());
 
-  const handlePurchaseSeed = async (seedName: string) => {
-    setPurchasingSeeds((prev) => new Set([...prev, seedName]));
+  const handlePurchaseSeed = async (seedId: string) => {
+    const cost = ecosystemSeeds?.[seedId]?.cost ?? 0;
+    setPurchasingSeeds((prev) => new Set([...prev, seedId]));
+    dispatch!({ type: DEDUCT_COINS, payload: { amount: cost } });
     await backendAPI
-      .post("/seed/purchase", { seedName })
+      .post("/seed/purchase", { seedId })
       .then((response) => {
         dispatch!({
           type: SET_VISITOR_INVENTORY,
           payload: { visitorInventory: response.data.visitorInventory, error: "" },
         });
       })
-      .catch((error) => setErrorMessage(dispatch, error as ErrorType))
+      .catch((error) => {
+        dispatch!({ type: DEDUCT_COINS, payload: { amount: -cost } });
+        setErrorMessage(dispatch, error as ErrorType);
+      })
       .finally(() => {
         setPurchasingSeeds((prev) => {
           const updated = new Set(prev);
-          updated.delete(seedName);
+          updated.delete(seedId);
           return updated;
         });
       });
@@ -57,17 +62,17 @@ export const SeedMenu = () => {
 
             return (
               <InventoryItem
-                key={name}
+                key={seed.id}
                 coinsAvailable={coins}
-                icon={ecosystemSeeds[name].icon}
+                icon={seed.icon}
                 name={name}
                 description={formatTime(growthTime * harvestLevel)}
                 rarity={rarity}
                 cost={cost}
                 value={reward}
                 valueText="Profit"
-                isPurchasing={purchasingSeeds.has(name)}
-                handlePurchase={() => handlePurchaseSeed(name)}
+                isPurchasing={purchasingSeeds.has(seed.id)}
+                handlePurchase={() => handlePurchaseSeed(seed.id)}
                 isReadyOnly={false}
               />
             );
@@ -83,4 +88,4 @@ export const SeedMenu = () => {
   );
 };
 
-export default SeedMenu;
+export default SeedsMenu;

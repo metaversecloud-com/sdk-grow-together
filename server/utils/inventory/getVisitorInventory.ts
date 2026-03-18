@@ -16,52 +16,63 @@ export const getVisitorInventory = async (credentials: Credentials): Promise<Vis
 
     let coins = 0,
       xp = 0,
+      accessories: { [key: string]: VisitorInventoryItemType } = {},
       seeds: { [key: string]: VisitorInventoryItemType } = {},
       decorations: { [key: string]: VisitorInventoryItemType } = {},
       tools: { [key: string]: VisitorInventoryItemType } = {};
 
     for (const visitorItem of allItems || []) {
-      const itemData = await structureVisitorInventoryItem(visitorItem);
+      const itemData = await structureVisitorInventoryItem(visitorItem, credentials);
 
-      const { name, status, quantity, type } = itemData;
+      const { ecosystemItemId, name, status, quantity, type } = itemData;
       if (status !== "ACTIVE" || !name) continue;
 
       if (name === "Coins") coins = quantity || 0;
       else if (name === "Experience Points") xp = quantity || 0;
-      else if (type === "decoration") decorations[name] = itemData;
-      else if (type === "seed") seeds[name] = itemData;
-      else if (type === "tool") tools[name] = itemData;
+      else if (visitorItem.type === "ACCESSORY") accessories[ecosystemItemId] = itemData;
+      else if (type === "decoration") decorations[ecosystemItemId] = itemData;
+      else if (type === "seed") seeds[ecosystemItemId] = itemData;
+      else if (type === "tool") tools[ecosystemItemId] = itemData;
     }
 
     // Sort items by sortOrder while keeping them as objects
+    const sortedAccessories: { [key: string]: (typeof accessories)[keyof typeof accessories] } = {};
     const sortedDecorations: { [key: string]: (typeof decorations)[keyof typeof decorations] } = {};
     const sortedSeeds: { [key: string]: (typeof seeds)[keyof typeof seeds] } = {};
     const sortedTools: { [key: string]: (typeof tools)[keyof typeof tools] } = {};
+
+    // Sort accessories
+    Object.values(accessories)
+      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+      .forEach((accessory) => {
+        sortedAccessories[accessory.ecosystemItemId] = accessory;
+      });
 
     // Sort decorations
     Object.values(decorations)
       .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
       .forEach((decoration) => {
-        sortedDecorations[decoration.name] = decoration;
+        sortedDecorations[decoration.ecosystemItemId] = decoration;
       });
 
     // Sort seeds
     Object.values(seeds)
       .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
       .forEach((seed) => {
-        sortedSeeds[seed.name] = seed;
+        sortedSeeds[seed.ecosystemItemId] = seed;
       });
 
     // Sort tools
     Object.values(tools)
       .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
       .forEach((tool) => {
-        sortedTools[tool.name] = tool;
+        sortedTools[tool.ecosystemItemId] = tool;
       });
 
     const visitorInventory: VisitorInventoryType = {
       coins,
       xp,
+      accessories: sortedAccessories,
       seeds: sortedSeeds,
       decorations: sortedDecorations,
       tools: sortedTools,

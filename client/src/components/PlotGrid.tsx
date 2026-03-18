@@ -96,7 +96,7 @@ export const PlotGrid = ({
     } else if (decoration) {
       name = decoration?.decorationName;
       title = `${name} in Slot ${squareId!}`;
-      icon = ecosystemDecorations[decoration.decorationName]?.icon;
+      icon = ecosystemDecorations[decoration.decorationId]?.icon;
     }
 
     return { title, icon, name, growLevel, harvestLevel, reward, isReadyToWater, isReadyToHarvest, appliedTools };

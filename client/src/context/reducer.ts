@@ -1,5 +1,6 @@
 import {
   ActionType,
+  DeductCoinsPayload,
   InitialState,
   SET_ERROR,
   SET_GAME_STATE,
@@ -12,10 +13,12 @@ import {
   SET_EARNED_MESSAGE,
   SET_SOUND_EFFECT,
   SET_DID_LEVEL_UP,
+  DEDUCT_COINS,
 } from "./types";
 
 const globalReducer = (state: InitialState, action: ActionType) => {
-  const { type, payload } = action;
+  const { type } = action;
+  const payload = action.payload as InitialState;
   switch (type) {
     case SET_HAS_INTERACTIVE_PARAMS:
       return {
@@ -76,6 +79,15 @@ const globalReducer = (state: InitialState, action: ActionType) => {
         didLevelUp: payload.didLevelUp,
         error: "",
       };
+    case DEDUCT_COINS: {
+      const { amount } = action.payload as DeductCoinsPayload;
+      return {
+        ...state,
+        visitorInventory: state.visitorInventory
+          ? { ...state.visitorInventory, coins: state.visitorInventory.coins - (amount ?? 0) }
+          : state.visitorInventory,
+      };
+    }
     case SET_ERROR:
       return {
         ...state,

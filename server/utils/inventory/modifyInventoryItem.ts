@@ -5,20 +5,22 @@ import { getInventoryItem, standardizeError, structureVisitorInventoryItem } fro
 export const modifyVisitorInventoryItem = async ({
   credentials,
   visitor,
+  id,
   name,
   quantity,
 }: {
   credentials: Credentials;
   visitor: VisitorInterface;
-  name: string;
+  id?: string;
+  name?: string;
   quantity: number;
 }): Promise<VisitorInventoryItemType> => {
   try {
-    const inventoryItem = await getInventoryItem(credentials, name);
+    const inventoryItem = await getInventoryItem(credentials, { id, name });
 
     const visitorItem = await visitor.modifyInventoryItemQuantity(inventoryItem, quantity);
 
-    const itemData = await structureVisitorInventoryItem(visitorItem);
+    const itemData = await structureVisitorInventoryItem(visitorItem, credentials);
 
     return itemData;
   } catch (error: any) {

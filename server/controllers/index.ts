@@ -7,6 +7,7 @@ export * from "./handleHarvestCrop.js";
 export * from "./handleOpenPlotIframe.js";
 export * from "./handleOpenPlotSquareIframe.js";
 export * from "./handlePlaceDecoration.js";
+export * from "./handlePurchaseAccessory.js";
 export * from "./handlePurchaseDecoration.js";
 export * from "./handlePurchaseSeed.js";
 export * from "./handlePurchaseTool.js";

@@ -17,7 +17,8 @@ export const handleGetGameState = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
     const { assetId, profileId, urlSlug } = credentials;
-    const forceRefreshInventory = req.query.forceRefreshInventory === "true";
+    const forceRefreshInventory =
+      process.env.FORCE_REFRESH_INVENTORY === "true" || req.query.forceRefreshInventory === "true";
 
     const getPlotAssetsResult = await getPlotAssets(credentials, false);
 
@@ -63,7 +64,7 @@ export const handleGetGameState = async (req: Request, res: Response) => {
     );
 
     // Get all inventory items
-    const { ecosystemDecorations, ecosystemSeeds, ecosystemTools } = await getInventoryItems(
+    const { ecosystemAccessories, ecosystemDecorations, ecosystemSeeds, ecosystemTools } = await getInventoryItems(
       credentials,
       forceRefreshInventory,
     );
@@ -81,6 +82,7 @@ export const handleGetGameState = async (req: Request, res: Response) => {
       visitorPlotAssetId,
       plotData,
       visitorInventory,
+      ecosystemAccessories,
       ecosystemDecorations,
       ecosystemSeeds,
       ecosystemTools,

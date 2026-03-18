@@ -19,6 +19,7 @@ export const SET_DECORATION_DATA = "SET_DECORATION_DATA";
 export const SET_EARNED_MESSAGE = "SET_EARNED_MESSAGE";
 export const SET_SOUND_EFFECT = "SET_SOUND_EFFECT";
 export const SET_DID_LEVEL_UP = "SET_DID_LEVEL_UP";
+export const DEDUCT_COINS = "DEDUCT_COINS";
 
 export type InteractiveParams = {
   assetId: string;
@@ -46,6 +47,7 @@ export interface InitialState {
   visitorData?: VisitorDataObjectType;
   visitorPlotAssetId?: string;
   plotData?: VisitorWorldDataType;
+  ecosystemAccessories?: { [key: string]: InventoryItemType };
   ecosystemDecorations?: { [key: string]: InventoryItemType };
   ecosystemSeeds?: { [key: string]: InventoryItemType };
   ecosystemTools?: { [key: string]: InventoryItemType };
@@ -55,9 +57,13 @@ export interface InitialState {
   didLevelUp?: boolean;
 }
 
+export type DeductCoinsPayload = {
+  amount: number;
+};
+
 export type ActionType = {
   type: string;
-  payload: InitialState;
+  payload: InitialState | DeductCoinsPayload;
 };
 
 export type ErrorType =

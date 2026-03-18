@@ -10,61 +10,62 @@ import {
 } from "../utils/index.js";
 
 /**
- * Handle decoration purchase - allows visitor to purchase decorations with coins
+ * Handle accessory purchase - allows visitor to purchase an accessory with coins (one-time only)
  */
-export const handlePurchaseDecoration = async (req: Request, res: Response) => {
+export const handlePurchaseAccessory = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
     const { profileId, urlSlug } = credentials;
-    const { decorationId } = req.body;
+    const { accessoryId } = req.body;
 
-    if (!decorationId) throw "Valid decorationId is required";
+    if (!accessoryId) throw "Valid accessoryId is required";
 
-    // Get decoration configuration
-    const { ecosystemDecorations } = await getInventoryItems(credentials);
+    // Get accessory configuration
+    const { ecosystemAccessories } = await getInventoryItems(credentials);
 
-    const decorationConfig = ecosystemDecorations[decorationId];
-    if (!decorationConfig) throw "Invalid decoration type";
+    const accessoryConfig = ecosystemAccessories[accessoryId];
+    if (!accessoryConfig) throw "Invalid accessory type";
 
     const { visitor, visitorInventory } = await initializeVisitorData(credentials);
 
-    // Check if visitor has enough coins
-    if (visitorInventory.coins < decorationConfig.cost) throw `Not enough coins.`;
+    // Check if accessory is already owned (accessories can only be purchased once)
+    if (visitorInventory.accessories[accessoryId]) throw "Accessory already purchased";
 
-    // Purchase the decoration (modify quantity in inventory)
+    // Check if visitor has enough coins
+    if (visitorInventory.coins < accessoryConfig.cost) throw `Not enough coins.`;
+
+    // Purchase the accessory (modify quantity in inventory)
     const modifyCoinsResponse = await modifyVisitorInventoryItem({
       credentials,
       visitor,
       name: "Coins",
-      quantity: -decorationConfig.cost,
+      quantity: -accessoryConfig.cost,
     });
     visitorInventory.coins = modifyCoinsResponse.quantity;
 
     const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
       credentials,
       visitor,
-      id: decorationId,
+      id: accessoryId,
       quantity: 1,
     });
 
-    const availableQuantity = visitorInventory.decorations[decorationId]?.availableQuantity || 0;
-    visitorInventory.decorations[decorationId] = {
-      ...visitorInventory.decorations[decorationId],
+    visitorInventory.accessories[accessoryConfig.id] = {
+      ...visitorInventory.accessories[accessoryConfig.id],
       ...modifyInventoryItemResponse,
     };
-    visitorInventory.decorations[decorationId].availableQuantity = availableQuantity + 1;
 
     await visitor.updateDataObject(
       {},
       {
         analytics: [
           {
-            analyticName: "decorationsUnlocked",
+            analyticName: "accessoriesUnlocked",
             profileId,
             uniqueKey: profileId,
           },
           {
-            analyticName: `${getAnalyticName(decorationConfig)}Unlocked`,
+            analyticName: `${getAnalyticName(accessoryConfig)}Unlocked`,
             profileId,
             urlSlug,
             uniqueKey: profileId,
@@ -75,14 +76,14 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
 
     await visitor
       .fireToast({
-        groupId: "handlePurchaseDecoration",
-        title: "You purchased a new decoration!",
-        text: `You can now place a ${decorationConfig.name} in your garden.`,
+        groupId: "handlePurchaseAccessory",
+        title: "You purchased a new accessory!",
+        text: `You now own ${accessoryConfig.displayName}.`,
       })
       .catch((error: AxiosError) => {
         return errorHandler({
           error,
-          functionName: "handlePurchaseDecoration",
+          functionName: "handlePurchaseAccessory",
           message: "Error firing toast",
         });
       });
@@ -94,8 +95,8 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
   } catch (error) {
     return errorHandler({
       error,
-      functionName: "handlePurchaseDecoration",
-      message: "Error purchasing decoration",
+      functionName: "handlePurchaseAccessory",
+      message: "Error purchasing accessory",
       req,
       res,
     });

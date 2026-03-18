@@ -8,6 +8,7 @@ const CACHE_DURATION_MS = 6 * 60 * 60 * 1000;
 interface InventoryCacheEntry {
   data: {
     allItems: InventoryItemInterface[];
+    ecosystemAccessories: { [key: string]: InventoryItemType };
     ecosystemDecorations: { [key: string]: InventoryItemType };
     ecosystemSeeds: { [key: string]: InventoryItemType };
     ecosystemTools: { [key: string]: InventoryItemType };
@@ -57,6 +58,7 @@ class InventoryCache {
 
     const allItems = ecosystem.inventoryItems;
 
+    let ecosystemAccessories: { [key: string]: InventoryItemType } = {};
     let ecosystemDecorations: { [key: string]: InventoryItemType } = {};
     let ecosystemSeeds: { [key: string]: InventoryItemType } = {};
     let ecosystemTools: { [key: string]: InventoryItemType } = {};
@@ -66,39 +68,49 @@ class InventoryCache {
 
       const data = await structureEcosystemInventoryItem(item);
 
-      if (data.type === "decoration") ecosystemDecorations[data.name] = data;
-      else if (data.type === "seed") ecosystemSeeds[data.name] = data;
-      else if (data.type === "tool") ecosystemTools[data.name] = data;
+      if (item.type === "ACCESSORY") ecosystemAccessories[data.id] = data;
+      else if (data.type === "decoration") ecosystemDecorations[data.id] = data;
+      else if (data.type === "seed") ecosystemSeeds[data.id] = data;
+      else if (data.type === "tool") ecosystemTools[data.id] = data;
     }
 
     // Sort items by sortOrder while keeping them as objects
+    const sortedAccessories: { [key: string]: InventoryItemType } = {};
     const sortedDecorations: { [key: string]: InventoryItemType } = {};
     const sortedSeeds: { [key: string]: InventoryItemType } = {};
     const sortedTools: { [key: string]: InventoryItemType } = {};
+
+    // Sort accessories
+    Object.values(ecosystemAccessories)
+      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+      .forEach((accessory) => {
+        sortedAccessories[accessory.id] = accessory;
+      });
 
     // Sort decorations
     Object.values(ecosystemDecorations)
       .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
       .forEach((decoration) => {
-        sortedDecorations[decoration.name] = decoration;
+        sortedDecorations[decoration.id] = decoration;
       });
 
     // Sort seeds
     Object.values(ecosystemSeeds)
       .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
       .forEach((seed) => {
-        sortedSeeds[seed.name] = seed;
+        sortedSeeds[seed.id] = seed;
       });
 
     // Sort tools
     Object.values(ecosystemTools)
       .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
       .forEach((tool) => {
-        sortedTools[tool.name] = tool;
+        sortedTools[tool.id] = tool;
       });
 
     return {
       allItems,
+      ecosystemAccessories: sortedAccessories,
       ecosystemDecorations: sortedDecorations,
       ecosystemSeeds: sortedSeeds,
       ecosystemTools: sortedTools,

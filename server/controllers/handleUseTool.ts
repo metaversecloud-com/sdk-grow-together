@@ -186,11 +186,14 @@ export const handleUseTool = async (req: Request, res: Response) => {
       modifyVisitorInventoryItem({
         credentials,
         visitor,
-        name,
+        id: tool.ecosystemItemId || tool.id,
         quantity: -1,
       });
-      visitorInventory.tools[name].availableQuantity -= 1;
-      visitorInventory.tools[name].quantity -= 1;
+      const toolEntry = Object.values(visitorInventory.tools).find(t => t.name === name);
+      if (toolEntry) {
+        toolEntry.availableQuantity -= 1;
+        toolEntry.quantity -= 1;
+      }
     }
 
     return res.json({ ...result, visitorInventory, earnedMessage, soundEffect: actionType.toLowerCase(), didLevelUp });

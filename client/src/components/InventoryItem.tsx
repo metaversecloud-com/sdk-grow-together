@@ -56,7 +56,9 @@ export const InventoryItem = ({
           {!showDescriptionTooltip && description && <p className="p3 truncate">{description}</p>}
           {valueText && (
             <p className="p3">
-              {valueText}: <span className="text-success">{value}</span>
+              {valueText}
+              {value && `: `}
+              <span className="text-success">{value}</span>
             </p>
           )}
         </div>

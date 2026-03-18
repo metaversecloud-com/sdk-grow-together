@@ -5,32 +5,37 @@ import { InventoryItem } from "@/components";
 
 // context
 import { GlobalDispatchContext, GlobalStateContext } from "@/context/GlobalContext";
-import { ErrorType, SET_VISITOR_INVENTORY } from "@/context/types";
+import { DEDUCT_COINS, ErrorType, SET_VISITOR_INVENTORY } from "@/context/types";
 
 // utils
 import { backendAPI, setErrorMessage } from "@/utils";
 
-export const ToolMenu = () => {
+export const ToolsMenu = () => {
   const dispatch = useContext(GlobalDispatchContext);
   const { ecosystemTools, visitorInventory = { coins: 0 } } = useContext(GlobalStateContext);
 
   const [purchasingTools, setPurchasingTools] = useState<Set<string>>(new Set());
 
-  const handlePurchaseTool = async (toolName: string) => {
-    setPurchasingTools((prev) => new Set([...prev, toolName]));
+  const handlePurchaseTool = async (toolId: string) => {
+    const cost = ecosystemTools?.[toolId]?.cost ?? 0;
+    setPurchasingTools((prev) => new Set([...prev, toolId]));
+    dispatch!({ type: DEDUCT_COINS, payload: { amount: cost } });
     await backendAPI
-      .post("/tool/purchase", { toolName })
+      .post("/tool/purchase", { toolId })
       .then((response) => {
         dispatch!({
           type: SET_VISITOR_INVENTORY,
           payload: { visitorInventory: response.data.visitorInventory, error: "" },
         });
       })
-      .catch((error) => setErrorMessage(dispatch, error as ErrorType))
+      .catch((error) => {
+        dispatch!({ type: DEDUCT_COINS, payload: { amount: -cost } });
+        setErrorMessage(dispatch, error as ErrorType);
+      })
       .finally(() => {
         setPurchasingTools((prev) => {
           const updated = new Set(prev);
-          updated.delete(toolName);
+          updated.delete(toolId);
           return updated;
         });
       });
@@ -45,7 +50,7 @@ export const ToolMenu = () => {
 
             return (
               <InventoryItem
-                key={name}
+                key={tool.id}
                 coinsAvailable={visitorInventory.coins}
                 icon={icon}
                 name={name}
@@ -53,8 +58,8 @@ export const ToolMenu = () => {
                 rarity={rarity}
                 cost={cost}
                 quantity={quantity}
-                isPurchasing={purchasingTools.has(name)}
-                handlePurchase={() => handlePurchaseTool(name)}
+                isPurchasing={purchasingTools.has(tool.id)}
+                handlePurchase={() => handlePurchaseTool(tool.id)}
                 isReadyOnly={false}
                 showDescriptionTooltip={true}
               />
@@ -65,4 +70,4 @@ export const ToolMenu = () => {
   );
 };
 
-export default ToolMenu;
+export default ToolsMenu;

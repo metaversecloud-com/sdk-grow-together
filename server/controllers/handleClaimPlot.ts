@@ -58,7 +58,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
 
     // Add free seed and starter tools to visitor's inventory if they don't already have it
     const name = "Carrots";
-    if (!visitorInventory.seeds[name]) {
+    if (!Object.values(visitorInventory.seeds).find(s => s.name === name)) {
       // Throw error if Carrots doesn't exist in inventory for Public Key - user will not be able to do anything with their garden if they don't have any seeds to start with
       const modifyInventoryItemResponse = await modifyVisitorInventoryItem({
         credentials,
@@ -66,7 +66,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
         name,
         quantity: 1,
       });
-      visitorInventory.seeds[name] = modifyInventoryItemResponse as InventoryItemType & VisitorInventoryItemType;
+      visitorInventory.seeds[modifyInventoryItemResponse.ecosystemItemId] = modifyInventoryItemResponse as InventoryItemType & VisitorInventoryItemType;
     }
 
     if (Object.keys(visitorInventory.tools).length === 0) {
@@ -78,7 +78,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
           name,
           quantity: 1,
         });
-        visitorInventory.tools[name] = modifyInventoryItemResponse as InventoryItemType & VisitorInventoryItemType;
+        visitorInventory.tools[modifyInventoryItemResponse.ecosystemItemId] = modifyInventoryItemResponse as InventoryItemType & VisitorInventoryItemType;
       }
 
       const starterTools = ["Wooden Watering Can", "Basic Mulch", "Basic Compost"];
@@ -89,7 +89,7 @@ export const handleClaimPlot = async (req: Request, res: Response) => {
           name,
           quantity: 5,
         });
-        visitorInventory.tools[name] = modifyInventoryItemResponse as InventoryItemType & VisitorInventoryItemType;
+        visitorInventory.tools[modifyInventoryItemResponse.ecosystemItemId] = modifyInventoryItemResponse as InventoryItemType & VisitorInventoryItemType;
       }
     }
 

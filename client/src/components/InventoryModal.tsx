@@ -2,13 +2,15 @@ import { useContext, useState } from "react";
 
 // components
 import {
-  DecorationMenu,
-  InventoryDecorations,
-  InventorySeeds,
-  InventoryTools,
+  AccessoriesMenu,
+  DecorationsMenu,
+  VisitorAccessories,
+  VisitorDecorations,
+  VisitorSeeds,
+  VisitorTools,
   ModalHeader,
-  SeedMenu,
-  ToolMenu,
+  SeedsMenu,
+  ToolsMenu,
   YourMoney,
 } from "@/components";
 
@@ -40,54 +42,70 @@ export const InventoryModal = ({
 
         <YourMoney coinsAvailable={visitorInventory.coins} />
 
-        <div className="tab-text-container">
+        <div className="flex justify-between gap-2 py-2" style={{ borderBottom: "1px solid var(--color-border)" }}>
           <button
-            className={`btn btn-text ${activeTab === "seeds" ? "active" : ""}`}
-            style={{ width: "auto" }}
+            className={`p2 ${activeTab === "seeds" && "border-b border-gray-400"}`}
+            style={{ minWidth: 0 }}
             onClick={() => setActiveTab("seeds")}
           >
             Seeds
           </button>
           <button
-            className={`btn btn-text ${activeTab === "tools" ? "active" : ""}`}
-            style={{ width: "auto" }}
+            className={`p2 ${activeTab === "tools" && "border-b border-gray-400"}`}
+            style={{ minWidth: 0 }}
             onClick={() => setActiveTab("tools")}
           >
             Tools
           </button>
           <button
-            className={`btn btn-text ${activeTab === "decorations" ? "active" : ""}`}
-            style={{ width: "auto" }}
+            className={`p2 ${activeTab === "decorations" && "border-b border-gray-400"}`}
+            style={{ minWidth: 0 }}
             onClick={() => setActiveTab("decorations")}
           >
             Decorations
+          </button>
+          <button
+            className={`p2 ${activeTab === "accessories" && "border-b border-gray-400"}`}
+            style={{ minWidth: 0 }}
+            onClick={() => setActiveTab("accessories")}
+          >
+            Accessories
           </button>
         </div>
 
         {showStore ? (
           activeTab === "seeds" ? (
-            <SeedMenu />
+            <SeedsMenu />
           ) : activeTab === "tools" ? (
-            <ToolMenu />
+            <ToolsMenu />
+          ) : activeTab === "accessories" ? (
+            <AccessoriesMenu />
           ) : (
-            <DecorationMenu />
+            <DecorationsMenu />
           )
         ) : activeTab === "seeds" ? (
-          <InventorySeeds
+          <VisitorSeeds
             handleShowInventoryModal={() => {
               setShowStore(true);
               setActiveTab("seeds");
             }}
           />
         ) : activeTab === "tools" ? (
-          <InventoryTools
+          <VisitorTools
             handleShowInventoryModal={() => {
               setShowStore(true);
               setActiveTab("tools");
             }}
           />
+        ) : activeTab === "accessories" ? (
+          <VisitorAccessories
+            handleShowInventoryModal={() => {
+              setShowStore(true);
+              setActiveTab("accessories");
+            }}
+          />
         ) : (
-          <InventoryDecorations
+          <VisitorDecorations
             handleShowInventoryModal={() => {
               setShowStore(true);
               setActiveTab("decorations");

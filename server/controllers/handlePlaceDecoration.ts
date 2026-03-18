@@ -21,7 +21,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
   try {
     const credentials = getCredentials(req.query);
     const { assetId, displayName, profileId, urlSlug, visitorId } = credentials;
-    const { decorationName, squareId } = req.body;
+    const { decorationId, squareId } = req.body;
 
     const { visitor, visitorData, visitorInventory } = await initializeVisitorData(credentials);
     const { decorations: visitorDecorations } = visitorInventory;
@@ -43,7 +43,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
       return res.status(409).json({ message: "Decoration already being placed." });
     }
 
-    if (!decorationName || !squareId) throw "Valid decorationName and squareId are required";
+    if (!decorationId || !squareId) throw "Valid decorationId and squareId are required";
 
     const noOfSquares = calculateNumberOfSquares();
     if (squareId < 0 || squareId > noOfSquares) {
@@ -53,7 +53,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
     // Get decorations configuration
     const { ecosystemDecorations } = await getInventoryItems(credentials);
 
-    const decoration = ecosystemDecorations[decorationName];
+    const decoration = ecosystemDecorations[decorationId];
 
     // Verify decoration exists
     if (!decoration) throw "Invalid decoration type";
@@ -65,9 +65,9 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
 
     // Check if visitor owns this decoration
     if (
-      !visitorDecorations?.[decoration.name] ||
-      !visitorDecorations?.[decoration.name] ||
-      visitorDecorations[decoration.name].quantity < 1
+      !visitorDecorations?.[decorationId] ||
+      !visitorDecorations?.[decorationId] ||
+      visitorDecorations[decorationId].quantity < 1
     ) {
       throw "You must own this decoration before placing it";
     }
@@ -140,7 +140,7 @@ export const handlePlaceDecoration = async (req: Request, res: Response) => {
       visitorData.placedDecorations[decoration.name][urlSlug].push(decorationAsset.id);
     }
 
-    if (visitorDecorations[decoration.name]) visitorDecorations[decoration.name].availableQuantity -= 1;
+    if (visitorDecorations[decorationId]) visitorDecorations[decorationId].availableQuantity -= 1;
 
     await visitor.updateDataObject(visitorData, {
       analytics: [
