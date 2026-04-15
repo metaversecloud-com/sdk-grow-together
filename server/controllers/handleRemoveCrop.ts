@@ -26,20 +26,6 @@ export const handleRemoveCrop = async (req: Request, res: Response) => {
       // Check if visitor owns this asset
       if (dataObject?.ownerId !== profileId) throw "You must own this plot before removing crops";
 
-      visitorData.worlds[urlSlug].plotSquares[squareId] = null;
-      delete visitorData.worlds[urlSlug].crops[assetId];
-
-      await visitor.updateDataObject(visitorData, {
-        analytics: [
-          {
-            analyticName: "cropsRemoved",
-            profileId,
-            urlSlug,
-            uniqueKey: profileId,
-          },
-        ],
-      });
-
       const world = World.create(urlSlug, { credentials });
       await world
         .triggerParticle({
@@ -64,6 +50,20 @@ export const handleRemoveCrop = async (req: Request, res: Response) => {
         message: `Crop asset with id '${assetId}' has already been removed from world.`,
       });
     }
+
+    visitorData.worlds[urlSlug].plotSquares[squareId] = null;
+    delete visitorData.worlds[urlSlug].crops[assetId];
+
+    await visitor.updateDataObject(visitorData, {
+      analytics: [
+        {
+          analyticName: "cropsRemoved",
+          profileId,
+          urlSlug,
+          uniqueKey: profileId,
+        },
+      ],
+    });
 
     return res.json({
       success: true,
