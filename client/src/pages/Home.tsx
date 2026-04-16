@@ -61,13 +61,15 @@ export const Home = () => {
           </Accordion>
         )}
 
-        <Accordion title="Need a garden? Start here.">
-          <NewUserInfo
-            visitorPlotAssetId={visitorPlotAssetId}
-            noOfAvailablePlots={noOfAvailablePlots}
-            showHeaders={false}
-          />
-        </Accordion>
+        {!visitorPlotAssetId && (
+          <Accordion title="Need a garden? Start here.">
+            <NewUserInfo
+              visitorPlotAssetId={visitorPlotAssetId}
+              noOfAvailablePlots={noOfAvailablePlots}
+              showHeaders={false}
+            />
+          </Accordion>
+        )}
 
         <Instructions />
       </div>
