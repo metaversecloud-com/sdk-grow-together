@@ -3,6 +3,7 @@ import { CropDataObjectType, VisitorDataObjectType, VisitorWorldDataType } from 
 export const DEFAULT_VISITOR_DATA: VisitorDataObjectType = {
   lastDateCoinsEarned: "",
   totalCoinsEarned: 0,
+  inventoryLastUpdated: "",
   placedDecorations: {},
   worlds: {},
 };
@@ -22,6 +23,8 @@ export const DEFAULT_PLANT_DATA: CropDataObjectType = {
   dateDropped: "",
   lastWatered: "",
   seedId: "carrots",
+  name: "",
   growLevel: 0,
   squareId: 0,
+  appliedTools: [],
 };
