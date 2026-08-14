@@ -26,4 +26,4 @@ patches:
 images:
   - name: grow-tog0
     newName: 368076259134.dkr.ecr.us-east-1.amazonaws.com/sdk-example
-    digest: sha256:da708eb1bd3e72ea7d4a9398bc8f407d31b580a9855b35960ee2cbbc91cc9a4c
+    digest: sha256:8fb1d98f1815b06dbb066ac724b6a32e08863d84e2af013565a89947da8a9369
