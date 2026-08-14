@@ -36,6 +36,7 @@ export const handleUseTool = async (req: Request, res: Response) => {
         analyticName: "toolsUsed",
         profileId,
         uniqueKey: profileId,
+        urlSlug,
       },
       {
         analyticName: `${getAnalyticName(tool)}Used`,
@@ -65,6 +66,7 @@ export const handleUseTool = async (req: Request, res: Response) => {
         analyticName: "wateringCansUsed",
         profileId,
         uniqueKey: profileId,
+        urlSlug,
       });
 
       result = await waterCrop({
@@ -142,6 +144,7 @@ export const handleUseTool = async (req: Request, res: Response) => {
           analyticName: `${actionType.toLowerCase()}Used`,
           profileId,
           uniqueKey: profileId,
+          urlSlug,
         });
 
         const world = World.create(urlSlug, { credentials });
@@ -189,7 +192,7 @@ export const handleUseTool = async (req: Request, res: Response) => {
         id: tool.ecosystemItemId || tool.id,
         quantity: -1,
       });
-      const toolEntry = Object.values(visitorInventory.tools).find(t => t.name === name);
+      const toolEntry = Object.values(visitorInventory.tools).find((t) => t.name === name);
       if (toolEntry) {
         toolEntry.availableQuantity -= 1;
         toolEntry.quantity -= 1;
