@@ -27,6 +27,7 @@ export const checkDidIncreaseLevelOrRank = async (
       analyticName: "levelsGained",
       profileId,
       uniqueKey: profileId,
+      urlSlug,
     });
 
     if ([5, 10, 25, 50, 75, 100].includes(currentLevel)) {
@@ -34,6 +35,7 @@ export const checkDidIncreaseLevelOrRank = async (
         analyticName: `level${currentLevel}Reached`,
         profileId,
         uniqueKey: profileId,
+        urlSlug,
       });
     }
 
@@ -44,6 +46,7 @@ export const checkDidIncreaseLevelOrRank = async (
         analyticName: "ranksGained",
         profileId,
         uniqueKey: profileId,
+        urlSlug,
       });
 
       title += `  and your rank is now ${currentRank}`;

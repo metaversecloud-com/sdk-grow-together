@@ -63,6 +63,7 @@ export const handlePurchaseAccessory = async (req: Request, res: Response) => {
             analyticName: "accessoriesUnlocked",
             profileId,
             uniqueKey: profileId,
+            urlSlug,
           },
           {
             analyticName: `${getAnalyticName(accessoryConfig)}Unlocked`,

@@ -163,7 +163,7 @@ export const handleClearAllPlots = async (req: Request, res: Response) => {
         ownerData.worlds[urlSlug] = DEFAULT_VISITOR_WORLD_DATA;
         promises.push(
           plotOwner.updateDataObject(ownerData, {
-            analytics: [{ analyticName: "plotsCleared" }],
+            analytics: [{ analyticName: "plotsCleared", urlSlug }],
           }),
         );
 

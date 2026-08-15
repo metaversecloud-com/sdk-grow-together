@@ -60,6 +60,7 @@ export const handlePurchaseTool = async (req: Request, res: Response) => {
             analyticName: "toolsPurchased",
             profileId,
             uniqueKey: profileId,
+            urlSlug,
           },
           {
             analyticName: `${getAnalyticName(toolConfig)}Purchased`,

@@ -62,6 +62,7 @@ export const handlePurchaseDecoration = async (req: Request, res: Response) => {
             analyticName: "decorationsUnlocked",
             profileId,
             uniqueKey: profileId,
+            urlSlug,
           },
           {
             analyticName: `${getAnalyticName(decorationConfig)}Unlocked`,

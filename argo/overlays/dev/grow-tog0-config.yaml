@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grow-tog0-config
+  labels:
+    app.kubernetes.io/name: grow-tog0
+data:
+  INSTANCE_DOMAIN: "api.topia.io"
+  INSTANCE_PROTOCOL: "https"
+  INTERACTIVE_KEY: "2n70kG2YB0LNdM7BP7XO"
+  NODE_ENV: "production"
+  PORT: "3000"

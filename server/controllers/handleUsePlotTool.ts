@@ -199,7 +199,7 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
         quantity: -1,
       }),
     );
-    const toolEntry = Object.values(visitorInventory.tools).find(t => t.name === name);
+    const toolEntry = Object.values(visitorInventory.tools).find((t) => t.name === name);
     if (toolEntry) {
       toolEntry.availableQuantity -= 1;
       toolEntry.quantity -= 1;
@@ -247,6 +247,7 @@ export const handleUsePlotTool = async (req: Request, res: Response) => {
           analyticName: "toolsUsed",
           profileId,
           uniqueKey: profileId,
+          urlSlug,
         },
         {
           analyticName: `${getAnalyticName(tool)}Used`,

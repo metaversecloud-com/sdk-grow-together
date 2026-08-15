@@ -65,6 +65,7 @@ export const handlePurchaseSeed = async (req: Request, res: Response) => {
             analyticName: "seedsUnlocked",
             profileId,
             uniqueKey: profileId,
+            urlSlug,
           },
           {
             analyticName: `${getAnalyticName(seedConfig)}Unlocked`,
