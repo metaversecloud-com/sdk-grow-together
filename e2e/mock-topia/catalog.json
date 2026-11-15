@@ -1,0 +1,243 @@
+[
+  {
+    "id": "item-coins",
+    "name": "Coins",
+    "type": "CURRENCY",
+    "status": "ACTIVE",
+    "description": "Coins description",
+    "image_path": "https://example.invalid/items/item-coins.png",
+    "metadata": {}
+  },
+  {
+    "id": "item-xp",
+    "name": "Experience Points",
+    "type": "ITEM",
+    "status": "ACTIVE",
+    "description": "Experience Points description",
+    "image_path": "https://example.invalid/items/item-xp.png",
+    "metadata": {}
+  },
+  {
+    "id": "seed-carrots",
+    "name": "Carrots",
+    "type": "ITEM",
+    "status": "ACTIVE",
+    "description": "Carrots description",
+    "image_path": "https://example.invalid/items/seed-carrots.png",
+    "metadata": {
+      "type": "seed",
+      "cost": 0,
+      "rarity": 0,
+      "reward": 5,
+      "growthTime": 60,
+      "harvestLevel": 2,
+      "sortOrder": 1
+    }
+  },
+  {
+    "id": "seed-tomatoes",
+    "name": "Tomatoes",
+    "type": "ITEM",
+    "status": "ACTIVE",
+    "description": "Tomatoes description",
+    "image_path": "https://example.invalid/items/seed-tomatoes.png",
+    "metadata": {
+      "type": "seed",
+      "cost": 20,
+      "rarity": 1,
+      "reward": 15,
+      "growthTime": 120,
+      "harvestLevel": 3,
+      "sortOrder": 2
+    }
+  },
+  {
+    "id": "seed-pumpkins",
+    "name": "Pumpkins",
+    "type": "ITEM",
+    "status": "ACTIVE",
+    "description": "Pumpkins description",
+    "image_path": "https://example.invalid/items/seed-pumpkins.png",
+    "metadata": {
+      "type": "seed",
+      "cost": 100,
+      "rarity": 3,
+      "reward": 60,
+      "growthTime": 300,
+      "harvestLevel": 4,
+      "sortOrder": 3
+    }
+  },
+  {
+    "id": "seed-retired",
+    "name": "Retired Beans",
+    "type": "ITEM",
+    "status": "INACTIVE",
+    "description": "Retired Beans description",
+    "image_path": "https://example.invalid/items/seed-retired.png",
+    "metadata": {
+      "type": "seed",
+      "cost": 1,
+      "rarity": 0,
+      "reward": 1,
+      "growthTime": 60,
+      "harvestLevel": 1
+    }
+  },
+  {
+    "id": "tool-sprinkler",
+    "name": "Sprinkler",
+    "type": "ITEM",
+    "status": "ACTIVE",
+    "description": "Sprinkler description",
+    "image_path": "https://example.invalid/items/tool-sprinkler.png",
+    "metadata": {
+      "type": "tool",
+      "cost": 40,
+      "rarity": 1,
+      "actionType": "Water",
+      "canBeUsedOnPlot": true,
+      "quantity": 1,
+      "sortOrder": 1
+    }
+  },
+  {
+    "id": "tool-harvest-basket",
+    "name": "Harvest Basket",
+    "type": "ITEM",
+    "status": "ACTIVE",
+    "description": "Harvest Basket description",
+    "image_path": "https://example.invalid/items/tool-harvest-basket.png",
+    "metadata": {
+      "type": "tool",
+      "cost": 40,
+      "rarity": 1,
+      "actionType": "Harvest",
+      "canBeUsedOnPlot": true,
+      "quantity": 1,
+      "sortOrder": 2
+    }
+  },
+  {
+    "id": "tool-wooden-can",
+    "name": "Wooden Watering Can",
+    "type": "ITEM",
+    "status": "ACTIVE",
+    "description": "Wooden Watering Can description",
+    "image_path": "https://example.invalid/items/tool-wooden-can.png",
+    "metadata": {
+      "type": "tool",
+      "cost": 5,
+      "rarity": 0,
+      "actionType": "Water",
+      "quantity": 5,
+      "sortOrder": 3
+    }
+  },
+  {
+    "id": "tool-gold-can",
+    "name": "Gold Watering Can",
+    "type": "ITEM",
+    "status": "ACTIVE",
+    "description": "Gold Watering Can description",
+    "image_path": "https://example.invalid/items/tool-gold-can.png",
+    "metadata": {
+      "type": "tool",
+      "cost": 150,
+      "rarity": 3,
+      "actionType": "Water",
+      "quantity": 5,
+      "sortOrder": 4
+    }
+  },
+  {
+    "id": "tool-basic-mulch",
+    "name": "Basic Mulch",
+    "type": "ITEM",
+    "status": "ACTIVE",
+    "description": "Basic Mulch description",
+    "image_path": "https://example.invalid/items/tool-basic-mulch.png",
+    "metadata": {
+      "type": "tool",
+      "cost": 10,
+      "rarity": 0,
+      "actionType": "Mulch",
+      "quantity": 5,
+      "sortOrder": 5
+    }
+  },
+  {
+    "id": "tool-ultra-mulch",
+    "name": "Ultra Mulch",
+    "type": "ITEM",
+    "status": "ACTIVE",
+    "description": "Ultra Mulch description",
+    "image_path": "https://example.invalid/items/tool-ultra-mulch.png",
+    "metadata": {
+      "type": "tool",
+      "cost": 200,
+      "rarity": 4,
+      "actionType": "Mulch",
+      "quantity": 5,
+      "sortOrder": 6
+    }
+  },
+  {
+    "id": "tool-basic-compost",
+    "name": "Basic Compost",
+    "type": "ITEM",
+    "status": "ACTIVE",
+    "description": "Basic Compost description",
+    "image_path": "https://example.invalid/items/tool-basic-compost.png",
+    "metadata": {
+      "type": "tool",
+      "cost": 10,
+      "rarity": 0,
+      "actionType": "Compost",
+      "quantity": 5,
+      "sortOrder": 7
+    }
+  },
+  {
+    "id": "decoration-gnome",
+    "name": "Garden Gnome",
+    "type": "ITEM",
+    "status": "ACTIVE",
+    "description": "Garden Gnome description",
+    "image_path": "https://example.invalid/items/decoration-gnome.png",
+    "metadata": {
+      "type": "decoration",
+      "cost": 30,
+      "rarity": 1,
+      "sortOrder": 1
+    }
+  },
+  {
+    "id": "decoration-fountain",
+    "name": "Stone Fountain",
+    "type": "ITEM",
+    "status": "ACTIVE",
+    "description": "Stone Fountain description",
+    "image_path": "https://example.invalid/items/decoration-fountain.png",
+    "metadata": {
+      "type": "decoration",
+      "cost": 80,
+      "rarity": 2,
+      "sortOrder": 2
+    }
+  },
+  {
+    "id": "accessory-straw-hat",
+    "name": "Straw Hat",
+    "type": "ACCESSORY",
+    "status": "ACTIVE",
+    "description": "Straw Hat description",
+    "image_path": "https://example.invalid/items/accessory-straw-hat.png",
+    "metadata": {
+      "displayName": "Farmer's Straw Hat",
+      "cost": 25,
+      "rarity": 1,
+      "sortOrder": 1
+    }
+  }
+]
