@@ -24,22 +24,9 @@ const item = (id: string) => {
   return found;
 };
 
-/** A visitor inventory (GET get-visitor-inventory-items) from { [itemId]: quantity }. */
+/** Owned catalog items for the seed's `inventory` / otherVisitors' `inventory`, from { [itemId]: quantity }. */
 export const inventory = (quantities: Record<string, number>) =>
-  Object.entries(quantities).map(([id, quantity]) => {
-    const { name, type, status, image_path, description } = item(id);
-    return {
-      id: `owned-${id}`,
-      item_id: id,
-      itemId: id,
-      quantity,
-      name,
-      type,
-      status,
-      image_url: image_path,
-      item: { id, name, description, type, image_url: image_path },
-    };
-  });
+  Object.entries(quantities).map(([item, quantity]) => ({ item, quantity }));
 
 /** Quantity of an item in a visitor's inventory as the mock holds it (undefined = not owned). */
 export const quantityOf = async (world: TopiaWorld, itemId: string, visitorId = VISITOR_ID) =>
@@ -194,7 +181,7 @@ export const seedOwnGarden = async (
     assetData: own.plotAssetData,
     worldData: plotsIndex({ [world.assetId]: world.profileId, "plot-2": null }),
     visitorData: playerData({ [world.urlSlug]: own.worldEntry }, { placedDecorations: placed }),
-    visitor: { inventory: inventory(items) },
+    inventory: inventory(items),
     ...extra,
     extraAssets: { "plot-2": plotAsset("plot-2"), ...own.assets, ...(extra.extraAssets ?? {}) },
   });

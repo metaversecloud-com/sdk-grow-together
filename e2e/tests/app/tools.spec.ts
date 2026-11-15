@@ -146,7 +146,7 @@ const seedFriendsGarden = async (world: any, items: Record<string, number>, crop
     assetData: theirs.plotAssetData,
     worldData: plotsIndex({ [world.assetId]: robin.profileId }),
     extraAssets: theirs.assets,
-    visitor: { inventory: inventory(items) },
+    inventory: inventory(items),
     otherVisitors: { 43: { ...robin, visitorData: playerData({ [world.urlSlug]: theirs.worldEntry }) } },
   });
   return robin;
