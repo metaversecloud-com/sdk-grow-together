@@ -64,10 +64,6 @@ export type RouteSpec = {
   knownBugs?: KnownBugs;
 };
 
-// getCredentials (protected file) returns { error } instead of throwing, so every route that
-// uses it has this bug until it's fixed there.
-const GET_CREDENTIALS_DOESNT_THROW = "EXP-428 #6: getCredentials doesn't throw";
-
 /**
  * API routes that read the session credentials (getCredentials). Each one must reject missing or
  * foreign credentials and must never send the interactive secret to the browser. List them all.
@@ -76,37 +72,28 @@ const GET_CREDENTIALS_DOESNT_THROW = "EXP-428 #6: getCredentials doesn't throw";
  * the platform tests can't read its body and time out. Cover an SSE route's credential checks in
  * tests/app instead (open it with page.request or fetch + AbortController and check the status).
  */
-const unnamed = { unnamedCredentialError: GET_CREDENTIALS_DOESNT_THROW };
-// The "open a drawer" routes swallow the openIframe error and answer success, so bad credentials pass.
-const OPENS_DRAWER_ANYWAY = "EXP-459: openIframe errors are swallowed, the route answers success";
-const opensDrawerAnyway = {
-  ...unnamed,
-  acceptsMissingCredentials: OPENS_DRAWER_ANYWAY,
-  acceptsForeignCredentials: OPENS_DRAWER_ANYWAY,
-};
-
 export const CREDENTIALED_ROUTES: RouteSpec[] = [
-  { method: "get", path: "/game-state", knownBugs: unnamed },
-  { method: "post", path: "/teleport", knownBugs: unnamed },
-  { method: "post", path: "/admin/clear-plot", knownBugs: unnamed },
-  { method: "post", path: "/admin/clear-all-plots", knownBugs: unnamed },
-  { method: "post", path: "/plot/claim", knownBugs: unnamed },
-  { method: "post", path: "/plot/teleport", knownBugs: unnamed },
-  { method: "post", path: "/plot/view", data: { plotAssetId: "key-asset" }, knownBugs: opensDrawerAnyway },
-  { method: "post", path: "/plot/use-tool", data: { tool: { name: "Sprinkler", actionType: "Water" } }, knownBugs: unnamed },
-  { method: "post", path: "/square/view", data: { itemAssetId: "key-asset", type: "crop" }, knownBugs: opensDrawerAnyway },
-  { method: "get", path: "/square", knownBugs: unnamed },
-  { method: "post", path: "/seed/purchase", data: { seedId: "seed-tomatoes" }, knownBugs: unnamed },
-  { method: "post", path: "/crop/drop", data: { seedId: "seed-carrots", squareId: 5 }, knownBugs: unnamed },
-  { method: "post", path: "/crop/water", data: { cropAssetId: "key-asset" }, knownBugs: unnamed },
-  { method: "post", path: "/crop/harvest", data: { cropAssetId: "key-asset" }, knownBugs: unnamed },
-  { method: "post", path: "/crop/use-tool", data: { tool: { name: "Basic Mulch", actionType: "Mulch" } }, knownBugs: unnamed },
-  { method: "post", path: "/crop/remove", data: { squareId: 5 }, knownBugs: unnamed },
-  { method: "post", path: "/decoration/purchase", data: { decorationId: "decoration-gnome" }, knownBugs: unnamed },
-  { method: "post", path: "/decoration/drop", data: { decorationId: "decoration-gnome", squareId: 1 }, knownBugs: unnamed },
-  { method: "post", path: "/decoration/remove", data: { squareId: 1 }, knownBugs: unnamed },
-  { method: "post", path: "/accessory/purchase", data: { accessoryId: "accessory-straw-hat" }, knownBugs: unnamed },
-  { method: "post", path: "/tool/purchase", data: { toolId: "tool-basic-mulch" }, knownBugs: unnamed },
+  { method: "get", path: "/game-state" },
+  { method: "post", path: "/teleport" },
+  { method: "post", path: "/admin/clear-plot" },
+  { method: "post", path: "/admin/clear-all-plots" },
+  { method: "post", path: "/plot/claim" },
+  { method: "post", path: "/plot/teleport" },
+  { method: "post", path: "/plot/view", data: { plotAssetId: "key-asset" } },
+  { method: "post", path: "/plot/use-tool", data: { tool: { name: "Sprinkler", actionType: "Water" } } },
+  { method: "post", path: "/square/view", data: { itemAssetId: "key-asset", type: "crop" } },
+  { method: "get", path: "/square" },
+  { method: "post", path: "/seed/purchase", data: { seedId: "seed-tomatoes" } },
+  { method: "post", path: "/crop/drop", data: { seedId: "seed-carrots", squareId: 5 } },
+  { method: "post", path: "/crop/water", data: { cropAssetId: "key-asset" } },
+  { method: "post", path: "/crop/harvest", data: { cropAssetId: "key-asset" } },
+  { method: "post", path: "/crop/use-tool", data: { tool: { name: "Basic Mulch", actionType: "Mulch" } } },
+  { method: "post", path: "/crop/remove", data: { squareId: 5 } },
+  { method: "post", path: "/decoration/purchase", data: { decorationId: "decoration-gnome" } },
+  { method: "post", path: "/decoration/drop", data: { decorationId: "decoration-gnome", squareId: 1 } },
+  { method: "post", path: "/decoration/remove", data: { squareId: 1 } },
+  { method: "post", path: "/accessory/purchase", data: { accessoryId: "accessory-straw-hat" } },
+  { method: "post", path: "/tool/purchase", data: { toolId: "tool-basic-mulch" } },
 ];
 
 /**
@@ -163,10 +150,7 @@ export const HEALTH_KNOWN_BUGS: { incompleteContract?: string } = {};
  * registers its own logging handler. Fix: process.removeAllListeners("unhandledRejection") before
  * registering the app's handler.
  */
-export const PROCESS_KNOWN_BUGS: { exitsOnUnhandledRejection?: string } = {
-  exitsOnUnhandledRejection:
-    "EXP-472: @rtsdk/topia's unhandledRejection hook calls process.exit(1); server/index.ts's handler doesn't stop it",
-};
+export const PROCESS_KNOWN_BUGS: { exitsOnUnhandledRejection?: string } = {};
 
 /**
  * The request system.spec sends a malformed JSON body to. Default: the first POST/PUT route in
@@ -182,9 +166,7 @@ export const MALFORMED_JSON_REQUEST: { method: "post" | "put"; path: string } | 
  * middleware after express.json()). Fix: an error middleware that answers body-parser errors
  * (err.type === "entity.parse.failed") with res.status(400).json({ success: false, error: "Invalid JSON" }).
  */
-export const ERROR_KNOWN_BUGS: { malformedJson?: string } = {
-  malformedJson: "EXP-473: no error middleware: Express' default error page shows the stack trace (NODE_ENV isn't production)",
-};
+export const ERROR_KNOWN_BUGS: { malformedJson?: string } = {};
 
 /**
  * true starts mock-redis/server.mjs (an in-memory Redis) next to mock-topia and points REDIS_URL at it

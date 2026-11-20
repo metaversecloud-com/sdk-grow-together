@@ -5,7 +5,6 @@ import { expect, test } from "../../fixtures";
 import { withPrivateServer } from "../../helpers/privateServer";
 import { ITEM, PLOT_POSITION, PLOT_UNIQUE_NAME, plotAsset, seedOwnGarden } from "./garden";
 
-const BUG = "EXP-459";
 const LEAK_MARKERS = [INTERACTIVE_SECRET, "interactiveSecret", "InteractiveJWT"];
 
 test("no response of a whole play session contains the interactive secret", async ({ request, world }) => {
@@ -73,7 +72,6 @@ test("a failed Topia call reported to the player doesn't contain the interactive
 
 test("a failed background update of the plots index doesn't take the server down", async ({ world }) => {
   test.slow();
-  test.fail(true, `${BUG}: getPlotAssets doesn't await or catch world.setDataObject; a failed write exits the process`);
   // No plots index yet: the first open builds it in the background, and Topia rejects that write.
   await world.seed({
     asset: { uniqueName: PLOT_UNIQUE_NAME, position: PLOT_POSITION },
@@ -91,7 +89,6 @@ test("a failed background update of the plots index doesn't take the server down
 
 test("using a tool sent without an id doesn't take the server down", async ({ world }) => {
   test.slow();
-  test.fail(true, `${BUG}: handleUseTool fires the tool decrement without await or catch; an unknown tool exits the process`);
   await seedOwnGarden(world, {
     crops: { "crop-1": { squareId: 5, wateredAgo: 5 } },
     items: { [ITEM.coins]: 0, [ITEM.basicMulch]: 5 },
